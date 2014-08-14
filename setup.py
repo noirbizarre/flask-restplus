@@ -59,7 +59,6 @@ long_description = '\n'.join((
     ''
 ))
 
-# install_requires = pip('install.pip')
 tests_require = ['nose', 'rednose']
 
 setup(
