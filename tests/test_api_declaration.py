@@ -435,7 +435,7 @@ class APITestCase(TestCase):
 
         self.assertEqual(by_method['post']['nickname'], 'post_test_resource')
 
-    def test_model_as_dict(self):
+    def test_model_as_flat_dict(self):
         fields = self.api.model('Person', {
             'name': restplus.fields.String,
             'age': restplus.fields.Integer,
@@ -475,5 +475,3 @@ class APITestCase(TestCase):
         ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
         self.assertEqual(ops['get']['type'], 'Person')
         self.assertEqual(ops['post']['type'], 'Person')
-
-

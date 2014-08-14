@@ -5,6 +5,8 @@ import re
 
 from flask import current_app
 
+from .. import fields
+
 RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
 RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
 
@@ -45,3 +47,18 @@ def extract_path_params(path):
             raise ValueError('Unsupported type converter')
         params.append(param)
     return params
+
+
+FIELDS = {
+    fields.String: {'type': 'string'},
+    fields.Integer: {'type': 'integer'},
+    fields.DateTime: {'type': 'string', 'format': 'date-time'},
+}
+
+
+def field_to_property(field):
+    '''Convert a restful.Field into a Swagger property declaration'''
+    if not field in FIELDS:
+        # raise ValueError('Unknown field type {0}'.format(field))
+        return {'type': 'string'}
+    return FIELDS[field]

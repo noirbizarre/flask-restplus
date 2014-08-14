@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from werkzeug.routing import BaseConverter
-
+from flask.ext.restplus import fields
 from flask.ext.restplus.swagger import utils
 
 from . import TestCase
@@ -93,4 +92,19 @@ class ExtractPathParamsTestCase(TestCase):
     #             'required': True
     #         }])
 
+class FieldToPropertyTestCase(unittest.TestCase):
+    def test_unknown_field(self):
+        prop = utils.field_to_property(None)
+        self.assertEqual(prop, {'type': 'string'})
 
+    def test_simple_string_field(self):
+        prop = utils.field_to_property(fields.String)
+        self.assertEqual(prop, {'type': 'string'})
+
+    def test_simple_integer_field(self):
+        prop = utils.field_to_property(fields.Integer)
+        self.assertEqual(prop, {'type': 'integer'})
+
+    def test_simple_datetime_field(self):
+        prop = utils.field_to_property(fields.DateTime)
+        self.assertEqual(prop, {'type': 'string', 'format': 'date-time'})

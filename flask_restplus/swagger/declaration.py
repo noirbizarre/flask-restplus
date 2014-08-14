@@ -6,7 +6,7 @@ from six import string_types
 from ..utils import camel_to_dash
 
 from .base import SwaggerBaseView
-from .utils import extract_path, extract_path_params
+from .utils import extract_path, extract_path_params, field_to_property
 
 
 class ApiDeclaration(SwaggerBaseView):
@@ -156,7 +156,7 @@ class ApiDeclaration(SwaggerBaseView):
         }
 
     def serialize_field(self, field):
-        return {'type': 'string'}
+        return field_to_property(field)
 
     def extract_model(self, resource, method):
         method_impl = self.get_method(resource, method)
