@@ -1,0 +1,7 @@
+Changelog
+=========
+
+Current
+-------
+
+- Initial release

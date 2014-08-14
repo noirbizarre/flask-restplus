@@ -1,0 +1,8 @@
+include README.rst CHANGELOG.rst MANIFEST.in
+recursive-include flask_restplus *
+
+prune flask_restplus/static/bower
+
+recursive-include flask_restplus/static/bower/swagger-ui/dist *
+
+global-exclude *.pyc

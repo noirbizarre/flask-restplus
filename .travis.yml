@@ -1,0 +1,18 @@
+language: python
+python:
+  - 2.7
+  - 3.3
+  - 3.4
+  - pypy
+install:
+  - pip install -e .
+  - pip install nose rednose coverage coveralls
+script:
+  - nosetests --with-coverage flask_restplus
+after_success:
+  - coveralls --rcfile=coverage.rc
+matrix:
+  allow_failures:
+    - python:
+        - 3.3
+        - 3.4

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Swagger UI</title>
+    {% include 'swagger-ui-css.html' %}
+    {% include 'swagger-ui-libs.html' %}
+    <script type="text/javascript">
+        $(function () {
+            window.swaggerUi = new SwaggerUi({
+                url: "{{ specs_url }}",
+                dom_id: "swagger-ui-container",
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
+                onComplete: function(swaggerApi, swaggerUi){
+                    log("Loaded SwaggerUI");
+
+                    if(typeof initOAuth == "function") {
+                        /*
+                        initOAuth({
+                            clientId: "your-client-id",
+                            realm: "your-realms",
+                            appName: "your-app-name"
+                        });
+                        */
+                    }
+                    $('pre code').each(function(i, e) {
+                        hljs.highlightBlock(e)
+                    });
+                },
+                onFailure: function(data) {
+                    log("Unable to Load SwaggerUI");
+                },
+                docExpansion: "none"
+            });
+            window.swaggerUi.load();
+        });
+    </script>
+</head>
+
+<body class="swagger-section">
+    <div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>
+    <div id="swagger-ui-container" class="swagger-ui-wrap"></div>
+</body>
+</html>
