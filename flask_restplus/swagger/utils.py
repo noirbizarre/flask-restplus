@@ -58,7 +58,6 @@ FIELDS = {
 
 def field_to_property(field):
     '''Convert a restful.Field into a Swagger property declaration'''
-    if not field in FIELDS:
-        # raise ValueError('Unknown field type {0}'.format(field))
+    if field not in FIELDS:
         return {'type': 'string'}
     return FIELDS[field]
