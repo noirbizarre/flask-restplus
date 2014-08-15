@@ -26,8 +26,7 @@ parser.add_argument('task', type=str, required=True, help='The task details')
 # Todo
 #   show a single todo item and lets you delete them
 @ns.route('/<string:todo_id>')
-@api.doc(responses={404: 'Todo not found'},
-    params={'todo_id': {'description': 'The Todo ID'}})
+@api.doc(responses={404: 'Todo not found'}, params={'todo_id': 'The Todo ID'})
 class Todo(Resource):
     '''Single TODO resource'''
     @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
