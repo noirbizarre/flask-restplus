@@ -58,9 +58,40 @@ FIELDS = {
     fields.DateTime: {'type': 'string', 'format': 'date-time'},
 }
 
+LOCATIONS = {
+    'args': 'query',
+    'form': 'form',
+    'headers': 'header',
+}
+
 
 def field_to_property(field):
     '''Convert a restful.Field into a Swagger property declaration'''
     if field not in FIELDS:
         return {'type': 'string'}
     return FIELDS[field]
+
+
+def parser_to_params(parser):
+    '''Extract Swagger parameters from a RequestParser'''
+    params = {}
+    for arg in parser.args:
+        if arg.location == 'cookie':
+            continue
+        param = {'paramType': LOCATIONS.get(arg.location, 'query')}
+        _handle_arg_type(arg, param)
+        if arg.required:
+            param['required'] = True
+        if arg.help:
+            param['description'] = arg.help
+        if arg.action == 'append':
+            param['allowMultiple'] = True
+        params[arg.name] = param
+    return params
+
+
+def _handle_arg_type(arg, param):
+    if arg.type is int:
+        param['type'] = 'integer'
+    elif arg.type is str:
+        param['type'] = 'string'

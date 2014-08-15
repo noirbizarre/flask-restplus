@@ -1,5 +1,4 @@
 from flask import Flask
-from flask.ext.restful import reqparse
 from flask.ext.restplus import Api, Resource
 
 app = Flask(__name__)
@@ -20,22 +19,15 @@ def abort_if_todo_doesnt_exist(todo_id):
     if todo_id not in TODOS:
         api.abort(404, "Todo {} doesn't exist".format(todo_id))
 
-parser = reqparse.RequestParser()
-parser.add_argument('task', type=str)
-
-params = {
-    'task': {
-        'type': 'string',
-        'description': 'The task details',
-        'paramType': 'query'
-    }
-}
+parser = api.parser()
+parser.add_argument('task', type=str, required=True, help='The task details')
 
 
 # Todo
 #   show a single todo item and lets you delete them
 @ns.route('/<string:todo_id>')
-@api.doc(responses={404: 'Todo not found'})
+@api.doc(responses={404: 'Todo not found'},
+    params={'todo_id': {'description': 'The Todo ID'}})
 class Todo(Resource):
     '''Single TODO resource'''
     @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
@@ -50,7 +42,7 @@ class Todo(Resource):
         del TODOS[todo_id]
         return '', 204
 
-    @api.doc(params=params)
+    @api.doc(parser=parser)
     def put(self, todo_id):
         '''Update a given resource'''
         args = parser.parse_args()
@@ -68,7 +60,7 @@ class TodoList(Resource):
         '''List all todos'''
         return TODOS
 
-    @api.doc(params=params)
+    @api.doc(parser=parser)
     def post(self):
         '''Ceate a todo'''
         args = parser.parse_args()

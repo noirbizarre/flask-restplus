@@ -6,7 +6,7 @@ from six import string_types
 from ..utils import camel_to_dash
 
 from .base import SwaggerBaseView
-from .utils import extract_path, extract_path_params, field_to_property
+from .utils import extract_path, extract_path_params, field_to_property, parser_to_params
 
 
 class ApiDeclaration(SwaggerBaseView):
@@ -24,7 +24,6 @@ class ApiDeclaration(SwaggerBaseView):
             for url in urls:
                 response['apis'].append(self.serialize_resource(resource, url))
         if self._registered_models:
-            print self._registered_models
             response['models'] = dict(
                 (name, self.serialize_model(name, model))
                 for name, model in self._registered_models.items()
@@ -109,12 +108,22 @@ class ApiDeclaration(SwaggerBaseView):
         return params
 
     def update_params(self, params, obj, method=None):
-        if not hasattr(obj, '__apidoc__') or 'params' not in obj.__apidoc__:
+        if not hasattr(obj, '__apidoc__') or ('params' not in obj.__apidoc__ and 'parser' not in obj.__apidoc__):
             return params
         by_name = dict((p['name'], p) for p in params)
-        self._update_params_by_name(by_name, obj.__apidoc__['params'])
+        cascade = []
+
+        if 'parser' in obj.__apidoc__:
+            cascade.append(parser_to_params(obj.__apidoc__['parser']))
+
+        if 'params' in obj.__apidoc__:
+            cascade.append(obj.__apidoc__['params'])
+
         if method and method in obj.__apidoc__ and 'params' in obj.__apidoc__[method]:
-            self._update_params_by_name(by_name, obj.__apidoc__[method]['params'])
+            cascade.append(obj.__apidoc__[method]['params'])
+
+        for params in cascade:
+            self._update_params_by_name(by_name, params)
         return by_name.values()
 
     def _update_params_by_name(self, params, new_params):

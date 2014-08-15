@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from flask.ext.restplus import fields
+from flask.ext.restplus import fields, reqparse
 from flask.ext.restplus.swagger import utils
 
 from . import TestCase
@@ -121,3 +121,74 @@ class FieldToPropertyTestCase(unittest.TestCase):
     def test_simple_datetime_field(self):
         prop = utils.field_to_property(fields.DateTime)
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time'})
+
+
+class ParserToParamsTestCase(unittest.TestCase):
+    def test_empty_parser(self):
+        parser = reqparse.RequestParser()
+        self.assertEqual(utils.parser_to_params(parser), {})
+
+    def test_primitive_types(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('int', type=int, help='Some integer')
+        parser.add_argument('str', type=str, help='Some string')
+        self.assertEqual(utils.parser_to_params(parser), {
+            'int': {
+                'type': 'integer',
+                'paramType': 'query',
+                'description': 'Some integer',
+            },
+            'str':  {
+                'type': 'string',
+                'paramType': 'query',
+                'description': 'Some string',
+            }
+        })
+
+    def test_required(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('int', type=int, required=True)
+        self.assertEqual(utils.parser_to_params(parser), {
+            'int': {
+                'type': 'integer',
+                'paramType': 'query',
+                'required': True,
+            }
+        })
+
+    def test_location(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('default', type=int)
+        parser.add_argument('in_form', type=int, location='form')
+        parser.add_argument('in_query', type=int, location='args')
+        parser.add_argument('in_headers', type=int, location='headers')
+        parser.add_argument('in_cookie', type=int, location='cookie')
+        self.assertEqual(utils.parser_to_params(parser), {
+            'default': {
+                'type': 'integer',
+                'paramType': 'query',
+            },
+            'in_form': {
+                'type': 'integer',
+                'paramType': 'form',
+            },
+            'in_query': {
+                'type': 'integer',
+                'paramType': 'query',
+            },
+            'in_headers': {
+                'type': 'integer',
+                'paramType': 'header',
+            },
+        })
+
+    def test_lists(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('int', type=int, action='append')
+        self.assertEqual(utils.parser_to_params(parser), {
+            'int': {
+                'type': 'integer',
+                'paramType': 'query',
+                'allowMultiple': True,
+            }
+        })

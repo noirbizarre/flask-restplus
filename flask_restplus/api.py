@@ -143,7 +143,6 @@ class Api(restful.Api):
 
     def owns_endpoint(self, endpoint):
         '''Override the default implementation as there is always a Blueprint'''
-        print 'owns endpoint', endpoint, self.endpoints
         return endpoint in self.endpoints
 
     def abort(self, code=500, message=None, **kwargs):
@@ -171,6 +170,10 @@ class Api(restful.Api):
                 cls.__apidoc__['name'] = name
                 return cls
             return wrapper
+
+    def parser(self):
+        '''Instanciate a RequestParser'''
+        return restful.reqparse.RequestParser()
 
 
 class ApiModel(dict, MutableMapping):

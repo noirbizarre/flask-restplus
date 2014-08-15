@@ -345,3 +345,7 @@ class APITestCase(TestCase):
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data['status'], 500)
             self.assertIn('message', data)
+
+    def test_parser(self):
+        api = restplus.Api()
+        self.assertIsInstance(api.parser(), restplus.reqparse.RequestParser)

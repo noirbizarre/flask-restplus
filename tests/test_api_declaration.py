@@ -160,6 +160,78 @@ class APITestCase(TestCase):
         self.assertEqual(parameter['required'], True)
         self.assertEqual(parameter['description'], 'An age')
 
+    def test_parser_parameters(self):
+        parser = self.api.parser()
+        parser.add_argument('param', type=int, help='Some param')
+
+        @self.api.route('/with-parser/', endpoint='with-parser')
+        class WithParserResource(restplus.Resource):
+            @self.api.doc(parser=parser)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        api = data['apis'][0]
+        self.assertEqual(len(api['operations']), 1)
+
+        operation = api['operations'][0]
+        self.assertEqual(len(operation['parameters']), 1)
+
+        parameter = operation['parameters'][0]
+        self.assertEqual(parameter['name'], 'param')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['paramType'], 'query')
+        self.assertEqual(parameter['description'], 'Some param')
+
+    def test_parser_parameters_on_class(self):
+        parser = self.api.parser()
+        parser.add_argument('param', type=int, help='Some param')
+
+        @self.api.route('/with-parser/', endpoint='with-parser')
+        @self.api.doc(parser=parser)
+        class WithParserResource(restplus.Resource):
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        api = data['apis'][0]
+        self.assertEqual(len(api['operations']), 1)
+
+        operation = api['operations'][0]
+        self.assertEqual(len(operation['parameters']), 1)
+
+        parameter = operation['parameters'][0]
+        self.assertEqual(parameter['name'], 'param')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['paramType'], 'query')
+        self.assertEqual(parameter['description'], 'Some param')
+
+    def test_parser_parameters_ovrride(self):
+        parser = self.api.parser()
+        parser.add_argument('param', type=int, help='Some param')
+
+        @self.api.route('/with-parser/', endpoint='with-parser')
+        class WithParserResource(restplus.Resource):
+            @self.api.doc(parser=parser, params={'param': {'description': 'New description'}})
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        api = data['apis'][0]
+        self.assertEqual(len(api['operations']), 1)
+
+        operation = api['operations'][0]
+        self.assertEqual(len(operation['parameters']), 1)
+
+        parameter = operation['parameters'][0]
+        self.assertEqual(parameter['name'], 'param')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['paramType'], 'query')
+        self.assertEqual(parameter['description'], 'New description')
+
     def test_explicit_parameters(self):
         @self.api.route('/name/<int:age>/', endpoint='by-name')
         class ByNameResource(restplus.Resource):
