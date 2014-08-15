@@ -121,6 +121,10 @@ class Api(restful.Api):
         def wrapper(cls):
             doc = kwargs.pop('doc', None)
             if doc:
+                unshortcut_params_description(doc)
+                for key in 'get', 'post', 'put', 'delete':
+                    if key in doc:
+                        unshortcut_params_description(doc[key])
                 cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
             self.add_resource(cls, *urls, **kwargs)
             return cls
@@ -137,6 +141,7 @@ class Api(restful.Api):
     def doc(self, **kwargs):
         '''Add some api documentation to the decorated object'''
         def wrapper(documented):
+            unshortcut_params_description(kwargs)
             documented.__apidoc__ = merge(getattr(documented, '__apidoc__', {}), kwargs)
             return documented
         return wrapper
@@ -180,3 +185,10 @@ class ApiModel(dict, MutableMapping):
     def __init__(self, *args, **kwargs):
         self.__apidoc__ = {}
         super(ApiModel, self).__init__(*args, **kwargs)
+
+
+def unshortcut_params_description(data):
+    if 'params' in data:
+        for name, description in data['params'].items():
+            if isinstance(description, basestring):
+                data['params'][name] = {'description': description}

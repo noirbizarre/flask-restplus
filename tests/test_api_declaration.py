@@ -404,6 +404,60 @@ class APITestCase(TestCase):
         self.assertEqual(parameter['required'], True)
         self.assertEqual(parameter['description'], 'An age')
 
+    def test_explicit_parameters_desription_shortcut(self):
+        @self.api.route('/name/<int:age>/', endpoint='by-name', doc={
+            'get': {
+                'params': {
+                    'q': 'A query string',
+                }
+            },
+            'params': {
+                'age': 'An age'
+            }
+        })
+        class ByNameResource(restplus.Resource):
+            @self.api.doc(params={'age': 'Overriden'})
+            def get(self, age):
+                return {}
+
+            def post(self, age):
+                return {}
+
+        data = self.get_declaration()
+
+        api = data['apis'][0]
+        self.assertEqual(len(api['operations']), 2)
+
+        by_method = dict((o['method'].lower(), o) for o in api['operations'])
+
+        op_get = by_method['get']
+        self.assertEqual(len(op_get['parameters']), 2)
+
+        by_name = dict((p['name'], p) for p in op_get['parameters'])
+
+        parameter = by_name['age']
+        self.assertEqual(parameter['name'], 'age')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['paramType'], 'path')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['description'], 'Overriden')
+
+        parameter = by_name['q']
+        self.assertEqual(parameter['name'], 'q')
+        self.assertEqual(parameter['type'], 'string')
+        self.assertEqual(parameter['paramType'], 'query')
+        self.assertEqual(parameter['description'], 'A query string')
+
+        op_post = by_method['post']
+        self.assertEqual(len(op_post['parameters']), 1)
+
+        parameter = op_post['parameters'][0]
+        self.assertEqual(parameter['name'], 'age')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['paramType'], 'path')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['description'], 'An age')
+
     def test_response_on_method(self):
         @self.api.route('/name/<int:age>/', endpoint='by-name')
         class ByNameResource(restplus.Resource):

@@ -133,6 +133,10 @@ class ApiDeclaration(SwaggerBaseView):
             else:
                 params[name] = param
                 params[name].update(name=name)
+            if 'type' not in params[name]:
+                params[name]['type'] = 'string'
+            if 'paramType' not in params[name]:
+                params[name]['paramType'] = 'query'
         return params
 
     def extract_responses(self, resource, method):
