@@ -162,12 +162,14 @@ class ApiDeclaration(SwaggerBaseView):
         method_impl = self.get_method(resource, method)
         if hasattr(method_impl, '__apidoc__') and 'model' in method_impl.__apidoc__:
             model = method_impl.__apidoc__['model']
-            if isinstance(model, string_types):
-                if model not in self.api.models:
-                    raise ValueError('Model {0} not found'.format(model))
-                self._registered_models[model] = self.api.models[model]
-                return model
-            elif isinstance(model, dict) and hasattr(model, '__apidoc__'):
-                name = model.__apidoc__['name']
-                self._registered_models[name] = self.api.models[name]
-                return name
+        elif hasattr(resource, '__apidoc__') and 'model' in resource.__apidoc__:
+            model = resource.__apidoc__['model']
+        else:
+            return
+        if isinstance(model, dict) and hasattr(model, '__apidoc__'):
+            model = model.__apidoc__['name']
+
+        if model not in self.api.models:
+            raise ValueError('Model {0} not registered'.format(model))
+        self._registered_models[model] = self.api.models[model]
+        return model

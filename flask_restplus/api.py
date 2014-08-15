@@ -14,7 +14,8 @@ from .utils import merge
 class Api(restful.Api):
     def __init__(self, app=None, version='1.0', title=None, description=None,
             terms_url=None, contact=None, license=None, license_url=None,
-            endpoint='api', prefix=None, **kwargs):
+            endpoint='api', prefix=None, default='default',
+            default_label='Default namespace', **kwargs):
         self.version = version
         self.title = title
         self.description = description
@@ -26,8 +27,10 @@ class Api(restful.Api):
 
         self.models = {}
         self.namespaces = []
-        self.default_namespace = ApiNamespace(self, '', 'Default namespace',
-            endpoint='default-declaration', json_path='/default.json')
+        self.default_namespace = ApiNamespace(self, '', default_label,
+            endpoint='{0}-declaration'.format(default),
+            json_path='/{0}.json'.format(default)
+        )
 
         self.blueprint = Blueprint(self.endpoint, __name__,
             template_folder='templates',
@@ -42,7 +45,7 @@ class Api(restful.Api):
         view_func = self.output(ApiSpecs.as_view(str('specs'), api=self))
         url = self._complete_url('/specs.json', '')
         self.blueprint.add_url_rule(url, view_func=view_func)
-        self.blueprint.add_url_rule('/', 'doc', self.render_ui)
+        self.blueprint.add_url_rule('/', 'root', self.render_ui)
         self.blueprint.add_app_template_global(self.swagger_static)
         self.add_namespace(self.default_namespace)
 
@@ -102,9 +105,10 @@ class Api(restful.Api):
             view_func = self.output(ApiDeclaration.as_view(ns.endpoint, api=self, namespace=ns))
             url = self._complete_url(ns.json_path, '')
             self.namespaces.append(ns)
+            self.endpoints.add(ns.endpoint)
             if self.blueprint_setup:
-                    # Set the rule to a string directly, as the blueprint is already set up.
-                    self.blueprint_setup.add_url_rule(url, view_func=view_func)
+                # Set the rule to a string directly, as the blueprint is already set up.
+                self.blueprint_setup.add_url_rule(url, view_func=view_func)
             else:
                 self.blueprint.add_url_rule(url, view_func=view_func)
 
@@ -128,7 +132,7 @@ class Api(restful.Api):
 
     @property
     def base_url(self):
-        return url_for('{0}.doc'.format(self.endpoint), _external=True)
+        return url_for('{0}.root'.format(self.endpoint), _external=True)
 
     def doc(self, **kwargs):
         '''Add some api documentation to the decorated object'''
@@ -139,6 +143,7 @@ class Api(restful.Api):
 
     def owns_endpoint(self, endpoint):
         '''Override the default implementation as there is always a Blueprint'''
+        print 'owns endpoint', endpoint, self.endpoints
         return endpoint in self.endpoints
 
     def abort(self, code=500, message=None, **kwargs):

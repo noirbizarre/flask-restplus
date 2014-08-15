@@ -28,10 +28,10 @@ class TestCase(unittest.TestCase):
             self.assertEquals(response.content_type, 'application/json')
             return json.loads(response.data.decode('utf8'))
 
-    def get_declaration(self, namespace='default', prefix='/api', app=None):
+    def get_declaration(self, namespace='default', prefix='/api', status=200, app=None):
         '''Get an API declaration for a given namespace'''
         with self.app.test_client() as client:
             response = client.get('{0}/{1}.json'.format(prefix, namespace))
-            self.assertEquals(response.status_code, 200)
+            self.assertEquals(response.status_code, status)
             self.assertEquals(response.content_type, 'application/json')
             return json.loads(response.data.decode('utf8'))

@@ -10,11 +10,11 @@ from . import TestCase
 
 
 class APITestCase(TestCase):
-    def test_doc_endpoint(self):
+    def test_root_endpoint(self):
         api = restplus.Api(self.app, version='1.0')
 
         with self.context():
-            url = url_for('api.doc')
+            url = url_for('api.root')
             self.assertEqual(url, '/')
             self.assertEqual(api.base_url, 'http://localhost/')
 
@@ -23,12 +23,12 @@ class APITestCase(TestCase):
             self.assertEquals(response.status_code, 200)
             self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
-    def test_doc_endpoint_lazy(self):
+    def test_root_endpoint_lazy(self):
         api = restplus.Api(version='1.0')
         api.init_app(self.app)
 
         with self.context():
-            url = url_for('api.doc')
+            url = url_for('api.root')
             self.assertEqual(url, '/')
             self.assertEqual(api.base_url, 'http://localhost/')
 
@@ -37,12 +37,12 @@ class APITestCase(TestCase):
             self.assertEquals(response.status_code, 200)
             self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
-    def test_doc_endpoint_with_params(self):
+    def test_root_endpoint_with_params(self):
         api = restplus.Api(version='1.0', prefix='/api', endpoint='apiv1')
         api.init_app(self.app)
 
         with self.context():
-            url = url_for('apiv1.doc')
+            url = url_for('apiv1.root')
             self.assertEqual(url, '/api/')
             self.assertEqual(api.base_url, 'http://localhost/api/')
 
@@ -109,6 +109,36 @@ class APITestCase(TestCase):
         self.assertEqual(data['infos']['contact'], 'contact@somewhere.com')
         self.assertEqual(data['infos']['license'], 'Apache 2.0')
         self.assertEqual(data['infos']['licenseUrl'], 'http://www.apache.org/licenses/LICENSE-2.0.html')
+
+    def test_default_ns_resource_documentation_with_override(self):
+        api = restplus.Api(self.app, prefix='/api', version='1.0',
+            default='site', default_label='Site namespace')
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+        apis = data['apis']
+        self.assertEqual(len(apis), 1)
+        self.assertEqual(apis[0]['path'], 'http://localhost/api/site.json')
+        self.assertEqual(apis[0]['description'], 'Site namespace')
+
+        data = self.get_declaration('site')
+        self.assertEqual(data['apiVersion'], '1.0')
+        self.assertEqual(data['swaggerVersion'], '1.2')
+        self.assertEqual(data['basePath'], 'http://localhost/api')
+        self.assertEqual(data['resourcePath'], '/')
+        self.assertEqual(len(data['apis']), 1)
+
+        test_api = data['apis'][0]
+        self.assertEqual(test_api['path'], '/test/')
+        self.assertEqual(len(test_api['operations']), 1)
+
+        with self.context():
+            self.assertEqual(url_for('api.site-declaration'), '/api/site.json')
+            self.assertEqual(url_for('api.test'), '/api/test/')
 
     def test_default_ns_resource_documentation(self):
         api = restplus.Api(self.app, prefix='/api', version='1.0')
@@ -261,7 +291,7 @@ class APITestCase(TestCase):
             self.assertEqual(data['status'], 403)
             self.assertEqual(data['message'], 'A message')
 
-    def test_abort_code_only_with_lazy_init(self):
+    def test_abort_with_lazy_init(self):
         api = restplus.Api()
 
         @api.route('/test/', endpoint='test')
@@ -278,4 +308,40 @@ class APITestCase(TestCase):
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data['status'], 403)
+            self.assertIn('message', data)
+
+    def test_abort_on_exception(self):
+        api = restplus.Api(self.app)
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise ValueError()
+
+        with self.app.test_client() as client:
+            response = client.get('/test/')
+            self.assertEquals(response.status_code, 500)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertEqual(data['status'], 500)
+            self.assertIn('message', data)
+
+    def test_abort_on_exception_with_lazy_init(self):
+        api = restplus.Api()
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise ValueError()
+
+        api.init_app(self.app)
+
+        with self.app.test_client() as client:
+            response = client.get('/test/')
+            self.assertEquals(response.status_code, 500)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertEqual(data['status'], 500)
             self.assertIn('message', data)

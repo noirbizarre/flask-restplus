@@ -52,6 +52,9 @@ def extract_path_params(path):
 FIELDS = {
     fields.String: {'type': 'string'},
     fields.Integer: {'type': 'integer'},
+    fields.Boolean: {'type': 'boolean'},
+    fields.Float: {'type': 'number'},
+    fields.Arbitrary: {'type': 'number'},
     fields.DateTime: {'type': 'string', 'format': 'date-time'},
 }
 

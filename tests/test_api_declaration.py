@@ -475,3 +475,39 @@ class APITestCase(TestCase):
         ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
         self.assertEqual(ops['get']['type'], 'Person')
         self.assertEqual(ops['post']['type'], 'Person')
+
+    def test_model_doc_on_class(self):
+        fields = self.api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @self.api.route('/model-as-dict/')
+        @self.api.doc(model=fields)
+        class ModelAsDict(restplus.Resource):
+            def get(self):
+                return {}
+
+            def post(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Person', data['models'].keys())
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        self.assertEqual(ops['get']['type'], 'Person')
+        self.assertEqual(ops['post']['type'], 'Person')
+
+    def test_model_not_found(self):
+        @self.api.route('/model-not-found/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.doc(model='NotFound')
+            def get(self):
+                return {}
+
+        data = self.get_declaration(status=500)
+
+        self.assertEqual(data['status'], 500)

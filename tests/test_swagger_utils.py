@@ -92,6 +92,7 @@ class ExtractPathParamsTestCase(TestCase):
     #             'required': True
     #         }])
 
+
 class FieldToPropertyTestCase(unittest.TestCase):
     def test_unknown_field(self):
         prop = utils.field_to_property(None)
@@ -104,6 +105,18 @@ class FieldToPropertyTestCase(unittest.TestCase):
     def test_simple_integer_field(self):
         prop = utils.field_to_property(fields.Integer)
         self.assertEqual(prop, {'type': 'integer'})
+
+    def test_simple_boolean_field(self):
+        prop = utils.field_to_property(fields.Boolean)
+        self.assertEqual(prop, {'type': 'boolean'})
+
+    def test_simple_float_field(self):
+        prop = utils.field_to_property(fields.Float)
+        self.assertEqual(prop, {'type': 'number'})
+
+    def test_simple_arbitrary_field(self):
+        prop = utils.field_to_property(fields.Arbitrary)
+        self.assertEqual(prop, {'type': 'number'})
 
     def test_simple_datetime_field(self):
         prop = utils.field_to_property(fields.DateTime)
