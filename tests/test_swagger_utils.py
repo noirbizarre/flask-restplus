@@ -145,6 +145,17 @@ class ParserToParamsTestCase(unittest.TestCase):
             }
         })
 
+    def test_unknown_type(self):
+        parser = reqparse.RequestParser()
+        unknown = lambda v: v
+        parser.add_argument('unknown', type=unknown)
+        self.assertEqual(utils.parser_to_params(parser), {
+            'unknown':  {
+                'type': 'string',
+                'paramType': 'query',
+            }
+        })
+
     def test_required(self):
         parser = reqparse.RequestParser()
         parser.add_argument('int', type=int, required=True)

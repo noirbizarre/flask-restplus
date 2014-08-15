@@ -95,3 +95,5 @@ def _handle_arg_type(arg, param):
         param['type'] = 'integer'
     elif arg.type is str:
         param['type'] = 'string'
+    else:
+        param['type'] = 'string'
