@@ -121,14 +121,17 @@ class Api(restful.Api):
         def wrapper(cls):
             doc = kwargs.pop('doc', None)
             if doc:
-                unshortcut_params_description(doc)
-                for key in 'get', 'post', 'put', 'delete':
-                    if key in doc:
-                        unshortcut_params_description(doc[key])
-                cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
+                self._handle_api_doc(cls, doc)
             self.add_resource(cls, *urls, **kwargs)
             return cls
         return wrapper
+
+    def _handle_api_doc(self, cls, doc):
+        unshortcut_params_description(doc)
+        for key in 'get', 'post', 'put', 'delete':
+            if key in doc:
+                unshortcut_params_description(doc[key])
+        cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
 
     @property
     def specs_url(self):
@@ -141,8 +144,7 @@ class Api(restful.Api):
     def doc(self, **kwargs):
         '''Add some api documentation to the decorated object'''
         def wrapper(documented):
-            unshortcut_params_description(kwargs)
-            documented.__apidoc__ = merge(getattr(documented, '__apidoc__', {}), kwargs)
+            self._handle_api_doc(documented, kwargs)
             return documented
         return wrapper
 
