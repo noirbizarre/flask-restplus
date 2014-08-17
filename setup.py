@@ -56,6 +56,7 @@ setup(
     },
     license='GNU AGPLv3+',
     use_2to3=True,
+    zip_safe=False,
     keywords='',
     classifiers=[
         'Development Status :: 3 - Alpha',
