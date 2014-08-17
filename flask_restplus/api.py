@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from collections import MutableMapping
 
-from flask import url_for, Blueprint, render_template
+from flask import url_for, Blueprint, render_template, redirect
 from flask.ext import restful
 
 from .namespace import ApiNamespace
@@ -113,6 +113,13 @@ class Api(restful.Api):
             static_url_path='/swaggerui',
             url_prefix=prefix,
         )
+
+        @self.blueprint.route('/images/throbber.gif')
+        def fix_throbber():
+            return redirect(url_for('.static'.format(self.endpoint),
+                filename='bower/swagger-ui/dist/images/throbber.gif'
+            ))
+
         self.blueprint.record(self._deferred_blueprint_init)
 
         super(Api, self).__init__(self.blueprint, **kwargs)
