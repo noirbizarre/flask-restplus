@@ -23,6 +23,8 @@ class ApiSpecs(SwaggerBaseView):
             infos['licenseUrl'] = self.api.license_url
         if infos:
             response['infos'] = infos
+        if self.api.authorizations:
+            response['authorizations'] = self.api.authorizations
         for ns in self.api.namespaces:
             if len(ns.resources):
                 response['apis'].append(self.serialize_namespace(ns))

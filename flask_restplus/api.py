@@ -81,12 +81,15 @@ class Api(restful.Api):
         exception or error raised during a request
     :type errors: dict
 
+    :param authorizations: A Swagger Authorizations declaration as dictionary
+    :type authorizations: dict
+
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,
             terms_url=None, contact=None, license=None, license_url=None,
-            endpoint='api', prefix=None, default='default',
-            default_label='Default namespace', **kwargs):
+            endpoint='api', prefix=None, authorizations=None,
+            default='default', default_label='Default namespace', **kwargs):
         self.version = version
         self.title = title
         self.description = description
@@ -95,6 +98,7 @@ class Api(restful.Api):
         self.license = license
         self.license_url = license_url
         self.endpoint = endpoint
+        self.authorizations = authorizations
 
         self.models = {}
         self.namespaces = []

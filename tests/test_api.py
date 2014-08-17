@@ -110,6 +110,21 @@ class APITestCase(TestCase):
         self.assertEqual(data['infos']['license'], 'Apache 2.0')
         self.assertEqual(data['infos']['licenseUrl'], 'http://www.apache.org/licenses/LICENSE-2.0.html')
 
+    def test_specs_authorizations(self):
+        authorizations = {
+            'apikey': {
+                'type': 'apiKey',
+                'passAs': 'header',
+                'keyname': 'X-API'
+            }
+        }
+        restplus.Api(self.app, authorizations=authorizations)
+
+        data = self.get_specs('')
+
+        self.assertIn('authorizations', data)
+        self.assertEqual(data['authorizations'], authorizations)
+
     def test_default_ns_resource_documentation_with_override(self):
         api = restplus.Api(self.app, prefix='/api', version='1.0',
             default='site', default_label='Site namespace')

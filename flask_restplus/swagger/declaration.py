@@ -49,6 +49,7 @@ class ApiDeclaration(SwaggerBaseView):
                 'summary': self.extract_summary(resource, method) or None,
                 'notes': self.extract_notes(resource, method) or None,
                 'responseMessages': self.extract_responses(resource, method) or None,
+                'authorizations': self.extract_authorizations(resource, method),
             }
             self.extract_model(operation, resource, method)
             operations.append(dict((k, v) for k, v in operation.items() if v is not None))
@@ -224,3 +225,22 @@ class ApiDeclaration(SwaggerBaseView):
         if model not in self.api.models:
             raise ValueError('Model {0} not registered'.format(model))
         self._registered_models[model] = self.api.models[model]
+
+    def extract_authorizations(self, resource, method):
+        authorizations = None
+        if hasattr(resource, '__apidoc__') and 'authorizations' in resource.__apidoc__:
+            auth = resource.__apidoc__['authorizations']
+            if isinstance(auth, basestring):
+                authorizations = {auth: []}
+            elif auth is None:
+                authorizations = {}
+
+        method_impl = self.get_method(resource, method)
+        if hasattr(method_impl, '__apidoc__') and 'authorizations' in method_impl.__apidoc__:
+            auth = method_impl.__apidoc__['authorizations']
+            if isinstance(auth, basestring):
+                authorizations = {auth: []}
+            elif auth is None:
+                authorizations = {}
+
+        return authorizations

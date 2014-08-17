@@ -769,3 +769,58 @@ class APITestCase(TestCase):
         data = self.get_declaration(status=500)
 
         self.assertEqual(data['status'], 500)
+
+    def test_authorizations(self):
+        authorizations = {
+            'apikey': {
+                'type': 'apiKey',
+                'passAs': 'header',
+                'keyname': 'X-API'
+            }
+        }
+        self.api.authorizations = authorizations
+
+        @self.api.route('/authorizations/')
+        class ModelAsDict(restplus.Resource):
+            def get(self):
+                return {}
+
+            @self.api.doc(authorizations='apikey')
+            def post(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertNotIn('authorizations', data)
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        self.assertNotIn('authorizations', ops['get'])
+        self.assertEqual(ops['post']['authorizations'], {'apikey': []})
+
+    def test_authorizations_overwrite(self):
+        authorizations = {
+            'apikey': {
+                'type': 'apiKey',
+                'passAs': 'header',
+                'keyname': 'X-API'
+            }
+        }
+        self.api.authorizations = authorizations
+
+        @self.api.route('/authorizations/')
+        @self.api.doc(authorizations='apikey')
+        class ModelAsDict(restplus.Resource):
+            @self.api.doc(authorizations=None)
+            def get(self):
+                return {}
+
+            def post(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertNotIn('authorizations', data)
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        self.assertEqual(ops['get']['authorizations'], {})
+        self.assertEqual(ops['post']['authorizations'], {'apikey': []})
