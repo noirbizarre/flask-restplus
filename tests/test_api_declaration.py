@@ -561,6 +561,32 @@ class APITestCase(TestCase):
 
         self.assertEqual(by_method['post']['nickname'], 'post_test_resource')
 
+    def test_model_void(self):
+        @self.api.route('/model-void/')
+        class ModelVoid(restplus.Resource):
+            @self.api.doc(model=None)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertNotIn('models', data)
+
+        self.assertEqual(data['apis'][0]['operations'][0]['type'], 'void')
+
+    def test_model_primitive_types(self):
+        @self.api.route('/model-int/')
+        class ModelVoid(restplus.Resource):
+            @self.api.doc(model=int)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertNotIn('models', data)
+
+        self.assertEqual(data['apis'][0]['operations'][0]['type'], 'integer')
+
     def test_model_as_flat_dict(self):
         fields = self.api.model('Person', {
             'name': restplus.fields.String,
@@ -602,6 +628,52 @@ class APITestCase(TestCase):
         self.assertEqual(ops['get']['type'], 'Person')
         self.assertEqual(ops['post']['type'], 'Person')
 
+    def test_model_list_of_primitive_types(self):
+        @self.api.route('/model-list/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.doc(model=[int])
+            def get(self):
+                return {}
+
+            @self.api.doc(model=[str])
+            def post(self):
+                return {}
+
+        data = self.get_declaration()
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        self.assertEqual(ops['get']['type'], 'array')
+        self.assertEqual(ops['get']['items'], {'type': 'integer'})
+        self.assertEqual(ops['post']['type'], 'array')
+        self.assertEqual(ops['post']['items'], {'type': 'string'})
+
+    def test_model_list_as_flat_dict(self):
+        fields = self.api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @self.api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.doc(model=[fields])
+            def get(self):
+                return {}
+
+            @self.api.doc(model=['Person'])
+            def post(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Person', data['models'].keys())
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        for method in 'get', 'post':
+            self.assertEqual(ops[method]['type'], 'array')
+            self.assertEqual(ops[method]['items'], {'$ref': 'Person'})
+
     def test_model_doc_on_class(self):
         fields = self.api.model('Person', {
             'name': restplus.fields.String,
@@ -626,6 +698,31 @@ class APITestCase(TestCase):
         ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
         self.assertEqual(ops['get']['type'], 'Person')
         self.assertEqual(ops['post']['type'], 'Person')
+
+    def test_model_doc_for_method_on_class(self):
+        fields = self.api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @self.api.route('/model-as-dict/')
+        @self.api.doc(get={'model': fields})
+        class ModelAsDict(restplus.Resource):
+            def get(self):
+                return {}
+
+            def post(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Person', data['models'].keys())
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        self.assertEqual(ops['get']['type'], 'Person')
+        self.assertNotIn('type', ops['post'])
 
     def test_model_not_found(self):
         @self.api.route('/model-not-found/')

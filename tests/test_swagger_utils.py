@@ -167,6 +167,17 @@ class ParserToParamsTestCase(unittest.TestCase):
             }
         })
 
+    def test_default(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('int', type=int, default=5)
+        self.assertEqual(utils.parser_to_params(parser), {
+            'int': {
+                'type': 'integer',
+                'paramType': 'query',
+                'defaultValue': 5,
+            }
+        })
+
     def test_location(self):
         parser = reqparse.RequestParser()
         parser.add_argument('default', type=int)

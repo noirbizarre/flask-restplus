@@ -5,7 +5,7 @@ import re
 
 from flask import current_app
 
-from .. import fields
+from . import mappings
 
 RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
 RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
@@ -16,14 +16,6 @@ def extract_path(path):
     Transform a Flask/Werkzeug URL pattern in a Swagger one.
     '''
     return RE_URL.sub(r'{\1}', path)
-
-
-TYPES_MAPPING = {
-    'int': 'integer',
-    'float': 'number',
-    'string': 'string',
-    None: 'string',
-}
 
 
 def extract_path_params(path):
@@ -39,8 +31,8 @@ def extract_path_params(path):
             'required': True
         }
 
-        if descriptor in TYPES_MAPPING:
-            param['type'] = TYPES_MAPPING[descriptor]
+        if descriptor in mappings.PATH_TYPES:
+            param['type'] = mappings.PATH_TYPES[descriptor]
         elif descriptor in current_app.url_map.converters:
             param['type'] = 'string'
         else:
@@ -49,27 +41,11 @@ def extract_path_params(path):
     return params
 
 
-FIELDS = {
-    fields.String: {'type': 'string'},
-    fields.Integer: {'type': 'integer'},
-    fields.Boolean: {'type': 'boolean'},
-    fields.Float: {'type': 'number'},
-    fields.Arbitrary: {'type': 'number'},
-    fields.DateTime: {'type': 'string', 'format': 'date-time'},
-}
-
-LOCATIONS = {
-    'args': 'query',
-    'form': 'form',
-    'headers': 'header',
-}
-
-
 def field_to_property(field):
     '''Convert a restful.Field into a Swagger property declaration'''
-    if field not in FIELDS:
+    if field not in mappings.FIELDS:
         return {'type': 'string'}
-    return FIELDS[field]
+    return mappings.FIELDS[field]
 
 
 def parser_to_params(parser):
@@ -78,12 +54,14 @@ def parser_to_params(parser):
     for arg in parser.args:
         if arg.location == 'cookie':
             continue
-        param = {'paramType': LOCATIONS.get(arg.location, 'query')}
+        param = {'paramType': mappings.LOCATIONS.get(arg.location, 'query')}
         _handle_arg_type(arg, param)
         if arg.required:
             param['required'] = True
         if arg.help:
             param['description'] = arg.help
+        if arg.default:
+            param['defaultValue'] = arg.default
         if arg.action == 'append':
             param['allowMultiple'] = True
         params[arg.name] = param
@@ -91,9 +69,7 @@ def parser_to_params(parser):
 
 
 def _handle_arg_type(arg, param):
-    if arg.type is int:
-        param['type'] = 'integer'
-    elif arg.type is str:
-        param['type'] = 'string'
+    if arg.type in mappings.PY_TYPES:
+        param['type'] = mappings.PY_TYPES[arg.type]
     else:
         param['type'] = 'string'

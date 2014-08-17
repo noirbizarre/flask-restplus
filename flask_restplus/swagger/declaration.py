@@ -5,6 +5,7 @@ from six import string_types
 
 from ..utils import camel_to_dash
 
+from . import mappings
 from .base import SwaggerBaseView
 from .utils import extract_path, extract_path_params, field_to_property, parser_to_params
 
@@ -47,9 +48,9 @@ class ApiDeclaration(SwaggerBaseView):
                 'parameters': self.extract_parameters(resource, url, method),
                 'summary': self.extract_summary(resource, method) or None,
                 'notes': self.extract_notes(resource, method) or None,
-                'type': self.extract_model(resource, method) or None,
                 'responseMessages': self.extract_responses(resource, method) or None,
             }
+            self.extract_model(operation, resource, method)
             operations.append(dict((k, v) for k, v in operation.items() if v is not None))
         return operations
 
@@ -171,18 +172,55 @@ class ApiDeclaration(SwaggerBaseView):
     def serialize_field(self, field):
         return field_to_property(field)
 
-    def extract_model(self, resource, method):
+    def extract_model(self, operation, resource, method):
         method_impl = self.get_method(resource, method)
         if hasattr(method_impl, '__apidoc__') and 'model' in method_impl.__apidoc__:
             model = method_impl.__apidoc__['model']
+        elif (hasattr(resource, '__apidoc__') and method in resource.__apidoc__
+            and 'model' in resource.__apidoc__[method]):
+            model = resource.__apidoc__[method]['model']
         elif hasattr(resource, '__apidoc__') and 'model' in resource.__apidoc__:
             model = resource.__apidoc__['model']
         else:
             return
-        if isinstance(model, dict) and hasattr(model, '__apidoc__'):
-            model = model.__apidoc__['name']
 
+        if isinstance(model, (list, tuple)):
+            operation['type'] = 'array'
+            model = model[0]
+
+            if isinstance(model, dict) and hasattr(model, '__apidoc__'):
+                model = model.__apidoc__['name']
+                self.register_model(model)
+                operation['items'] = {'$ref': model}
+                return
+
+            elif isinstance(model, basestring):
+                self.register_model(model)
+                operation['items'] = {'$ref': model}
+                return
+
+            elif model in mappings.PY_TYPES:
+                operation['items'] = {'type': mappings.PY_TYPES[model]}
+                return
+
+        elif isinstance(model, dict) and hasattr(model, '__apidoc__'):
+            model = model.__apidoc__['name']
+            self.register_model(model)
+            operation['type'] = model
+            return
+
+        elif isinstance(model, basestring):
+            self.register_model(model)
+            operation['type'] = model
+            return
+
+        elif model in mappings.PY_TYPES:
+            operation['type'] = mappings.PY_TYPES[model]
+            return
+
+        raise ValueError('Model {0} not registered'.format(model))
+
+    def register_model(self, model):
         if model not in self.api.models:
             raise ValueError('Model {0} not registered'.format(model))
         self._registered_models[model] = self.api.models[model]
-        return model
