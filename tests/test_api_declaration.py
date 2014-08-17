@@ -628,6 +628,41 @@ class APITestCase(TestCase):
         self.assertEqual(ops['get']['type'], 'Person')
         self.assertEqual(ops['post']['type'], 'Person')
 
+    def test_model_as_dict_with_list(self):
+        fields = self.api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'tags': restplus.fields.List(restplus.fields.String),
+        })
+
+        @self.api.route('/model-with-list/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.doc(model=fields)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Person', data['models'].keys())
+        self.assertEqual(data['models']['Person'], {
+            'id': 'Person',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'tags': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'string'
+                    }
+                }
+            }
+        })
+
     def test_model_list_of_primitive_types(self):
         @self.api.route('/model-list/')
         class ModelAsDict(restplus.Resource):

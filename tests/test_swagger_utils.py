@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from flask.ext.restplus import fields, reqparse
+from flask.ext.restplus import fields, reqparse, Api
 from flask.ext.restplus.swagger import utils
 
 from . import TestCase
@@ -93,7 +93,7 @@ class ExtractPathParamsTestCase(TestCase):
     #         }])
 
 
-class FieldToPropertyTestCase(unittest.TestCase):
+class FieldToPropertyTestCase(TestCase):
     def test_unknown_field(self):
         prop = utils.field_to_property(None)
         self.assertEqual(prop, {'type': 'string'})
@@ -121,6 +121,38 @@ class FieldToPropertyTestCase(unittest.TestCase):
     def test_simple_datetime_field(self):
         prop = utils.field_to_property(fields.DateTime)
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time'})
+
+    def test_list_field(self):
+        prop = utils.field_to_property(fields.List(fields.String))
+        self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}})
+
+    def test_nested_field(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        prop = utils.field_to_property(fields.Nested(nested_fields))
+        self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True})
+
+    def test_nullable_nested_field(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        prop = utils.field_to_property(fields.Nested(nested_fields, allow_null=True))
+        self.assertEqual(prop, {'$ref': 'NestedModel'})
+
+    def test_nested_field_as_list(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        prop = utils.field_to_property(api.as_list(fields.Nested(nested_fields)))
+        self.assertEqual(prop, {'type': 'array', 'items': {'$ref': 'NestedModel'}})
+
+    def test_nested_field_as_list_is_reusable(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+
+        prop = utils.field_to_property(api.as_list(fields.Nested(nested_fields)))
+        self.assertEqual(prop, {'type': 'array', 'items': {'$ref': 'NestedModel'}})
+
+        prop = utils.field_to_property(fields.Nested(nested_fields))
+        self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True})
 
 
 class ParserToParamsTestCase(unittest.TestCase):

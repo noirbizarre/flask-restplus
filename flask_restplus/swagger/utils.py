@@ -6,6 +6,7 @@ import re
 from flask import current_app
 
 from . import mappings
+from .. import fields
 
 RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
 RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
@@ -43,9 +44,25 @@ def extract_path_params(path):
 
 def field_to_property(field):
     '''Convert a restful.Field into a Swagger property declaration'''
-    if field not in mappings.FIELDS:
-        return {'type': 'string'}
-    return mappings.FIELDS[field]
+    if isinstance(field, fields.List):
+        nested_field = field.container
+        prop = {'type': 'array', 'items': {}}
+        if nested_field in mappings.FIELDS:
+            prop['items'] = mappings.FIELDS[nested_field]
+        else:
+            prop['items']['type'] = 'string'
+        return prop
+    elif isinstance(field, fields.Nested):
+        nested_field = field.nested
+        prop = {'$ref': nested_field.__apidoc__['name']}
+        if getattr(field, '__apidoc__', {}).get('as_list'):
+            prop = {'type': 'array', 'items': prop}
+        elif not field.allow_null:
+            prop['required'] = True
+        return prop
+    elif field in mappings.FIELDS:
+        return mappings.FIELDS[field]
+    return {'type': 'string'}
 
 
 def parser_to_params(parser):

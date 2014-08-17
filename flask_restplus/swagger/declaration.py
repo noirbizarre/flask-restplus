@@ -214,7 +214,7 @@ class ApiDeclaration(SwaggerBaseView):
             operation['type'] = model
             return
 
-        elif model in mappings.PY_TYPES:
+        elif isinstance(model, (type, type(None))) and model in mappings.PY_TYPES:
             operation['type'] = mappings.PY_TYPES[model]
             return
 

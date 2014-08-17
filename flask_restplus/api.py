@@ -182,6 +182,11 @@ class Api(restful.Api):
         '''Instanciate a RequestParser'''
         return restful.reqparse.RequestParser()
 
+    def as_list(self, field):
+        '''Allow to specify nested lists for documentation'''
+        field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
+        return field
+
 
 class ApiModel(dict, MutableMapping):
     def __init__(self, *args, **kwargs):
