@@ -10,12 +10,10 @@ RE_REQUIREMENT = re.compile(r'^\s*-r\s*(?P<filename>.*)$')
 PYPI_RST_FILTERS = (
     # Replace code-blocks
     (r'\.\.\s? code-block::\s*(\w|\+)+',  '::'),
-    # Remove travis ci badge
-    (r'.*travis-ci\.org/.*', ''),
-    # Remove pypip.in badges
-    (r'.*pypip\.in/.*', ''),
-    (r'.*crate\.io/.*', ''),
-    (r'.*coveralls\.io/.*', ''),
+    # Remove all badges
+    (r'\.\. image:: .*', ''),
+    (r'    :target: .*', ''),
+    (r'    :alt: .*', ''),
 )
 
 
@@ -24,7 +22,7 @@ def rst(filename):
     Load rst file and sanitize it for PyPI.
     Remove unsupported github tags:
      - code-block directive
-     - travis ci build badge
+     - all badges
     '''
     content = open(filename).read()
     for regex, replacement in PYPI_RST_FILTERS:

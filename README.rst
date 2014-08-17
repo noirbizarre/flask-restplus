@@ -9,8 +9,8 @@ Flask RestPlus
     :target: https://coveralls.io/r/noirbizarre/flask-restplus
     :alt: Code coverage
 .. image:: https://requires.io/github/noirbizarre/flask-restplus/requirements.png?branch=master
-   :target: https://requires.io/github/noirbizarre/flask-restplus/requirements/?branch=master
-   :alt: Requirements Status
+    :target: https://requires.io/github/noirbizarre/flask-restplus/requirements/?branch=master
+    :alt: Requirements Status
 .. image:: https://readthedocs.org/projects/flask-restplus/badge/?version=latest
     :target: http://flask-restplus.readthedocs.org/en/latest/
     :alt: Documentation status
