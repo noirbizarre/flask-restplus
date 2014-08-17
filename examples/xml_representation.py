@@ -29,8 +29,9 @@ class Hello(Resource):
         >>> get('http://localhost:5000/me', headers={"accept":"application/xml"}).content
         '<?xml version="1.0" ?><response><hello>me</hello></response>'
     """
-    @api.doc(model=hello_fields)
+    @api.doc(model=hello_fields, params={'entry': 'The entry to wrap'})
     def get(self, entry):
+        '''Get a wrapped entry'''
         return {'hello': entry}
 
 

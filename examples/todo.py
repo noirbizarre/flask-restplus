@@ -1,5 +1,5 @@
 from flask import Flask
-from flask.ext.restplus import Api, Resource
+from flask.ext.restplus import Api, Resource, fields
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Todo API',
@@ -13,6 +13,10 @@ TODOS = {
     'todo2': {'task': '?????'},
     'todo3': {'task': 'profit!'},
 }
+
+todo_fields = api.model('Todo', {
+    'task': fields.String
+})
 
 
 def abort_if_todo_doesnt_exist(todo_id):
@@ -29,7 +33,7 @@ parser.add_argument('task', type=str, required=True, help='The task details')
 @api.doc(responses={404: 'Todo not found'}, params={'todo_id': 'The Todo ID'})
 class Todo(Resource):
     '''Single TODO resource'''
-    @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
+    @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())), model=todo_fields)
     def get(self, todo_id):
         '''Fetch a given resource'''
         abort_if_todo_doesnt_exist(todo_id)
@@ -41,7 +45,7 @@ class Todo(Resource):
         del TODOS[todo_id]
         return '', 204
 
-    @api.doc(parser=parser)
+    @api.doc(parser=parser, model=todo_fields)
     def put(self, todo_id):
         '''Update a given resource'''
         args = parser.parse_args()
@@ -55,11 +59,12 @@ class Todo(Resource):
 @ns.route('/')
 class TodoList(Resource):
     '''A Todolist Resource'''
+    @api.doc(model=[todo_fields])
     def get(self):
         '''List all todos'''
         return TODOS
 
-    @api.doc(parser=parser)
+    @api.doc(parser=parser, model=todo_fields)
     def post(self):
         '''Ceate a todo'''
         args = parser.parse_args()
