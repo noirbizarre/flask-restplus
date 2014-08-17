@@ -12,6 +12,77 @@ from .utils import merge
 
 
 class Api(restful.Api):
+    '''
+    The main entry point for the application.
+    You need to initialize it with a Flask Application: ::
+
+    >>> app = Flask(__name__)
+    >>> api = Api(app)
+
+    Alternatively, you can use :meth:`init_app` to set the Flask application
+    after it has been constructed.
+
+    The endpoint parameter prefix all views and resources:
+
+        - The API root/documentation will be ``{endpoint}.root``
+        - A resource registered as 'resource' will be available as ``{endpoint}.resource``
+
+    :param app: the Flask application object
+    :type app: flask.Flask
+
+    :param version: The API version (used in Swagger documentation)
+    :type version: str
+
+    :param title: The API title (used in Swagger documentation)
+    :type title: str
+
+    :param description: The API description (used in Swagger documentation)
+    :type description: str
+
+    :param terms_url: The API terms page URL (used in Swagger documentation)
+    :type terms_url: str
+
+    :param contact: A contact email for the API (used in Swagger documentation)
+    :type contact: str
+
+    :param license: The license associated to the API (used in Swagger documentation)
+    :type license: str
+
+    :param license_url: The license page URL (used in Swagger documentation)
+    :type license_url: str
+
+    :param endpoint: The API base endpoint (default to 'api).
+    :type endpoint: str
+
+    :param default: The default namespace base name (default to 'default')
+    :type default: str
+
+    :param default_label: The default namespace label (used in Swagger documentation)
+    :type default_label: str
+
+    :param prefix: Prefix all routes with a value, eg v1 or 2010-04-01
+    :type prefix: str
+
+    :param default_mediatype: The default media type to return
+    :type default_mediatype: str
+
+    :param decorators: Decorators to attach to every resource
+    :type decorators: list
+
+    :param catch_all_404s: Use :meth:`handle_error`
+        to handle 404 errors throughout your app
+    :param url_part_order: A string that controls the order that the pieces
+        of the url are concatenated when the full url is constructed.  'b'
+        is the blueprint (or blueprint registration) prefix, 'a' is the api
+        prefix, and 'e' is the path component the endpoint is added with
+    :type catch_all_404s: bool
+
+    :param errors: A dictionary to define a custom response for each
+        exception or error raised during a request
+    :type errors: dict
+
+    '''
+
     def __init__(self, app=None, version='1.0', title=None, description=None,
             terms_url=None, contact=None, license=None, license_url=None,
             endpoint='api', prefix=None, default='default',

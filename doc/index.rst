@@ -34,7 +34,13 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
+
+    quickstart
+    syntaxic_sugar
+    documentation
+    example
+    api
 
 
 

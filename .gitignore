@@ -50,7 +50,7 @@ coverage.xml
 *.pot
 
 # Sphinx documentation
-docs/_build/
+doc/_build/
 
 # Specifics
 flask_restplus/static/bower
