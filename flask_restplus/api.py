@@ -286,7 +286,9 @@ class Api(restful.Api):
         '''A shortcut decorator for ``marshal_with(as_list=True)``'''
         return self.marshal_with(fields, True)
 
-    marshal = restful.marshal
+    def marshal(self, data, fields):
+        '''A shortcut to the ``marshal`` helper'''
+        return restful.marshal(data, fields)
 
 
 class ApiModel(dict, MutableMapping):
