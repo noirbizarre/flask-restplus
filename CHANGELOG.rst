@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.1.3
+-----
 
 - Fix ``Api.marshal()`` shortcut
 
