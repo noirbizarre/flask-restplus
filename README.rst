@@ -127,7 +127,7 @@ With Flask-Restplus, you only import the api instance to route and document your
 Documentation
 =============
 
-The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs.org/en/0.1.2/>`_
+The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs.org/en/matest/>`_
 
 
 .. _Swagger: http://swagger.wordnik.com/
