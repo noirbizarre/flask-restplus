@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __description__ = 'Helpers, syntaxic sugar and Swagger documentation for Flask-Restful'
 
 try:
