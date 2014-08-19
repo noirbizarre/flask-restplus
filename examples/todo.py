@@ -27,13 +27,12 @@ parser = api.parser()
 parser.add_argument('task', type=str, required=True, help='The task details')
 
 
-# Todo
-#   show a single todo item and lets you delete them
 @ns.route('/<string:todo_id>')
 @api.doc(responses={404: 'Todo not found'}, params={'todo_id': 'The Todo ID'})
 class Todo(Resource):
-    '''Single TODO resource'''
-    @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())), model=todo_fields)
+    '''Show a single todo item and lets you delete them'''
+    @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
+    @api.marshal_with(todo_fields)
     def get(self, todo_id):
         '''Fetch a given resource'''
         abort_if_todo_doesnt_exist(todo_id)
@@ -45,7 +44,8 @@ class Todo(Resource):
         del TODOS[todo_id]
         return '', 204
 
-    @api.doc(parser=parser, model=todo_fields)
+    @api.doc(parser=parser)
+    @api.marshal_with(todo_fields)
     def put(self, todo_id):
         '''Update a given resource'''
         args = parser.parse_args()
@@ -54,17 +54,16 @@ class Todo(Resource):
         return task, 201
 
 
-# TodoList
-#   shows a list of all todos, and lets you POST to add new tasks
 @ns.route('/')
 class TodoList(Resource):
-    '''A Todolist Resource'''
-    @api.doc(model=[todo_fields])
+    '''Shows a list of all todos, and lets you POST to add new tasks'''
+    @api.marshal_with(todo_fields, as_list=True)
     def get(self):
         '''List all todos'''
         return TODOS
 
-    @api.doc(parser=parser, model=todo_fields)
+    @api.doc(parser=parser)
+    @api.marshal_with(todo_fields)
     def post(self):
         '''Ceate a todo'''
         args = parser.parse_args()

@@ -27,6 +27,50 @@ You can document a class or a method.
             api.abort(403)
 
 
+Documenting with the ``Api.marshal_with()`` decorator
+-----------------------------------------------------
+
+This decorator works like the Flask-Restful ``marshal_with`` decorator
+with the difference that it documents the methods.
+The optionnal parameter ``as_list`` allows you to specify wether or not the objects are returned as a list.
+
+.. code-block:: python
+
+    resource_fields = {
+        'name': fields.String,
+    }
+
+    @api.route('/my-resource/<id>', endpoint='my-resource')
+    class MyResource(Resource):
+        @api.marshal_with(resource_fields, as_list=True)
+        def get(self):
+            return get_objects()
+
+        @api.marshal_with(resource_fields)
+        def post(self):
+            return create_object()
+
+
+The ``Api.marshal_list_with()`` decorator is strictly equivalent to ``Api.marshal_with(fields, as_list=True)``.
+
+.. code-block:: python
+
+    resource_fields = {
+        'name': fields.String,
+    }
+
+    @api.route('/my-resource/<id>', endpoint='my-resource')
+    class MyResource(Resource):
+        @api.marshal_list_with(resource_fields)
+        def get(self):
+            return get_objects()
+
+        @api.marshal_with(resource_fields)
+        def post(self):
+            return create_object()
+
+
+
 Documenting with the ``Api.route()`` decorator
 ----------------------------------------------
 

@@ -74,3 +74,13 @@ You can use the ``Api.parser()`` shortcut to obtain a RequestParser instance.
 
     parser = api.parser()
     parser.add_argument('param', type=str, help='Some parameter')
+
+
+``marshal`` shortcut
+--------------------
+
+You can use the ``Api.marshal()`` shortcut to serialize your objects.
+
+.. code-block:: python
+
+    return api.marshal(todos, fields), 201

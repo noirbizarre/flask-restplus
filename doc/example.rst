@@ -13,6 +13,8 @@ Here a full example extracted from Flask-Restful and ported to Flask-RestPlus.
         description='A simple TODO API extracted from the original flask-restful example'
     )
 
+    ns = api.namespace('todos', description='TODO operations')
+
     TODOS = {
         'todo1': {'task': 'build an API'},
         'todo2': {'task': '?????'},
@@ -32,11 +34,12 @@ Here a full example extracted from Flask-Restful and ported to Flask-RestPlus.
     parser.add_argument('task', type=str, required=True, help='The task details')
 
 
-    @api.route('/<string:todo_id>')
+    @ns.route('/<string:todo_id>')
     @api.doc(responses={404: 'Todo not found'}, params={'todo_id': 'The Todo ID'})
     class Todo(Resource):
         '''Show a single todo item and lets you delete them'''
-        @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())), model=todo_fields)
+        @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
+        @api.marshal_with(todo_fields)
         def get(self, todo_id):
             '''Fetch a given resource'''
             abort_if_todo_doesnt_exist(todo_id)
@@ -48,7 +51,8 @@ Here a full example extracted from Flask-Restful and ported to Flask-RestPlus.
             del TODOS[todo_id]
             return '', 204
 
-        @api.doc(parser=parser, model=todo_fields)
+        @api.doc(parser=parser)
+        @api.marshal_with(todo_fields)
         def put(self, todo_id):
             '''Update a given resource'''
             args = parser.parse_args()
@@ -57,15 +61,16 @@ Here a full example extracted from Flask-Restful and ported to Flask-RestPlus.
             return task, 201
 
 
-    @api.route('/')
+    @ns.route('/')
     class TodoList(Resource):
         '''Shows a list of all todos, and lets you POST to add new tasks'''
-        @api.doc(model=[todo_fields])
+        @api.marshal_with(todo_fields, as_list=True)
         def get(self):
             '''List all todos'''
             return TODOS
 
-        @api.doc(parser=parser, model=todo_fields)
+        @api.doc(parser=parser)
+        @api.marshal_with(todo_fields)
         def post(self):
             '''Ceate a todo'''
             args = parser.parse_args()

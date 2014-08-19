@@ -269,6 +269,25 @@ class Api(restful.Api):
         field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
         return field
 
+    def marshal_with(self, fields, as_list=False):
+        '''
+        A decorator specifying the fields to use for serialization
+
+        :param as_list: Indicate that the return type is a list (for the documentation)
+        :type as_list: bool
+        '''
+        def wrapper(func):
+            doc = {'model': [fields]} if as_list else {'model': fields}
+            func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
+            return restful.marshal_with(fields)(func)
+        return wrapper
+
+    def marshal_list_with(self, fields):
+        '''A shortcut decorator for ``marshal_with(as_list=True)``'''
+        return self.marshal_with(fields, True)
+
+    marshal = restful.marshal
+
 
 class ApiModel(dict, MutableMapping):
     def __init__(self, *args, **kwargs):

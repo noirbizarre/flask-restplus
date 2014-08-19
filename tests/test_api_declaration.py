@@ -628,6 +628,65 @@ class APITestCase(TestCase):
         self.assertEqual(ops['get']['type'], 'Person')
         self.assertEqual(ops['post']['type'], 'Person')
 
+    def test_model_as_flat_dict_with_marchal_decorator(self):
+        fields = self.api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @self.api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.marshal_with(fields)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Person', data['models'].keys())
+        self.assertEqual(data['apis'][0]['operations'][0]['type'], 'Person')
+
+    def test_model_as_flat_dict_with_marchal_decorator_list(self):
+        fields = self.api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @self.api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.marshal_with(fields, as_list=True)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Person', data['models'].keys())
+        self.assertEqual(data['apis'][0]['operations'][0]['type'], 'array')
+        self.assertEqual(data['apis'][0]['operations'][0]['items'], {'$ref': 'Person'})
+
+    def test_model_as_flat_dict_with_marchal_decorator_list_alt(self):
+        fields = self.api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @self.api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.marshal_list_with(fields)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Person', data['models'].keys())
+        self.assertEqual(data['apis'][0]['operations'][0]['type'], 'array')
+        self.assertEqual(data['apis'][0]['operations'][0]['items'], {'$ref': 'Person'})
+
     def test_model_as_dict_with_list(self):
         fields = self.api.model('Person', {
             'name': restplus.fields.String,

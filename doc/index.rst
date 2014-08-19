@@ -38,7 +38,7 @@ Documentation
 
     quickstart
     syntaxic_sugar
-    documentation
+    documenting
     example
     api
 
