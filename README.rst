@@ -11,8 +11,8 @@ Flask RestPlus
 .. image:: https://requires.io/github/noirbizarre/flask-restplus/requirements.png?branch=master
     :target: https://requires.io/github/noirbizarre/flask-restplus/requirements/?branch=master
     :alt: Requirements Status
-.. image:: https://readthedocs.org/projects/flask-restplus/badge/?version=0.1.3
-    :target: http://flask-restplus.readthedocs.org/en/0.1.3/
+.. image:: https://readthedocs.org/projects/flask-restplus/badge/?version=latest
+    :target: http://flask-restplus.readthedocs.org/en/latest/
     :alt: Documentation status
 
 Flask-RestPlus provide syntaxic suger, helpers and automatically generated `Swagger`_ documentation on top of `Flask-Restful`_.
@@ -131,4 +131,4 @@ The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs
 
 
 .. _Swagger: http://swagger.wordnik.com/
-.. _Flask-Restful: http://flask-restful.readthedocs.org/en/0.1.3/
+.. _Flask-Restful: http://flask-restful.readthedocs.org/en/latest/
