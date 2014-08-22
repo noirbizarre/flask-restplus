@@ -889,6 +889,58 @@ class APITestCase(TestCase):
 
         self.assertEqual(data['status'], 500)
 
+    def test_model_as_class(self):
+        @self.api.model('MyClass', fields={
+            'name': restplus.fields.String,
+        })
+        class MyModelField(restplus.fields.Raw):
+            pass
+
+        fields = self.api.model('Fake', {
+            'name': restplus.fields.String,
+            'nested': restplus.fields.Nested(MyModelField),
+        })
+
+        @self.api.route('/model-as-class/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.doc(model=fields)
+            def get(self):
+                return {}
+
+            @self.api.doc(model='Fake')
+            def post(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Fake', data['models'].keys())
+        self.assertIn('MyClass', data['models'].keys())
+        self.assertEqual(data['models']['Fake'], {
+            'id': 'Fake',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'nested': {
+                    '$ref': 'MyClass',
+                    'required': True,
+                }
+            }
+        })
+        self.assertEqual(data['models']['MyClass'], {
+            'id': 'MyClass',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                }
+            }
+        })
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        self.assertEqual(ops['get']['type'], 'Fake')
+        self.assertEqual(ops['post']['type'], 'Fake')
+
     def test_authorizations(self):
         authorizations = {
             'apikey': {
