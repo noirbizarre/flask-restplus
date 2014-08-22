@@ -628,6 +628,66 @@ class APITestCase(TestCase):
         self.assertEqual(ops['get']['type'], 'Person')
         self.assertEqual(ops['post']['type'], 'Person')
 
+    def test_model_as_nested_dict(self):
+        address_fields = self.api.model('Address', {
+            'road': restplus.fields.String,
+        })
+
+        fields = self.api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+            'address': restplus.fields.Nested(address_fields)
+        })
+
+        @self.api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.doc(model=fields)
+            def get(self):
+                return {}
+
+            @self.api.doc(model='Person')
+            def post(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Person', data['models'].keys())
+        self.assertEqual(data['models']['Person'], {
+            'id': 'Person',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                },
+                'address': {
+                    '$ref': 'Address',
+                    'required': True,
+                }
+            }
+        })
+
+        self.assertIn('Address', data['models'].keys())
+        self.assertEqual(data['models']['Address'], {
+            'id': 'Address',
+            'properties': {
+                'road': {
+                    'type': 'string'
+                },
+            }
+        })
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        self.assertEqual(ops['get']['type'], 'Person')
+        self.assertEqual(ops['post']['type'], 'Person')
+
     def test_model_as_flat_dict_with_marchal_decorator(self):
         fields = self.api.model('Person', {
             'name': restplus.fields.String,

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from six import string_types
 
+from .. import fields
 from ..utils import camel_to_dash
 
 from . import mappings
@@ -224,7 +225,13 @@ class ApiDeclaration(SwaggerBaseView):
     def register_model(self, model):
         if model not in self.api.models:
             raise ValueError('Model {0} not registered'.format(model))
-        self._registered_models[model] = self.api.models[model]
+        specs = self.api.models[model]
+        self._registered_models[model] = specs
+        if isinstance(specs, dict):
+            for name, field in specs.items():
+                if isinstance(field, fields.Nested) and hasattr(field.nested, '__apidoc__'):
+                    self.register_model(field.nested.__apidoc__['name'])
+                    # self._registered_models[model]
 
     def extract_authorizations(self, resource, method):
         authorizations = None
