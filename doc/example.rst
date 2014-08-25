@@ -22,7 +22,7 @@ Here a full example extracted from Flask-Restful and ported to Flask-RestPlus.
     }
 
     todo_fields = api.model('Todo', {
-        'task': fields.String
+        'task': fields.String(required=True, description='The task details')
     })
 
 

@@ -63,7 +63,7 @@ With Flask-Restplus, you only import the api instance to route and document your
     }
 
     todo_fields = api.model('Todo', {
-        'task': fields.String
+        'task': fields.String(required=True, description='The task details')
     })
 
 

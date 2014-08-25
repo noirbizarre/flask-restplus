@@ -15,7 +15,7 @@ TODOS = {
 }
 
 todo_fields = api.model('Todo', {
-    'task': fields.String
+    'task': fields.String(required=True, description='The task details')
 })
 
 

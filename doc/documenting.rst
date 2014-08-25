@@ -27,6 +27,24 @@ You can document a class or a method.
             api.abort(403)
 
 
+Documenting with the ``Api.model()`` decorator
+----------------------------------------------
+
+The ``Api.model`` decorator allows you to declare the models that your API can serialize.
+
+You can use it either on a fields dictionnary or a ``field.Raw`` subclass:
+
+.. code-block:: python
+
+    my_fields = api.model('MyModel', {
+        'name': fields.String
+    })
+
+    @api.model('MyField')
+    class MySpecialField(fields.Raw):
+        pass
+
+
 Documenting with the ``Api.marshal_with()`` decorator
 -----------------------------------------------------
 
@@ -36,9 +54,9 @@ The optionnal parameter ``as_list`` allows you to specify wether or not the obje
 
 .. code-block:: python
 
-    resource_fields = {
+    resource_fields = api.model('Resource', {
         'name': fields.String,
-    }
+    })
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
     class MyResource(Resource):
@@ -55,9 +73,9 @@ The ``Api.marshal_list_with()`` decorator is strictly equivalent to ``Api.marsha
 
 .. code-block:: python
 
-    resource_fields = {
+    resource_fields = api.model('Resource', {
         'name': fields.String,
-    }
+    })
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
     class MyResource(Resource):
@@ -97,22 +115,28 @@ By example, these two declaration are equivalents:
             return {}
 
 
-Documenting with the ``Api.model()`` decorator
-----------------------------------------------
+Documenting the fields
+----------------------
 
-The ``Api.model`` decorator allows you to declare the models that your API can serialize.
+Every Flask-Restplus fields accepts additional but optional arguments used to document the field:
 
-You can use it either on a fields dictionnary or a ``field.Raw`` subclass:
+- ``required``: a boolean indicating if the field is always set (*default*: ``False``)
+- ``description``: some details about the field (*default*: ``None``)
+
+There is also field specific attributes.
+
+The ``String`` field accept an optional ``enum`` argument to restrict the authorized values.
+
+The ``Integer``, ``Float`` and ``Arbitrary`` fields accept
+both ``min`` and ``max`` arguments to restrict the possible values.
 
 .. code-block:: python
 
     my_fields = api.model('MyModel', {
-        'name': fields.String
+        'name': fields.String(description='The name', required=True),
+        'type': fields.String(description='The object type', enum=['A', 'B']),
+        'age': fields.Integer(min=0),
     })
-
-    @api.model('MyField')
-    class MySpecialField(fields.Raw):
-        pass
 
 
 Cascading
