@@ -4,7 +4,9 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Upgraded to SwaggerUI 0.2.22
+- Support additional field documentation attributes: ``required``, ``description``, ``enum``, ``min``, ``max``
+- Initial support for model in RequestParser
 
 0.1.3
 -----
