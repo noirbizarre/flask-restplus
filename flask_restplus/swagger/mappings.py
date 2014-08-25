@@ -22,6 +22,7 @@ FIELDS = {
     fields.Float: {'type': 'number'},
     fields.Arbitrary: {'type': 'number'},
     fields.DateTime: {'type': 'string', 'format': 'date-time'},
+    fields.Fixed: {'type': 'number'},
 }
 
 

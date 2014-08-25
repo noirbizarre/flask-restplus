@@ -170,6 +170,22 @@ class FieldToPropertyTestCase(TestCase):
         prop = utils.field_to_property(fields.Float(min=0, max=5))
         self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
 
+    def test_simple_fixed_field(self):
+        prop = utils.field_to_property(fields.Fixed)
+        self.assertEqual(prop, {'type': 'number'})
+
+    def test_fixed_field_with_description(self):
+        prop = utils.field_to_property(fields.Fixed(description='A description'))
+        self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
+
+    def test_fixed_field_with_required(self):
+        prop = utils.field_to_property(fields.Fixed(required=True))
+        self.assertEqual(prop, {'type': 'number', 'required': True})
+
+    def test_fixed_field_with_min_max(self):
+        prop = utils.field_to_property(fields.Fixed(min=0, max=5))
+        self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
+
     def test_simple_arbitrary_field(self):
         prop = utils.field_to_property(fields.Arbitrary)
         self.assertEqual(prop, {'type': 'number'})
@@ -235,6 +251,30 @@ class FieldToPropertyTestCase(TestCase):
 
         prop = utils.field_to_property(fields.Nested(nested_fields))
         self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True})
+
+    def test_simple_formatted_string_field(self):
+        prop = utils.field_to_property(fields.FormattedString('Hello {name}'))
+        self.assertEqual(prop, {'type': 'string'})
+
+    def test_formatted_string_field_with_description(self):
+        prop = utils.field_to_property(fields.FormattedString('Hello {name}', description='A description'))
+        self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
+
+    def test_formatted_string_field_with_required(self):
+        prop = utils.field_to_property(fields.FormattedString('Hello {name}', required=True))
+        self.assertEqual(prop, {'type': 'string', 'required': True})
+
+    def test_simple_url_field(self):
+        prop = utils.field_to_property(fields.Url('endpoint'))
+        self.assertEqual(prop, {'type': 'string'})
+
+    def test_url_field_with_description(self):
+        prop = utils.field_to_property(fields.Url('endpoint', description='A description'))
+        self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
+
+    def test_url_field_with_required(self):
+        prop = utils.field_to_property(fields.Url('endpoint', required=True))
+        self.assertEqual(prop, {'type': 'string', 'required': True})
 
     def test_custom_field(self):
         class Custom(fields.Raw):

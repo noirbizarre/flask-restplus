@@ -58,3 +58,15 @@ class Raw(DetailsMixin, base_fields.Raw):
 
 class Nested(DescriptionMixin, base_fields.Nested):
     pass
+
+
+class Url(DetailsMixin, base_fields.Url):
+    pass
+
+
+class Fixed(DetailsMixin, MinMaxMixin, base_fields.Fixed):
+    pass
+
+
+class FormattedString(DetailsMixin, base_fields.FormattedString):
+    pass
