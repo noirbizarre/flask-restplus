@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from collections import MutableMapping
-
 from flask import url_for, Blueprint, render_template, redirect
 from flask.ext import restful
 
+from .model import ApiModel
 from .namespace import ApiNamespace
 from .swagger import ApiSpecs, ApiDeclaration
 from .utils import merge
+from .reqparse import RequestParser
 
 
 class Api(restful.Api):
@@ -264,7 +264,7 @@ class Api(restful.Api):
 
     def parser(self):
         '''Instanciate a RequestParser'''
-        return restful.reqparse.RequestParser()
+        return RequestParser()
 
     def as_list(self, field):
         '''Allow to specify nested lists for documentation'''
@@ -291,12 +291,6 @@ class Api(restful.Api):
     def marshal(self, data, fields):
         '''A shortcut to the ``marshal`` helper'''
         return restful.marshal(data, fields)
-
-
-class ApiModel(dict, MutableMapping):
-    def __init__(self, *args, **kwargs):
-        self.__apidoc__ = {}
-        super(ApiModel, self).__init__(*args, **kwargs)
 
 
 def unshortcut_params_description(data):

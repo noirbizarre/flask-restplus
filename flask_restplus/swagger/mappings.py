@@ -31,6 +31,8 @@ LOCATIONS = {
     'args': 'query',
     'form': 'form',
     'headers': 'header',
+    'json': 'body',
+    'values': 'query',
 }
 
 

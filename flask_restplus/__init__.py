@@ -3,9 +3,9 @@ __version__ = '0.2.dev'
 __description__ = 'Helpers, syntaxic sugar and Swagger documentation for Flask-Restful'
 
 try:
-    from flask.ext.restful import marshal, marshal_with, abort, reqparse  # noqa
+    from flask.ext.restful import marshal, marshal_with, abort  # noqa
 
-    from . import fields
+    from . import fields, reqparse
     from .api import Api  # noqa
     from .resource import Resource  # noqa
 

@@ -65,7 +65,7 @@ class TodoList(Resource):
     @api.doc(parser=parser)
     @api.marshal_with(todo_fields)
     def post(self):
-        '''Ceate a todo'''
+        '''Create a todo'''
         args = parser.parse_args()
         todo_id = 'todo%d' % (len(TODOS) + 1)
         TODOS[todo_id] = {'task': args['task']}

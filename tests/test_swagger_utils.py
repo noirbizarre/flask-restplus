@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from flask import Flask
+
 from flask.ext.restplus import fields, reqparse, Api
 from flask.ext.restplus.swagger import utils
 
@@ -348,6 +350,8 @@ class ParserToParamsTestCase(unittest.TestCase):
         parser = reqparse.RequestParser()
         parser.add_argument('default', type=int)
         parser.add_argument('in_form', type=int, location='form')
+        parser.add_argument('in_json', type=str, location='json')
+        parser.add_argument('in_values', type=int, location='values')
         parser.add_argument('in_query', type=int, location='args')
         parser.add_argument('in_headers', type=int, location='headers')
         parser.add_argument('in_cookie', type=int, location='cookie')
@@ -360,6 +364,14 @@ class ParserToParamsTestCase(unittest.TestCase):
                 'type': 'integer',
                 'paramType': 'form',
             },
+            'in_json': {
+                'type': 'string',
+                'paramType': 'body',
+            },
+            'in_values': {
+                'type': 'integer',
+                'paramType': 'query',
+            },
             'in_query': {
                 'type': 'integer',
                 'paramType': 'query',
@@ -367,6 +379,21 @@ class ParserToParamsTestCase(unittest.TestCase):
             'in_headers': {
                 'type': 'integer',
                 'paramType': 'header',
+            },
+        })
+
+    def test_models(self):
+        app = Flask(__name__)
+        api = Api(app)
+        todo_fields = api.model('Todo', {
+            'task': fields.String(required=True, description='The task details')
+        })
+        parser = reqparse.RequestParser()
+        parser.add_argument('todo', type=todo_fields)
+        self.assertEqual(utils.parser_to_params(parser), {
+            'todo': {
+                'type': 'Todo',
+                'paramType': 'body',
             },
         })
 

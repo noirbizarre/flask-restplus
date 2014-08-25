@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import re
 
+from collections import Hashable
+
 from flask import current_app
 
 from . import mappings
@@ -96,12 +98,18 @@ def parser_to_params(parser):
             param['defaultValue'] = arg.default
         if arg.action == 'append':
             param['allowMultiple'] = True
+        # if param['paramType'] == 'body':
+        #     params['body'] = param
+        # else:
         params[arg.name] = param
     return params
 
 
 def _handle_arg_type(arg, param):
-    if arg.type in mappings.PY_TYPES:
+    if isinstance(arg.type, Hashable) and arg.type in mappings.PY_TYPES:
         param['type'] = mappings.PY_TYPES[arg.type]
+    elif hasattr(arg.type, '__apidoc__'):
+        param['type'] = arg.type.__apidoc__['name']
+        param['paramType'] = 'body'
     else:
         param['type'] = 'string'
