@@ -112,6 +112,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = utils.field_to_property(fields.Raw(required=True))
         self.assertEqual(prop, {'type': 'string', 'required': True})
 
+    def test_raw_field_with_default(self):
+        prop = utils.field_to_property(fields.Raw(default='aaa'))
+        self.assertEqual(prop, {'type': 'string', 'defaultValue': 'aaa'})
+
     def test_simple_string_field(self):
         prop = utils.field_to_property(fields.String)
         self.assertEqual(prop, {'type': 'string'})
@@ -127,6 +131,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_string_field_with_enum(self):
         prop = utils.field_to_property(fields.String(enum=['A', 'B', 'C']))
         self.assertEqual(prop, {'type': 'string', 'enum': ['A', 'B', 'C']})
+
+    def test_string_field_with_default(self):
+        prop = utils.field_to_property(fields.String(default='aaa'))
+        self.assertEqual(prop, {'type': 'string', 'defaultValue': 'aaa'})
 
     def test_simple_integer_field(self):
         prop = utils.field_to_property(fields.Integer)
@@ -144,6 +152,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = utils.field_to_property(fields.Integer(min=0, max=5))
         self.assertEqual(prop, {'type': 'integer', 'minimum': 0, 'maximum': 5})
 
+    def test_integer_field_with_default(self):
+        prop = utils.field_to_property(fields.Integer(default=42))
+        self.assertEqual(prop, {'type': 'integer', 'defaultValue': 42})
+
     def test_simple_boolean_field(self):
         prop = utils.field_to_property(fields.Boolean)
         self.assertEqual(prop, {'type': 'boolean'})
@@ -155,6 +167,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_boolean_field_with_required(self):
         prop = utils.field_to_property(fields.Boolean(required=True))
         self.assertEqual(prop, {'type': 'boolean', 'required': True})
+
+    def test_boolean_field_with_default(self):
+        prop = utils.field_to_property(fields.Boolean(default=True))
+        self.assertEqual(prop, {'type': 'boolean', 'defaultValue': True})
 
     def test_simple_float_field(self):
         prop = utils.field_to_property(fields.Float)
@@ -172,6 +188,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = utils.field_to_property(fields.Float(min=0, max=5))
         self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
 
+    def test_float_field_with_default(self):
+        prop = utils.field_to_property(fields.Float(default=0.5))
+        self.assertEqual(prop, {'type': 'number', 'defaultValue': 0.5})
+
     def test_simple_fixed_field(self):
         prop = utils.field_to_property(fields.Fixed)
         self.assertEqual(prop, {'type': 'number'})
@@ -187,6 +207,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_fixed_field_with_min_max(self):
         prop = utils.field_to_property(fields.Fixed(min=0, max=5))
         self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
+
+    def test_fixed_field_with_default(self):
+        prop = utils.field_to_property(fields.Fixed(default=0.5))
+        self.assertEqual(prop, {'type': 'number', 'defaultValue': 0.5})
 
     def test_simple_arbitrary_field(self):
         prop = utils.field_to_property(fields.Arbitrary)
@@ -204,6 +228,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = utils.field_to_property(fields.Arbitrary(min=0, max=5))
         self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
 
+    def test_arbitrary_field_with_default(self):
+        prop = utils.field_to_property(fields.Arbitrary(default=0.5))
+        self.assertEqual(prop, {'type': 'number', 'defaultValue': 0.5})
+
     def test_simple_datetime_field(self):
         prop = utils.field_to_property(fields.DateTime)
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time'})
@@ -215,6 +243,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_datetime_field_with_description(self):
         prop = utils.field_to_property(fields.DateTime(description='A description'))
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'description': 'A description'})
+
+    def test_datetime_field_with_default(self):
+        prop = utils.field_to_property(fields.DateTime(default='2014-08-25'))
+        self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'defaultValue': '2014-08-25'})
 
     def test_list_field(self):
         prop = utils.field_to_property(fields.List(fields.String))
