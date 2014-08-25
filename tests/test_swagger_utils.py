@@ -98,29 +98,105 @@ class FieldToPropertyTestCase(TestCase):
         prop = utils.field_to_property(None)
         self.assertEqual(prop, {'type': 'string'})
 
+    def test_simple_raw_field(self):
+        prop = utils.field_to_property(fields.Raw)
+        self.assertEqual(prop, {'type': 'string'})
+
+    def test_raw_field_with_description(self):
+        prop = utils.field_to_property(fields.Raw(description='A description'))
+        self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
+
+    def test_raw_field_with_required(self):
+        prop = utils.field_to_property(fields.Raw(required=True))
+        self.assertEqual(prop, {'type': 'string', 'required': True})
+
     def test_simple_string_field(self):
         prop = utils.field_to_property(fields.String)
         self.assertEqual(prop, {'type': 'string'})
+
+    def test_string_field_with_description(self):
+        prop = utils.field_to_property(fields.String(description='A description'))
+        self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
+
+    def test_string_field_with_required(self):
+        prop = utils.field_to_property(fields.String(required=True))
+        self.assertEqual(prop, {'type': 'string', 'required': True})
+
+    def test_string_field_with_enum(self):
+        prop = utils.field_to_property(fields.String(enum=['A', 'B', 'C']))
+        self.assertEqual(prop, {'type': 'string', 'enum': ['A', 'B', 'C']})
 
     def test_simple_integer_field(self):
         prop = utils.field_to_property(fields.Integer)
         self.assertEqual(prop, {'type': 'integer'})
 
+    def test_integer_field_with_description(self):
+        prop = utils.field_to_property(fields.Integer(description='A description'))
+        self.assertEqual(prop, {'type': 'integer', 'description': 'A description'})
+
+    def test_integer_field_with_required(self):
+        prop = utils.field_to_property(fields.Integer(required=True))
+        self.assertEqual(prop, {'type': 'integer', 'required': True})
+
+    def test_integer_field_with_min_max(self):
+        prop = utils.field_to_property(fields.Integer(min=0, max=5))
+        self.assertEqual(prop, {'type': 'integer', 'minimum': 0, 'maximum': 5})
+
     def test_simple_boolean_field(self):
         prop = utils.field_to_property(fields.Boolean)
         self.assertEqual(prop, {'type': 'boolean'})
+
+    def test_boolean_field_with_description(self):
+        prop = utils.field_to_property(fields.Boolean(description='A description'))
+        self.assertEqual(prop, {'type': 'boolean', 'description': 'A description'})
+
+    def test_boolean_field_with_required(self):
+        prop = utils.field_to_property(fields.Boolean(required=True))
+        self.assertEqual(prop, {'type': 'boolean', 'required': True})
 
     def test_simple_float_field(self):
         prop = utils.field_to_property(fields.Float)
         self.assertEqual(prop, {'type': 'number'})
 
+    def test_float_field_with_description(self):
+        prop = utils.field_to_property(fields.Float(description='A description'))
+        self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
+
+    def test_float_field_with_required(self):
+        prop = utils.field_to_property(fields.Float(required=True))
+        self.assertEqual(prop, {'type': 'number', 'required': True})
+
+    def test_float_field_with_min_max(self):
+        prop = utils.field_to_property(fields.Float(min=0, max=5))
+        self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
+
     def test_simple_arbitrary_field(self):
         prop = utils.field_to_property(fields.Arbitrary)
         self.assertEqual(prop, {'type': 'number'})
 
+    def test_arbitrary_field_with_description(self):
+        prop = utils.field_to_property(fields.Arbitrary(description='A description'))
+        self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
+
+    def test_arbitrary_field_with_required(self):
+        prop = utils.field_to_property(fields.Arbitrary(required=True))
+        self.assertEqual(prop, {'type': 'number', 'required': True})
+
+    def test_arbitrary_field_with_min_max(self):
+        prop = utils.field_to_property(fields.Arbitrary(min=0, max=5))
+        self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
+
     def test_simple_datetime_field(self):
         prop = utils.field_to_property(fields.DateTime)
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time'})
+
+    def test_datetime_field_with_required(self):
+        prop = utils.field_to_property(fields.DateTime(required=True))
+        self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'required': True})
+
+    def test_datetime_field_with_description(self):
+        prop = utils.field_to_property(fields.DateTime(description='A description'))
+        self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'description': 'A description'})
 
     def test_list_field(self):
         prop = utils.field_to_property(fields.List(fields.String))
@@ -131,6 +207,12 @@ class FieldToPropertyTestCase(TestCase):
         nested_fields = api.model('NestedModel', {'name': fields.String})
         prop = utils.field_to_property(fields.Nested(nested_fields))
         self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True})
+
+    def test_nested_field_with_description(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        prop = utils.field_to_property(fields.Nested(nested_fields, description='A description'))
+        self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True, 'description': 'A description'})
 
     def test_nullable_nested_field(self):
         api = Api(self.app)
@@ -153,6 +235,18 @@ class FieldToPropertyTestCase(TestCase):
 
         prop = utils.field_to_property(fields.Nested(nested_fields))
         self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True})
+
+    def test_custom_field(self):
+        class Custom(fields.Raw):
+            pass
+        prop = utils.field_to_property(Custom)
+        self.assertEqual(prop, {'type': 'string'})
+
+    def test_custom_field_with_description(self):
+        class Custom(fields.Raw):
+            pass
+        prop = utils.field_to_property(Custom(description='A description'))
+        self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
 
 
 class ParserToParamsTestCase(unittest.TestCase):

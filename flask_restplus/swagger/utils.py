@@ -59,10 +59,25 @@ def field_to_property(field):
             prop = {'type': 'array', 'items': prop}
         elif not field.allow_null:
             prop['required'] = True
-        return prop
     elif field in mappings.FIELDS:
-        return mappings.FIELDS[field]
-    return {'type': 'string'}
+        prop = mappings.FIELDS[field].copy()
+    elif field.__class__ in mappings.FIELDS:
+        prop = mappings.FIELDS[field.__class__].copy()
+    else:
+        prop = {'type': 'string'}
+
+    if getattr(field, 'description', None):
+        prop['description'] = field.description
+    if getattr(field, 'minimum', None) is not None:
+        prop['minimum'] = field.minimum
+    if getattr(field, 'maximum', None):
+        prop['maximum'] = field.maximum
+    if getattr(field, 'enum', None):
+        prop['enum'] = field.enum
+    if getattr(field, 'required', None):
+        prop['required'] = field.required
+
+    return prop
 
 
 def parser_to_params(parser):

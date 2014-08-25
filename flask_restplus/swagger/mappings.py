@@ -15,6 +15,7 @@ PATH_TYPES = {
 
 #: Maps Flask-Restful/plus fields types to Swagger ones
 FIELDS = {
+    fields.Raw: {'type': 'string'},
     fields.String: {'type': 'string'},
     fields.Integer: {'type': 'integer'},
     fields.Boolean: {'type': 'boolean'},
