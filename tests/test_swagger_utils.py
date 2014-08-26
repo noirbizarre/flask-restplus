@@ -322,6 +322,39 @@ class FieldToPropertyTestCase(TestCase):
         prop = utils.field_to_property(Custom(description='A description'))
         self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
 
+    def test_custom_field_with_type(self):
+        api = Api(self.app)
+
+        @api.model(type='string', format='date-time')
+        class ISODateTime(fields.Raw):
+            def format(self, value):
+                return value.isoformat()
+
+        prop = utils.field_to_property(ISODateTime(description='A description'))
+        self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'description': 'A description'})
+
+    def test_custom_field_with_nested_fields(self):
+        api = Api(self.app)
+
+        @api.model(fields={'name': fields.String, 'age': fields.Integer})
+        class Person(fields.Raw):
+            def format(self, value):
+                return {'name': value.name, 'age': value.age}
+
+        prop = utils.field_to_property(Person(description='A description'))
+        self.assertEqual(prop, {'$ref': 'Person', 'description': 'A description'})
+
+    def test_custom_field_with_name_and_nested_fields(self):
+        api = Api(self.app)
+
+        @api.model('Person', fields={'name': fields.String, 'age': fields.Integer})
+        class PersonField(fields.Raw):
+            def format(self, value):
+                return {'name': value.name, 'age': value.age}
+
+        prop = utils.field_to_property(PersonField(description='A description'))
+        self.assertEqual(prop, {'$ref': 'Person', 'description': 'A description'})
+
 
 class ParserToParamsTestCase(unittest.TestCase):
     def test_empty_parser(self):

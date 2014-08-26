@@ -242,7 +242,7 @@ class Api(restful.Api):
             kwargs['message'] = str(message)
         restful.abort(code, **kwargs)
 
-    def model(self, name, model=None, fields=None, **kwargs):
+    def model(self, name=None, model=None, **kwargs):
         '''
         Register a model
 
@@ -250,15 +250,16 @@ class Api(restful.Api):
         '''
         if isinstance(model, dict):
             model = ApiModel(model)
+            model.__apidoc__ = kwargs
             model.__apidoc__['name'] = name
             self.models[name] = model
             return model
         else:
             def wrapper(cls):
                 cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), kwargs)
-                cls.__apidoc__['name'] = name
-                if fields:
-                    self.models[name] = fields
+                cls.__apidoc__['name'] = name or cls.__name__
+                if 'fields' in kwargs:
+                    self.models[name or cls.__name__] = kwargs['fields']
                 return cls
             return wrapper
 

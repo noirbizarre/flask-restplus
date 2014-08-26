@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Allow to type custom fields with ``Api.model``
 
 0.2
 ---

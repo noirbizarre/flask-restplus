@@ -46,6 +46,8 @@ def extract_path_params(path):
 
 def field_to_property(field):
     '''Convert a restful.Field into a Swagger property declaration'''
+    prop = {'type': 'string'}
+
     if isinstance(field, fields.List):
         nested_field = field.container
         prop = {'type': 'array', 'items': {}}
@@ -54,6 +56,7 @@ def field_to_property(field):
         else:
             prop['items']['type'] = 'string'
         return prop
+
     elif isinstance(field, fields.Nested):
         nested_field = field.nested
         prop = {'$ref': nested_field.__apidoc__['name']}
@@ -61,12 +64,20 @@ def field_to_property(field):
             prop = {'type': 'array', 'items': prop}
         elif not field.allow_null:
             prop['required'] = True
+
     elif field in mappings.FIELDS:
         prop = mappings.FIELDS[field].copy()
+
     elif field.__class__ in mappings.FIELDS:
         prop = mappings.FIELDS[field.__class__].copy()
-    else:
-        prop = {'type': 'string'}
+
+    elif hasattr(field, '__apidoc__'):
+        if 'type' in field.__apidoc__:
+            prop = {'type': field.__apidoc__['type']}
+            if 'format' in field.__apidoc__:
+                prop['format'] = field.__apidoc__['format']
+        elif 'fields' in field.__apidoc__:
+            prop = {'$ref': field.__apidoc__.get('name', field.__class__.__name__)}
 
     if getattr(field, 'description', None):
         prop['description'] = field.description
