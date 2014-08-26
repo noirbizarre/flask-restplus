@@ -1,10 +1,10 @@
 Changelog
 =========
 
-Current
--------
+0.2.3
+-----
 
-- Nothing yet
+- Fix custom fields registeration
 
 0.2.2
 -----
