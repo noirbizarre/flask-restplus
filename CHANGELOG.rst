@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.2.2
+-----
 
 - Fix model list in declaration
 
