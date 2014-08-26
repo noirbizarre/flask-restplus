@@ -44,6 +44,16 @@ You can use it either on a fields dictionnary or a ``field.Raw`` subclass:
     class MySpecialField(fields.Raw):
         pass
 
+    @api.model(type='integer', format='int64')
+    class MyIntField(fields.Raw):
+        pass
+
+    @api.model(fields={'name': fields.String, 'age': fields.Integer})
+    class Person(fields.Raw):
+        def format(self, value):
+            return {'name': value.name, 'age': value.age}
+
+
 
 Documenting with the ``Api.marshal_with()`` decorator
 -----------------------------------------------------

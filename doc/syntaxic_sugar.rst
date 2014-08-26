@@ -37,16 +37,20 @@ You can optionnaly provide class-wide documentation:
         def get(self, id):
             return {}
 
+
 The namespace object provide the same feature:
 
 .. code-block:: python
 
-    ns = api.namespcae('ns', 'Some namespace')
+    ns = api.namespace('ns', 'Some namespace')
 
+    # Will ba available to /api/ns/my-resource/<id>
     @ns.route('/my-resource/<id>', endpoint='my-resource')
     class MyResource(Resource):
         def get(self, id):
             return {}
+
+All routes within a namespace are prefixed with the namespace name.
 
 
 ``abort`` shortcut
