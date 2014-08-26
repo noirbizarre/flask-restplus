@@ -355,6 +355,14 @@ class FieldToPropertyTestCase(TestCase):
         prop = utils.field_to_property(fields.List(fields.String))
         self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}})
 
+    def test_list_field_with_description(self):
+        prop = utils.field_to_property(fields.List(fields.String, description='A description'))
+        self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}, 'description': 'A description'})
+
+    def test_list_field_with_required(self):
+        prop = utils.field_to_property(fields.List(fields.String, required=True))
+        self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}, 'required': True})
+
     def test_list_field_with_custom_nested_field(self):
         api = Api(self.app)
 

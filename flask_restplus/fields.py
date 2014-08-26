@@ -4,9 +4,6 @@ from __future__ import unicode_literals
 from flask.ext.restful import fields as base_fields
 
 
-List = base_fields.List
-
-
 class DescriptionMixin(object):
     def __init__(self, *args, **kwargs):
         self.description = kwargs.pop('description', None)
@@ -57,6 +54,10 @@ class Raw(DetailsMixin, base_fields.Raw):
 
 
 class Nested(DescriptionMixin, base_fields.Nested):
+    pass
+
+
+class List(DetailsMixin, base_fields.List):
     pass
 
 

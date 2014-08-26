@@ -930,7 +930,6 @@ class APITestCase(TestCase):
             }
         })
 
-        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
         self.assertEqual(data['apis'][0]['operations'][0]['type'], 'Fake')
 
     def test_nested_model_as_class(self):
