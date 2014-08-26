@@ -1,10 +1,10 @@
 Changelog
 =========
 
-Current
--------
+0.2.4
+-----
 
-- Nothing yet
+- Handle ``description`` and ``required`` attributes on ``fields.List``
 
 0.2.3
 -----
