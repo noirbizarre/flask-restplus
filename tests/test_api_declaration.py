@@ -890,15 +890,13 @@ class APITestCase(TestCase):
         self.assertEqual(data['status'], 500)
 
     def test_model_as_class(self):
-        @self.api.model('MyClass', fields={
-            'name': restplus.fields.String,
-        })
-        class MyModelField(restplus.fields.Raw):
+        @self.api.model(fields={'name': restplus.fields.String})
+        class MyModel(restplus.fields.Raw):
             pass
 
         fields = self.api.model('Fake', {
             'name': restplus.fields.String,
-            'nested': restplus.fields.Nested(MyModelField),
+            'nested': restplus.fields.Nested(MyModel),
         })
 
         @self.api.route('/model-as-class/')
@@ -915,7 +913,7 @@ class APITestCase(TestCase):
 
         self.assertIn('models', data)
         self.assertIn('Fake', data['models'].keys())
-        self.assertIn('MyClass', data['models'].keys())
+        self.assertIn('MyModel', data['models'].keys())
         self.assertEqual(data['models']['Fake'], {
             'id': 'Fake',
             'properties': {
@@ -923,13 +921,13 @@ class APITestCase(TestCase):
                     'type': 'string'
                 },
                 'nested': {
-                    '$ref': 'MyClass',
+                    '$ref': 'MyModel',
                     'required': True,
                 }
             }
         })
-        self.assertEqual(data['models']['MyClass'], {
-            'id': 'MyClass',
+        self.assertEqual(data['models']['MyModel'], {
+            'id': 'MyModel',
             'properties': {
                 'name': {
                     'type': 'string'
@@ -940,6 +938,88 @@ class APITestCase(TestCase):
         ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
         self.assertEqual(ops['get']['type'], 'Fake')
         self.assertEqual(ops['post']['type'], 'Fake')
+
+    def test_model_list_as_class(self):
+        @self.api.model(fields={'name': restplus.fields.String})
+        class MyModel(restplus.fields.Raw):
+            pass
+
+        fields = self.api.model('Fake', {
+            'name': restplus.fields.String,
+            'list': restplus.fields.List(MyModel),
+        })
+
+        @self.api.route('/model-list-as-class/')
+        class ModelListAsClass(restplus.Resource):
+            @self.api.doc(model=fields)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Fake', data['models'].keys())
+        self.assertIn('MyModel', data['models'].keys())
+        self.assertEqual(data['models']['Fake'], {
+            'id': 'Fake',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'list': {
+                    'type': 'array',
+                    'items': {
+                        '$ref': 'MyModel',
+                    }
+                }
+            }
+        })
+        self.assertEqual(data['models']['MyModel'], {
+            'id': 'MyModel',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                }
+            }
+        })
+
+        self.assertEqual(data['apis'][0]['operations'][0]['type'], 'Fake')
+
+    def test_custom_field(self):
+        @self.api.model(type='integer', format='int64')
+        class MyModel(restplus.fields.Raw):
+            pass
+
+        fields = self.api.model('Fake', {
+            'name': restplus.fields.String,
+            'model': MyModel,
+        })
+
+        @self.api.route('/custom-field/')
+        class CustomFieldResource(restplus.Resource):
+            @self.api.doc(model=fields)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Fake', data['models'].keys())
+        self.assertNotIn('MyModel', data['models'].keys())
+        self.assertEqual(data['models']['Fake'], {
+            'id': 'Fake',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'model': {
+                    'type': 'integer',
+                    'format': 'int64',
+                }
+            }
+        })
+
+        self.assertEqual(data['apis'][0]['operations'][0]['type'], 'Fake')
 
     def test_authorizations(self):
         authorizations = {

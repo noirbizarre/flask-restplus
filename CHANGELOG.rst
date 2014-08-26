@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Fix model list in declaration
 
 0.2.1
 -----

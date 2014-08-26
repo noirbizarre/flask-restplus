@@ -231,6 +231,8 @@ class ApiDeclaration(SwaggerBaseView):
             for name, field in specs.items():
                 if isinstance(field, fields.Nested) and hasattr(field.nested, '__apidoc__'):
                     self.register_model(field.nested.__apidoc__['name'])
+                elif isinstance(field, fields.List) and hasattr(field.container, '__apidoc__'):
+                    self.register_model(field.container.__apidoc__['name'])
                     # self._registered_models[model]
 
     def extract_authorizations(self, resource, method):
