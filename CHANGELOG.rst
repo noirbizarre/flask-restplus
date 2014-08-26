@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.2.1
+-----
 
 - Allow to type custom fields with ``Api.model``
 - Handle custom fields into ``fieds.List``
