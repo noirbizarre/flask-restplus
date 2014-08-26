@@ -54,7 +54,7 @@ setup(
     extras_require={
         'test': tests_require,
     },
-    license='GNU AGPLv3+',
+    license='MIT',
     use_2to3=True,
     zip_safe=False,
     keywords='',
@@ -69,6 +69,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'Open Source License License :: OSI Approved :: MIT License License :: OSI Approved',
+        'License :: OSI Approved :: MIT License',
     ],
 )

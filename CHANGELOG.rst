@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.2
+---
 
 - Upgraded to SwaggerUI 0.2.22
 - Support additional field documentation attributes: ``required``, ``description``, ``enum``, ``min``, ``max`` and ``default``
