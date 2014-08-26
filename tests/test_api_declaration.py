@@ -896,6 +896,50 @@ class APITestCase(TestCase):
 
         fields = self.api.model('Fake', {
             'name': restplus.fields.String,
+            'model': MyModel,
+        })
+
+        @self.api.route('/model-as-class/')
+        class ModelAsDict(restplus.Resource):
+            @self.api.doc(model=fields)
+            def get(self):
+                return {}
+
+        data = self.get_declaration()
+
+        self.assertIn('models', data)
+        self.assertIn('Fake', data['models'].keys())
+        self.assertIn('MyModel', data['models'].keys())
+        self.assertEqual(data['models']['Fake'], {
+            'id': 'Fake',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'model': {
+                    '$ref': 'MyModel',
+                }
+            }
+        })
+        self.assertEqual(data['models']['MyModel'], {
+            'id': 'MyModel',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                }
+            }
+        })
+
+        ops = dict((o['method'].lower(), o) for o in data['apis'][0]['operations'])
+        self.assertEqual(data['apis'][0]['operations'][0]['type'], 'Fake')
+
+    def test_nested_model_as_class(self):
+        @self.api.model(fields={'name': restplus.fields.String})
+        class MyModel(restplus.fields.Raw):
+            pass
+
+        fields = self.api.model('Fake', {
+            'name': restplus.fields.String,
             'nested': restplus.fields.Nested(MyModel),
         })
 

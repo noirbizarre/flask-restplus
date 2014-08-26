@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import inspect
+
 from six import string_types
 
 from .. import fields
@@ -233,7 +235,10 @@ class ApiDeclaration(SwaggerBaseView):
                     self.register_model(field.nested.__apidoc__['name'])
                 elif isinstance(field, fields.List) and hasattr(field.container, '__apidoc__'):
                     self.register_model(field.container.__apidoc__['name'])
-                    # self._registered_models[model]
+                elif (isinstance(field, fields.Raw)
+                        or (inspect.isclass(field) and issubclass(field, fields.Raw))
+                        ) and hasattr(field, '__apidoc__') and not field.__apidoc__.get('type'):
+                    self.register_model(field.__apidoc__['name'])
 
     def extract_authorizations(self, resource, method):
         authorizations = None
