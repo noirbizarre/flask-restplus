@@ -1,4 +1,4 @@
-include README.rst CHANGELOG.rst MANIFEST.in
+include README.rst CHANGELOG.rst MANIFEST.in LICENSE
 recursive-include flask_restplus *
 
 prune flask_restplus/static/bower
