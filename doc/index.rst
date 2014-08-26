@@ -41,6 +41,7 @@ Documentation
     documenting
     example
     api
+    changelog
 
 
 
