@@ -30,15 +30,13 @@ class ReqParseTestCase(TestCase):
             'task': restplus.fields.String(required=True)
         })
 
-        case = self
         parser = self.parser
         parser.add_argument('todo', type=fields, required=True)
 
         @self.api.route('/reqparse', endpoint='reqparse')
         class TestApi(restplus.Resource):
             def post(self):
-                args = case.parser.parse_args()
-                case.assertEqual(args['todo'], {'task': 'aaa'})
+                args = parser.parse_args()
                 return args['todo']
 
         data = self.post('/reqparse', {'todo': {'task': 'aaa'}})
