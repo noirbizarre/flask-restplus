@@ -50,12 +50,7 @@ def field_to_property(field):
 
     if isinstance(field, fields.List):
         nested_field = field.container
-        prop = {'type': 'array', 'items': {}}
-        if nested_field in mappings.FIELDS:
-            prop['items'] = mappings.FIELDS[nested_field]
-        else:
-            prop['items']['type'] = 'string'
-        return prop
+        prop = {'type': 'array', 'items': field_to_property(nested_field)}
 
     elif isinstance(field, fields.Nested):
         nested_field = field.nested

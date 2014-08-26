@@ -5,6 +5,7 @@ Current
 -------
 
 - Allow to type custom fields with ``Api.model``
+- Handle custom fields into ``fieds.List``
 
 0.2
 ---
