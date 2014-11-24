@@ -21,7 +21,6 @@ class ReqParseTestCase(TestCase):
 
         with self.app.test_client() as client:
             response = client.post(url, data=json.dumps(data), headers=headers)
-            print response.data
             self.assertEquals(response.status_code, status)
             return json.loads(response.data.decode('utf8'))
 

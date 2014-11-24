@@ -6,7 +6,8 @@ from flask.ext import restful
 
 from .model import ApiModel
 from .namespace import ApiNamespace
-from .swagger import ApiSpecs, ApiDeclaration
+from .resource import Resource
+from .swagger import Swagger
 from .utils import merge
 from .reqparse import RequestParser
 
@@ -87,24 +88,28 @@ class Api(restful.Api):
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,
-            terms_url=None, contact=None, license=None, license_url=None,
-            endpoint='api', prefix=None, authorizations=None,
+            terms_url=None, license=None, license_url=None,
+            contact=None, contact_url=None, contact_email=None,
+            endpoint='api', prefix=None, authorizations=None, security=None,
             default='default', default_label='Default namespace', **kwargs):
         self.version = version
-        self.title = title
+        self.title = title or 'API'
         self.description = description
         self.terms_url = terms_url
         self.contact = contact
+        self.contact_email = contact_email
+        self.contact_url = contact_url
         self.license = license
         self.license_url = license_url
         self.endpoint = endpoint
         self.authorizations = authorizations
+        self.security = security
 
         self.models = {}
         self.namespaces = []
-        self.default_namespace = ApiNamespace(self, '', default_label,
+        self.default_namespace = ApiNamespace(self, default, default_label,
             endpoint='{0}-declaration'.format(default),
-            json_path='/{0}.json'.format(default)
+            path='/'
         )
 
         self.blueprint = Blueprint(self.endpoint, __name__,
@@ -124,12 +129,13 @@ class Api(restful.Api):
 
         super(Api, self).__init__(self.blueprint, **kwargs)
 
-        view_func = self.output(ApiSpecs.as_view(str('specs'), api=self))
-        url = self._complete_url('/specs.json', '')
+        view_func = self.output(SwaggerView.as_view(str('specs'), api=self))
+        url = self._complete_url('/swagger.json', '')
         self.blueprint.add_url_rule(url, view_func=view_func)
         self.blueprint.add_url_rule('/', 'root', self.render_ui)
         self.blueprint.add_app_template_global(self.swagger_static)
         self.add_namespace(self.default_namespace)
+        self.endpoints.add('.'.join((prefix, 'specs')) if prefix else 'specs')
 
         if app:
             app.register_blueprint(self.blueprint)
@@ -141,6 +147,8 @@ class Api(restful.Api):
         self.description = kwargs.get('description', self.description)
         self.terms_url = kwargs.get('terms_url', self.terms_url)
         self.contact = kwargs.get('contact', self.contact)
+        self.contact_url = kwargs.get('contact_url', self.contact_url)
+        self.contact_email = kwargs.get('contact_email', self.contact_email)
         self.license = kwargs.get('license', self.license)
         self.license_url = kwargs.get('license_url', self.license_url)
 
@@ -158,10 +166,10 @@ class Api(restful.Api):
 
     def _register_namespace(self, ns):
         '''Register a Swagger API declaration for a given API Namespace'''
-        endpoint = str(ns.endpoint)
-        view_func = self.output(ApiDeclaration.as_view(endpoint, api=self, namespace=ns))
-        url = self._complete_url(ns.json_path, '')
-        self.blueprint.add_url_rule(url, view_func=view_func)
+        # endpoint = str(ns.endpoint)
+        # view_func = self.output(ApiDeclaration.as_view(endpoint, api=self, namespace=ns))
+        # url = self._complete_url(ns.json_path, '')
+        # self.blueprint.add_url_rule(url, view_func=view_func)
 
     def _register_view(self, app, resource, *urls, **kwargs):
         super(Api, self)._register_view(app, resource, *urls, **kwargs)
@@ -184,15 +192,15 @@ class Api(restful.Api):
 
     def add_namespace(self, ns):
         if ns not in self.namespaces:
-            view_func = self.output(ApiDeclaration.as_view(ns.endpoint, api=self, namespace=ns))
-            url = self._complete_url(ns.json_path, '')
+            # view_func = self.output(ApiDeclaration.as_view(ns.endpoint, api=self, namespace=ns))
+            # url = self._complete_url(ns.json_path, '')
             self.namespaces.append(ns)
             self.endpoints.add(ns.endpoint)
-            if self.blueprint_setup:
-                # Set the rule to a string directly, as the blueprint is already set up.
-                self.blueprint_setup.add_url_rule(url, view_func=view_func)
-            else:
-                self.blueprint.add_url_rule(url, view_func=view_func)
+            # if self.blueprint_setup:
+            #     # Set the rule to a string directly, as the blueprint is already set up.
+            #     self.blueprint_setup.add_url_rule(url, view_func=view_func)
+            # else:
+            #     self.blueprint.add_url_rule(url, view_func=view_func)
 
     def namespace(self, *args, **kwargs):
         ns = ApiNamespace(self, *args, **kwargs)
@@ -210,7 +218,7 @@ class Api(restful.Api):
 
     def _handle_api_doc(self, cls, doc):
         unshortcut_params_description(doc)
-        for key in 'get', 'post', 'put', 'delete':
+        for key in 'get', 'post', 'put', 'delete', 'options', 'head', 'patch':
             if key in doc:
                 unshortcut_params_description(doc[key])
         cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
@@ -222,6 +230,10 @@ class Api(restful.Api):
     @property
     def base_url(self):
         return url_for('{0}.root'.format(self.endpoint), _external=True)
+
+    @property
+    def base_path(self):
+        return url_for('{0}.root'.format(self.endpoint))
 
     def doc(self, **kwargs):
         '''Add some api documentation to the decorated object'''
@@ -258,8 +270,7 @@ class Api(restful.Api):
             def wrapper(cls):
                 cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), kwargs)
                 cls.__apidoc__['name'] = name or cls.__name__
-                if 'fields' in kwargs:
-                    self.models[name or cls.__name__] = kwargs['fields']
+                self.models[name or cls.__name__] = kwargs.get('fields', cls)
                 return cls
             return wrapper
 
@@ -272,21 +283,25 @@ class Api(restful.Api):
         field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
         return field
 
-    def marshal_with(self, fields, as_list=False):
+    def marshal_with(self, fields, as_list=False, code=200, **kwargs):
         '''
-        A decorator specifying the fields to use for serialization
+        A decorator specifying the fields to use for serialization.
 
         :param as_list: Indicate that the return type is a list (for the documentation)
         :type as_list: bool
+        :param code: Optionnaly give the expected HTTP response code if its different from 200
+        :type code: integer
         '''
         def wrapper(func):
             doc = {'model': [fields]} if as_list else {'model': fields}
+            doc['default_code'] = code
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            return restful.marshal_with(fields)(func)
+            # if as_list and not isinstance(fields isinstance restful.fields
+            return restful.marshal_with(fields, **kwargs)(func)
         return wrapper
 
-    def marshal_list_with(self, fields):
-        '''A shortcut decorator for ``marshal_with(as_list=True)``'''
+    def marshal_list_with(self, fields, code=200):
+        '''A shortcut decorator for ``marshal_with(as_list=True, code=code)``'''
         return self.marshal_with(fields, True)
 
     def marshal(self, data, fields):
@@ -299,3 +314,14 @@ def unshortcut_params_description(data):
         for name, description in data['params'].items():
             if isinstance(description, basestring):
                 data['params'][name] = {'description': description}
+
+
+class SwaggerView(Resource):
+    def __init__(self, api=None):
+        self.api = api
+
+    def get(self):
+        return Swagger(self.api).as_dict()
+
+    def mediatypes(self):
+        return ['application/json']

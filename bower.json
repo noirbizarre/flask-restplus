@@ -21,6 +21,6 @@
     "tests"
   ],
   "dependencies": {
-    "swagger-ui": "~2.0.22"
+    "swagger-ui": "https://github.com/swagger-api/swagger-ui.git#v2.1.0-alpha.6"
   }
 }

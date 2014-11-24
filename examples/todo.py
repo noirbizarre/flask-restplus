@@ -1,9 +1,10 @@
-from flask import Flask
+from flask import Flask, redirect
 from flask.ext.restplus import Api, Resource, fields
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Todo API',
-    description='A simple TODO API extracted from the original flask-restful example'
+    description='A simple TODO API extracted from the original flask-restful example',
+    prefix='/api'
 )
 
 ns = api.namespace('todos', description='TODO operations')
@@ -31,13 +32,14 @@ parser.add_argument('task', type=str, required=True, help='The task details')
 @api.doc(responses={404: 'Todo not found'}, params={'todo_id': 'The Todo ID'})
 class Todo(Resource):
     '''Show a single todo item and lets you delete them'''
-    @api.doc(notes='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
+    @api.doc(description='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
     @api.marshal_with(todo_fields)
     def get(self, todo_id):
         '''Fetch a given resource'''
         abort_if_todo_doesnt_exist(todo_id)
         return TODOS[todo_id]
 
+    @api.doc(responses={204: 'Todo deleted'})
     def delete(self, todo_id):
         '''Delete a given resource'''
         abort_if_todo_doesnt_exist(todo_id)
@@ -51,7 +53,7 @@ class Todo(Resource):
         args = parser.parse_args()
         task = {'task': args['task']}
         TODOS[todo_id] = task
-        return task, 201
+        return task
 
 
 @ns.route('/')
@@ -63,13 +65,23 @@ class TodoList(Resource):
         return TODOS
 
     @api.doc(parser=parser)
-    @api.marshal_with(todo_fields)
+    @api.marshal_with(todo_fields, code=201)
     def post(self):
         '''Create a todo'''
         args = parser.parse_args()
         todo_id = 'todo%d' % (len(TODOS) + 1)
         TODOS[todo_id] = {'task': args['task']}
         return TODOS[todo_id], 201
+
+
+@app.route('/')
+def redirect_to_api():
+    '''
+    Redirect on API until root API is supported by SwaggerJS/UI.
+
+    See: https://github.com/swagger-api/swagger-js/issues/116
+    '''
+    return redirect(api.base_path)
 
 
 if __name__ == '__main__':

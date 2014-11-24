@@ -3,15 +3,14 @@ from __future__ import unicode_literals
 
 
 class ApiNamespace(object):
-    def __init__(self, api, name, description=None, endpoint=None, json_path=None, **kwargs):
+    def __init__(self, api, name, description=None, endpoint=None, path=None, **kwargs):
         self.api = api
         self.name = name
-        self.path = '/' + name
+        self.path = path or ('/' + name)
         self.description = description
         self.resources = []
         self.models = []
         self.endpoint = str(endpoint or 'ns-{0}'.format(self.name.lower().replace(' ', '-')))
-        self.json_path = json_path or '{0}.json'.format(self.path)
 
     @property
     def full_endpoint(self):

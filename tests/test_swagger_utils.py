@@ -6,7 +6,7 @@ import unittest
 from flask import Flask
 
 from flask.ext.restplus import fields, reqparse, Api
-from flask.ext.restplus.swagger import utils
+from flask.ext.restplus.swagger import extract_path, extract_path_params, field_to_property, parser_to_params
 
 from . import TestCase
 
@@ -14,66 +14,75 @@ from . import TestCase
 class ExtractPathTestCase(unittest.TestCase):
     def test_extract_static_path(self):
         path = '/test'
-        self.assertEqual(utils.extract_path(path), '/test')
+        self.assertEqual(extract_path(path), '/test')
 
     def test_extract_path_with_a_single_simple_parameter(self):
         path = '/test/<parameter>'
-        self.assertEqual(utils.extract_path(path), '/test/{parameter}')
+        self.assertEqual(extract_path(path), '/test/{parameter}')
 
     def test_extract_path_with_a_single_typed_parameter(self):
         path = '/test/<string:parameter>'
-        self.assertEqual(utils.extract_path(path), '/test/{parameter}')
+        self.assertEqual(extract_path(path), '/test/{parameter}')
 
     def test_extract_path_with_multiple_parameters(self):
         path = '/test/<parameter>/<string:other>/'
-        self.assertEqual(utils.extract_path(path), '/test/{parameter}/{other}/')
+        self.assertEqual(extract_path(path), '/test/{parameter}/{other}/')
 
 
 class ExtractPathParamsTestCase(TestCase):
     def test_extract_static_path(self):
         path = '/test'
-        self.assertEqual(utils.extract_path_params(path), [])
+        self.assertEqual(extract_path_params(path), {})
 
     def test_extract_single_simple_parameter(self):
         path = '/test/<parameter>'
-        self.assertEqual(utils.extract_path_params(path), [{
-            'name': 'parameter',
-            'type': 'string',
-            'paramType': 'path',
-            'required': True
-        }])
+        self.assertEqual(extract_path_params(path), {
+            'parameter': {
+                'name': 'parameter',
+                'type': 'string',
+                'in': 'path',
+                'required': True
+            }
+        })
 
     def test_single_int_parameter(self):
         path = '/test/<int:parameter>'
-        self.assertEqual(utils.extract_path_params(path), [{
-            'name': 'parameter',
-            'type': 'integer',
-            'paramType': 'path',
-            'required': True
-        }])
+        self.assertEqual(extract_path_params(path), {
+            'parameter': {
+                'name': 'parameter',
+                'type': 'integer',
+                'in': 'path',
+                'required': True
+            }
+        })
 
     def test_single_float_parameter(self):
         path = '/test/<float:parameter>'
-        self.assertEqual(utils.extract_path_params(path), [{
-            'name': 'parameter',
-            'type': 'number',
-            'paramType': 'path',
-            'required': True
-        }])
+        self.assertEqual(extract_path_params(path), {
+            'parameter': {
+                'name': 'parameter',
+                'type': 'number',
+                'in': 'path',
+                'required': True
+            }
+        })
 
     def test_extract_path_with_multiple_parameters(self):
         path = '/test/<parameter>/<int:other>/'
-        self.assertEqual(utils.extract_path_params(path), [{
-            'name': 'parameter',
-            'type': 'string',
-            'paramType': 'path',
-            'required': True
-        }, {
-            'name': 'other',
-            'type': 'integer',
-            'paramType': 'path',
-            'required': True
-        }])
+        self.assertEqual(extract_path_params(path), {
+            'parameter': {
+                'name': 'parameter',
+                'type': 'string',
+                'in': 'path',
+                'required': True
+            },
+            'other': {
+                'name': 'other',
+                'type': 'integer',
+                'in': 'path',
+                'required': True
+            }
+        })
 
     # def test_extract_registered_converters(self):
     #     class ListConverter(BaseConverter):
@@ -87,202 +96,202 @@ class ExtractPathParamsTestCase(TestCase):
 
     #     path = '/test/<list:parameters>'
     #     with self.context():
-    #         self.assertEqual(utils.extract_path_params(path), [{
+    #         self.assertEqual(extract_path_params(path), [{
     #             'name': 'parameters',
     #             'type': 'number',
-    #             'paramType': 'path',
+    #             'in': 'path',
     #             'required': True
     #         }])
 
 
 class FieldToPropertyTestCase(TestCase):
     def test_unknown_field(self):
-        prop = utils.field_to_property(None)
+        prop = field_to_property(None)
         self.assertEqual(prop, {'type': 'string'})
 
     def test_simple_raw_field(self):
-        prop = utils.field_to_property(fields.Raw)
-        self.assertEqual(prop, {'type': 'string'})
+        prop = field_to_property(fields.Raw)
+        self.assertEqual(prop, {'type': 'object'})
 
     def test_raw_field_with_description(self):
-        prop = utils.field_to_property(fields.Raw(description='A description'))
-        self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
+        prop = field_to_property(fields.Raw(description='A description'))
+        self.assertEqual(prop, {'type': 'object', 'description': 'A description'})
 
     def test_raw_field_with_required(self):
-        prop = utils.field_to_property(fields.Raw(required=True))
-        self.assertEqual(prop, {'type': 'string', 'required': True})
+        prop = field_to_property(fields.Raw(required=True))
+        self.assertEqual(prop, {'type': 'object', 'required': True})
 
     def test_raw_field_with_default(self):
-        prop = utils.field_to_property(fields.Raw(default='aaa'))
-        self.assertEqual(prop, {'type': 'string', 'defaultValue': 'aaa'})
+        prop = field_to_property(fields.Raw(default='aaa'))
+        self.assertEqual(prop, {'type': 'object', 'default': 'aaa'})
 
     def test_simple_string_field(self):
-        prop = utils.field_to_property(fields.String)
+        prop = field_to_property(fields.String)
         self.assertEqual(prop, {'type': 'string'})
 
     def test_string_field_with_description(self):
-        prop = utils.field_to_property(fields.String(description='A description'))
+        prop = field_to_property(fields.String(description='A description'))
         self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
 
     def test_string_field_with_required(self):
-        prop = utils.field_to_property(fields.String(required=True))
+        prop = field_to_property(fields.String(required=True))
         self.assertEqual(prop, {'type': 'string', 'required': True})
 
     def test_string_field_with_enum(self):
-        prop = utils.field_to_property(fields.String(enum=['A', 'B', 'C']))
+        prop = field_to_property(fields.String(enum=['A', 'B', 'C']))
         self.assertEqual(prop, {'type': 'string', 'enum': ['A', 'B', 'C']})
 
     def test_string_field_with_default(self):
-        prop = utils.field_to_property(fields.String(default='aaa'))
-        self.assertEqual(prop, {'type': 'string', 'defaultValue': 'aaa'})
+        prop = field_to_property(fields.String(default='aaa'))
+        self.assertEqual(prop, {'type': 'string', 'default': 'aaa'})
 
     def test_simple_integer_field(self):
-        prop = utils.field_to_property(fields.Integer)
+        prop = field_to_property(fields.Integer)
         self.assertEqual(prop, {'type': 'integer'})
 
     def test_integer_field_with_description(self):
-        prop = utils.field_to_property(fields.Integer(description='A description'))
+        prop = field_to_property(fields.Integer(description='A description'))
         self.assertEqual(prop, {'type': 'integer', 'description': 'A description'})
 
     def test_integer_field_with_required(self):
-        prop = utils.field_to_property(fields.Integer(required=True))
+        prop = field_to_property(fields.Integer(required=True))
         self.assertEqual(prop, {'type': 'integer', 'required': True})
 
     def test_integer_field_with_min_max(self):
-        prop = utils.field_to_property(fields.Integer(min=0, max=5))
+        prop = field_to_property(fields.Integer(min=0, max=5))
         self.assertEqual(prop, {'type': 'integer', 'minimum': 0, 'maximum': 5})
 
     def test_integer_field_with_default(self):
-        prop = utils.field_to_property(fields.Integer(default=42))
-        self.assertEqual(prop, {'type': 'integer', 'defaultValue': 42})
+        prop = field_to_property(fields.Integer(default=42))
+        self.assertEqual(prop, {'type': 'integer', 'default': 42})
 
     def test_simple_boolean_field(self):
-        prop = utils.field_to_property(fields.Boolean)
+        prop = field_to_property(fields.Boolean)
         self.assertEqual(prop, {'type': 'boolean'})
 
     def test_boolean_field_with_description(self):
-        prop = utils.field_to_property(fields.Boolean(description='A description'))
+        prop = field_to_property(fields.Boolean(description='A description'))
         self.assertEqual(prop, {'type': 'boolean', 'description': 'A description'})
 
     def test_boolean_field_with_required(self):
-        prop = utils.field_to_property(fields.Boolean(required=True))
+        prop = field_to_property(fields.Boolean(required=True))
         self.assertEqual(prop, {'type': 'boolean', 'required': True})
 
     def test_boolean_field_with_default(self):
-        prop = utils.field_to_property(fields.Boolean(default=True))
-        self.assertEqual(prop, {'type': 'boolean', 'defaultValue': True})
+        prop = field_to_property(fields.Boolean(default=True))
+        self.assertEqual(prop, {'type': 'boolean', 'default': True})
 
     def test_simple_float_field(self):
-        prop = utils.field_to_property(fields.Float)
+        prop = field_to_property(fields.Float)
         self.assertEqual(prop, {'type': 'number'})
 
     def test_float_field_with_description(self):
-        prop = utils.field_to_property(fields.Float(description='A description'))
+        prop = field_to_property(fields.Float(description='A description'))
         self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
 
     def test_float_field_with_required(self):
-        prop = utils.field_to_property(fields.Float(required=True))
+        prop = field_to_property(fields.Float(required=True))
         self.assertEqual(prop, {'type': 'number', 'required': True})
 
     def test_float_field_with_min_max(self):
-        prop = utils.field_to_property(fields.Float(min=0, max=5))
+        prop = field_to_property(fields.Float(min=0, max=5))
         self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
 
     def test_float_field_with_default(self):
-        prop = utils.field_to_property(fields.Float(default=0.5))
-        self.assertEqual(prop, {'type': 'number', 'defaultValue': 0.5})
+        prop = field_to_property(fields.Float(default=0.5))
+        self.assertEqual(prop, {'type': 'number', 'default': 0.5})
 
     def test_simple_fixed_field(self):
-        prop = utils.field_to_property(fields.Fixed)
+        prop = field_to_property(fields.Fixed)
         self.assertEqual(prop, {'type': 'number'})
 
     def test_fixed_field_with_description(self):
-        prop = utils.field_to_property(fields.Fixed(description='A description'))
+        prop = field_to_property(fields.Fixed(description='A description'))
         self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
 
     def test_fixed_field_with_required(self):
-        prop = utils.field_to_property(fields.Fixed(required=True))
+        prop = field_to_property(fields.Fixed(required=True))
         self.assertEqual(prop, {'type': 'number', 'required': True})
 
     def test_fixed_field_with_min_max(self):
-        prop = utils.field_to_property(fields.Fixed(min=0, max=5))
+        prop = field_to_property(fields.Fixed(min=0, max=5))
         self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
 
     def test_fixed_field_with_default(self):
-        prop = utils.field_to_property(fields.Fixed(default=0.5))
-        self.assertEqual(prop, {'type': 'number', 'defaultValue': 0.5})
+        prop = field_to_property(fields.Fixed(default=0.5))
+        self.assertEqual(prop, {'type': 'number', 'default': 0.5})
 
     def test_simple_arbitrary_field(self):
-        prop = utils.field_to_property(fields.Arbitrary)
+        prop = field_to_property(fields.Arbitrary)
         self.assertEqual(prop, {'type': 'number'})
 
     def test_arbitrary_field_with_description(self):
-        prop = utils.field_to_property(fields.Arbitrary(description='A description'))
+        prop = field_to_property(fields.Arbitrary(description='A description'))
         self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
 
     def test_arbitrary_field_with_required(self):
-        prop = utils.field_to_property(fields.Arbitrary(required=True))
+        prop = field_to_property(fields.Arbitrary(required=True))
         self.assertEqual(prop, {'type': 'number', 'required': True})
 
     def test_arbitrary_field_with_min_max(self):
-        prop = utils.field_to_property(fields.Arbitrary(min=0, max=5))
+        prop = field_to_property(fields.Arbitrary(min=0, max=5))
         self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
 
     def test_arbitrary_field_with_default(self):
-        prop = utils.field_to_property(fields.Arbitrary(default=0.5))
-        self.assertEqual(prop, {'type': 'number', 'defaultValue': 0.5})
+        prop = field_to_property(fields.Arbitrary(default=0.5))
+        self.assertEqual(prop, {'type': 'number', 'default': 0.5})
 
     def test_simple_datetime_field(self):
-        prop = utils.field_to_property(fields.DateTime)
+        prop = field_to_property(fields.DateTime)
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time'})
 
     def test_datetime_field_with_required(self):
-        prop = utils.field_to_property(fields.DateTime(required=True))
+        prop = field_to_property(fields.DateTime(required=True))
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'required': True})
 
     def test_datetime_field_with_description(self):
-        prop = utils.field_to_property(fields.DateTime(description='A description'))
+        prop = field_to_property(fields.DateTime(description='A description'))
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'description': 'A description'})
 
     def test_datetime_field_with_default(self):
-        prop = utils.field_to_property(fields.DateTime(default='2014-08-25'))
-        self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'defaultValue': '2014-08-25'})
+        prop = field_to_property(fields.DateTime(default='2014-08-25'))
+        self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'default': '2014-08-25'})
 
     def test_simple_formatted_string_field(self):
-        prop = utils.field_to_property(fields.FormattedString('Hello {name}'))
+        prop = field_to_property(fields.FormattedString('Hello {name}'))
         self.assertEqual(prop, {'type': 'string'})
 
     def test_formatted_string_field_with_description(self):
-        prop = utils.field_to_property(fields.FormattedString('Hello {name}', description='A description'))
+        prop = field_to_property(fields.FormattedString('Hello {name}', description='A description'))
         self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
 
     def test_formatted_string_field_with_required(self):
-        prop = utils.field_to_property(fields.FormattedString('Hello {name}', required=True))
+        prop = field_to_property(fields.FormattedString('Hello {name}', required=True))
         self.assertEqual(prop, {'type': 'string', 'required': True})
 
     def test_simple_url_field(self):
-        prop = utils.field_to_property(fields.Url('endpoint'))
+        prop = field_to_property(fields.Url('endpoint'))
         self.assertEqual(prop, {'type': 'string'})
 
     def test_url_field_with_description(self):
-        prop = utils.field_to_property(fields.Url('endpoint', description='A description'))
+        prop = field_to_property(fields.Url('endpoint', description='A description'))
         self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
 
     def test_url_field_with_required(self):
-        prop = utils.field_to_property(fields.Url('endpoint', required=True))
+        prop = field_to_property(fields.Url('endpoint', required=True))
         self.assertEqual(prop, {'type': 'string', 'required': True})
 
     def test_custom_field(self):
         class Custom(fields.Raw):
             pass
-        prop = utils.field_to_property(Custom)
-        self.assertEqual(prop, {'type': 'string'})
+        prop = field_to_property(Custom)
+        self.assertEqual(prop, {'type': 'object'})
 
     def test_custom_field_with_description(self):
         class Custom(fields.Raw):
             pass
-        prop = utils.field_to_property(Custom(description='A description'))
-        self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
+        prop = field_to_property(Custom(description='A description'))
+        self.assertEqual(prop, {'type': 'object', 'description': 'A description'})
 
     def test_custom_field_with_type(self):
         api = Api(self.app)
@@ -292,7 +301,7 @@ class FieldToPropertyTestCase(TestCase):
             def format(self, value):
                 return value.isoformat()
 
-        prop = utils.field_to_property(ISODateTime(description='A description'))
+        prop = field_to_property(ISODateTime(description='A description'))
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'description': 'A description'})
 
     def test_custom_field_with_nested_fields(self):
@@ -303,8 +312,8 @@ class FieldToPropertyTestCase(TestCase):
             def format(self, value):
                 return {'name': value.name, 'age': value.age}
 
-        prop = utils.field_to_property(Person(description='A description'))
-        self.assertEqual(prop, {'$ref': 'Person', 'description': 'A description'})
+        prop = field_to_property(Person(description='A description'))
+        self.assertEqual(prop, {'$ref': '#/definitions/Person', 'description': 'A description'})
 
     def test_custom_field_with_name_and_nested_fields(self):
         api = Api(self.app)
@@ -314,53 +323,53 @@ class FieldToPropertyTestCase(TestCase):
             def format(self, value):
                 return {'name': value.name, 'age': value.age}
 
-        prop = utils.field_to_property(PersonField(description='A description'))
-        self.assertEqual(prop, {'$ref': 'Person', 'description': 'A description'})
+        prop = field_to_property(PersonField(description='A description'))
+        self.assertEqual(prop, {'$ref': '#/definitions/Person', 'description': 'A description'})
 
     def test_nested_field(self):
         api = Api(self.app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
-        prop = utils.field_to_property(fields.Nested(nested_fields))
-        self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True})
+        prop = field_to_property(fields.Nested(nested_fields))
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'required': True})
 
     def test_nested_field_with_description(self):
         api = Api(self.app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
-        prop = utils.field_to_property(fields.Nested(nested_fields, description='A description'))
-        self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True, 'description': 'A description'})
+        prop = field_to_property(fields.Nested(nested_fields, description='A description'))
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'required': True, 'description': 'A description'})
 
     def test_nullable_nested_field(self):
         api = Api(self.app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
-        prop = utils.field_to_property(fields.Nested(nested_fields, allow_null=True))
-        self.assertEqual(prop, {'$ref': 'NestedModel'})
+        prop = field_to_property(fields.Nested(nested_fields, allow_null=True))
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel'})
 
     def test_nested_field_as_list(self):
         api = Api(self.app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
-        prop = utils.field_to_property(api.as_list(fields.Nested(nested_fields)))
-        self.assertEqual(prop, {'type': 'array', 'items': {'$ref': 'NestedModel'}})
+        prop = field_to_property(api.as_list(fields.Nested(nested_fields)))
+        self.assertEqual(prop, {'type': 'array', 'items': {'$ref': '#/definitions/NestedModel'}})
 
     def test_nested_field_as_list_is_reusable(self):
         api = Api(self.app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
 
-        prop = utils.field_to_property(api.as_list(fields.Nested(nested_fields)))
-        self.assertEqual(prop, {'type': 'array', 'items': {'$ref': 'NestedModel'}})
+        prop = field_to_property(api.as_list(fields.Nested(nested_fields)))
+        self.assertEqual(prop, {'type': 'array', 'items': {'$ref': '#/definitions/NestedModel'}})
 
-        prop = utils.field_to_property(fields.Nested(nested_fields))
-        self.assertEqual(prop, {'$ref': 'NestedModel', 'required': True})
+        prop = field_to_property(fields.Nested(nested_fields))
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'required': True})
 
     def test_list_field(self):
-        prop = utils.field_to_property(fields.List(fields.String))
+        prop = field_to_property(fields.List(fields.String))
         self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}})
 
     def test_list_field_with_description(self):
-        prop = utils.field_to_property(fields.List(fields.String, description='A description'))
+        prop = field_to_property(fields.List(fields.String, description='A description'))
         self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}, 'description': 'A description'})
 
     def test_list_field_with_required(self):
-        prop = utils.field_to_property(fields.List(fields.String, required=True))
+        prop = field_to_property(fields.List(fields.String, required=True))
         self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}, 'required': True})
 
     def test_list_field_with_custom_nested_field(self):
@@ -371,28 +380,28 @@ class FieldToPropertyTestCase(TestCase):
             def format(self, value):
                 return {'name': value.name, 'age': value.age}
 
-        prop = utils.field_to_property(fields.List(Person))
-        self.assertEqual(prop, {'type': 'array', 'items': {'$ref': 'Person'}})
+        prop = field_to_property(fields.List(Person))
+        self.assertEqual(prop, {'type': 'array', 'items': {'$ref': '#/definitions/Person'}})
 
 
 class ParserToParamsTestCase(unittest.TestCase):
     def test_empty_parser(self):
         parser = reqparse.RequestParser()
-        self.assertEqual(utils.parser_to_params(parser), {})
+        self.assertEqual(parser_to_params(parser), {})
 
     def test_primitive_types(self):
         parser = reqparse.RequestParser()
         parser.add_argument('int', type=int, help='Some integer')
         parser.add_argument('str', type=str, help='Some string')
-        self.assertEqual(utils.parser_to_params(parser), {
+        self.assertEqual(parser_to_params(parser), {
             'int': {
                 'type': 'integer',
-                'paramType': 'query',
+                'in': 'query',
                 'description': 'Some integer',
             },
-            'str':  {
+            'str': {
                 'type': 'string',
-                'paramType': 'query',
+                'in': 'query',
                 'description': 'Some string',
             }
         })
@@ -401,20 +410,20 @@ class ParserToParamsTestCase(unittest.TestCase):
         parser = reqparse.RequestParser()
         unknown = lambda v: v
         parser.add_argument('unknown', type=unknown)
-        self.assertEqual(utils.parser_to_params(parser), {
-            'unknown':  {
+        self.assertEqual(parser_to_params(parser), {
+            'unknown': {
                 'type': 'string',
-                'paramType': 'query',
+                'in': 'query',
             }
         })
 
     def test_required(self):
         parser = reqparse.RequestParser()
         parser.add_argument('int', type=int, required=True)
-        self.assertEqual(utils.parser_to_params(parser), {
+        self.assertEqual(parser_to_params(parser), {
             'int': {
                 'type': 'integer',
-                'paramType': 'query',
+                'in': 'query',
                 'required': True,
             }
         })
@@ -422,11 +431,22 @@ class ParserToParamsTestCase(unittest.TestCase):
     def test_default(self):
         parser = reqparse.RequestParser()
         parser.add_argument('int', type=int, default=5)
-        self.assertEqual(utils.parser_to_params(parser), {
+        self.assertEqual(parser_to_params(parser), {
             'int': {
                 'type': 'integer',
-                'paramType': 'query',
-                'defaultValue': 5,
+                'in': 'query',
+                'default': 5,
+            }
+        })
+
+    def test_choices(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('string', type=str, choices=['a', 'b'])
+        self.assertEqual(parser_to_params(parser), {
+            'string': {
+                'type': 'string',
+                'in': 'query',
+                'enum': ['a', 'b'],
             }
         })
 
@@ -439,30 +459,30 @@ class ParserToParamsTestCase(unittest.TestCase):
         parser.add_argument('in_query', type=int, location='args')
         parser.add_argument('in_headers', type=int, location='headers')
         parser.add_argument('in_cookie', type=int, location='cookie')
-        self.assertEqual(utils.parser_to_params(parser), {
+        self.assertEqual(parser_to_params(parser), {
             'default': {
                 'type': 'integer',
-                'paramType': 'query',
+                'in': 'query',
             },
             'in_form': {
                 'type': 'integer',
-                'paramType': 'form',
+                'in': 'form',
             },
             'in_json': {
                 'type': 'string',
-                'paramType': 'body',
+                'in': 'body',
             },
             'in_values': {
                 'type': 'integer',
-                'paramType': 'query',
+                'in': 'query',
             },
             'in_query': {
                 'type': 'integer',
-                'paramType': 'query',
+                'in': 'query',
             },
             'in_headers': {
                 'type': 'integer',
-                'paramType': 'header',
+                'in': 'header',
             },
         })
 
@@ -474,20 +494,20 @@ class ParserToParamsTestCase(unittest.TestCase):
         })
         parser = reqparse.RequestParser()
         parser.add_argument('todo', type=todo_fields)
-        self.assertEqual(utils.parser_to_params(parser), {
+        self.assertEqual(parser_to_params(parser), {
             'todo': {
                 'type': 'Todo',
-                'paramType': 'body',
+                'in': 'body',
             },
         })
 
     def test_lists(self):
         parser = reqparse.RequestParser()
         parser.add_argument('int', type=int, action='append')
-        self.assertEqual(utils.parser_to_params(parser), {
+        self.assertEqual(parser_to_params(parser), {
             'int': {
                 'type': 'integer',
-                'paramType': 'query',
+                'in': 'query',
                 'allowMultiple': True,
             }
         })
