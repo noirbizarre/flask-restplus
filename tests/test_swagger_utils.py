@@ -8,6 +8,8 @@ from flask import Flask
 from flask.ext.restplus import fields, reqparse, Api
 from flask.ext.restplus.swagger import utils
 
+from werkzeug.datastructures import FileStorage
+
 from . import TestCase
 
 
@@ -489,5 +491,31 @@ class ParserToParamsTestCase(unittest.TestCase):
                 'type': 'integer',
                 'paramType': 'query',
                 'allowMultiple': True,
+            }
+        })
+
+    def test_enums(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('enum', type=str, choices=('one', 'two', 'three'))
+        self.assertEqual(utils.parser_to_params(parser), {
+            'enum': {
+                'type': 'string',
+                'paramType': 'query',
+                'enum': (
+                    'one',
+                    'two',
+                    'three',
+                ),
+            }
+        })
+
+
+    def test_files(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('file', type=FileStorage, location='files')
+        self.assertEqual(utils.parser_to_params(parser), {
+            'file': {
+                'type': 'file',
+                'paramType': 'body',
             }
         })
