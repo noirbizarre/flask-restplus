@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from flask_restplus import fields
+from werkzeug.datastructures import FileStorage
 
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
@@ -33,6 +34,7 @@ LOCATIONS = {
     'headers': 'header',
     'json': 'body',
     'values': 'query',
+    'files': 'body',
 }
 
 
@@ -41,5 +43,6 @@ PY_TYPES = {
     int: 'integer',
     str: 'string',
     bool: 'boolean',
-    None: 'void'
+    None: 'void',
+    FileStorage: 'file',
 }
