@@ -300,7 +300,6 @@ class SwaggerTestCase(TestCase):
 
     def test_methods_docstring_to_summary(self):
         api = restplus.Api(self.app)
-        # ns = api.namespace('ns', 'Test namespace')
 
         @api.route('/test/', endpoint='test')
         class TestResource(restplus.Resource):
@@ -1442,6 +1441,100 @@ class SwaggerTestCase(TestCase):
 
         path = data['paths']['/custom-field/']
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Fake'})
+
+    def test_body_model(self):
+        api = restplus.Api(self.app)
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @api.doc(model='Person', body=fields)
+            def post(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertEqual(data['definitions']['Person'], {
+            # 'id': 'Person',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                }
+            }
+        })
+
+        op = data['paths']['/model-as-dict/']['post']
+        self.assertEqual(op['responses']['200']['schema']['$ref'], '#/definitions/Person')
+
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'payload')
+        self.assertEqual(parameter['in'], 'body')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['schema']['$ref'], '#/definitions/Person')
+        self.assertNotIn('description', parameter)
+
+    def test_body_model_as_tuple(self):
+        api = restplus.Api(self.app)
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @api.doc(model='Person', body=(fields, 'Body description'))
+            def post(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertEqual(data['definitions']['Person'], {
+            # 'id': 'Person',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                }
+            }
+        })
+
+        op = data['paths']['/model-as-dict/']['post']
+        self.assertEqual(op['responses']['200']['schema']['$ref'], '#/definitions/Person')
+
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'payload')
+        self.assertEqual(parameter['in'], 'body')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['description'], 'Body description')
+        self.assertEqual(parameter['schema']['$ref'], '#/definitions/Person')
 
     def test_authorizations(self):
         api = restplus.Api(self.app, authorizations={

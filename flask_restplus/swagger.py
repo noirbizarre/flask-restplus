@@ -253,7 +253,7 @@ class Swagger(object):
         return doc
 
     def merge_params(self, params, doc):
-        if 'params' not in doc and 'parser' not in doc:
+        if 'params' not in doc and 'parser' not in doc and 'body' not in doc:
             return params
 
         if 'parser' in doc:
@@ -262,11 +262,22 @@ class Swagger(object):
         if 'params' in doc:
             params = merge(params, doc['params'])
 
+        if 'body' in doc:
+            model, description = doc['body'] if isinstance(doc['body'], (list, tuple)) else (doc['body'], None)
+            params = merge(params, {
+                'payload': not_none({
+                    'name': 'payload',
+                    'required': True,
+                    'in': 'body',
+                    'schema': self.serialize_schema(model),
+                    'description': description
+                })
+            })
+
         return params
 
     def serialize_resource(self, ns, resource, url):
         doc = self.extract_resource_doc(resource, url)
-        print 'doc', doc
         operations = {}
         for method in [m.lower() for m in resource.methods or []]:
             operations[method] = self.serialize_operation(doc, method)
