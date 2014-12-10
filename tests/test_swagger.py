@@ -28,6 +28,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
         self.assertEqual(data['produces'], ['application/json'])
+        self.assertEqual(data['consumes'], ['application/json'])
         self.assertEqual(data['paths'], {})
         self.assertIn('info', data)
 
@@ -38,14 +39,9 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/api')
         self.assertEqual(data['produces'], ['application/json'])
+        self.assertEqual(data['consumes'], ['application/json'])
         self.assertEqual(data['paths'], {})
         self.assertIn('info', data)
-
-    def test_specs_endpoint_produces_default(self):
-        api = restplus.Api(self.app)
-        data = self.get_specs()
-
-        self.assertEqual(data['produces'], ['application/json'])
 
     def test_specs_endpoint_produces(self):
         api = restplus.Api(self.app)
