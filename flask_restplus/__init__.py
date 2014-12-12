@@ -8,6 +8,7 @@ try:
     from . import fields, reqparse
     from .api import Api  # noqa
     from .resource import Resource  # noqa
+    from .exceptions import RestException, SpecsError, ValidationError
 
     __all__ = (
         '__version__',
@@ -19,6 +20,9 @@ try:
         'abort',
         'fields',
         'reqparse',
+        'RestException',
+        'SpecsError',
+        'ValidationError',
     )
 
 except ImportError:

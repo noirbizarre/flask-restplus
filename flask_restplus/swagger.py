@@ -12,6 +12,7 @@ from flask import current_app
 
 
 from . import fields
+from .exceptions import SpecsError
 from .utils import camel_to_dash, merge
 
 
@@ -40,10 +41,11 @@ FIELDS = {
 #: Maps Flask-Restful RequestParser locations to Swagger ones
 LOCATIONS = {
     'args': 'query',
-    'form': 'form',
+    'form': 'formData',
     'headers': 'header',
     'json': 'body',
     'values': 'query',
+    'files': 'formData',
 }
 
 
@@ -156,6 +158,7 @@ def field_to_property(field):
 def parser_to_params(parser):
     '''Extract Swagger parameters from a RequestParser'''
     params = {}
+    locations = set()
     for arg in parser.args:
         if arg.location == 'cookie':
             continue
@@ -175,6 +178,9 @@ def parser_to_params(parser):
         #     params['body'] = param
         # else:
         params[arg.name] = param
+        locations.add(param['in'])
+    if 'body' in locations and 'formData' in locations:
+        raise SpecsError("Can't use formData and body at the same time")
     return params
 
 
@@ -184,6 +190,8 @@ def _handle_arg_type(arg, param):
     elif hasattr(arg.type, '__apidoc__'):
         param['type'] = arg.type.__apidoc__['name']
         param['in'] = 'body'
+    elif arg.location == 'files':
+        param['type'] = 'file'
     else:
         param['type'] = 'string'
 
@@ -299,6 +307,12 @@ class Swagger(object):
             'parameters': self.parameters_for(doc, method),
             'security': self.security_for(doc, method),
         }
+        # Handle form exceptions:
+        if any(p['in'] == 'formData' for p in operation['parameters']):
+            if any(p['type'] == 'file' for p in operation['parameters']):
+                operation['consumes'] = ['multipart/form-data']
+            else:
+                operation['consumes'] = ['application/x-www-form-urlencoded', 'multipart/form-data']
         return not_none(operation)
 
     def summary_for(self, doc, method):

@@ -7,6 +7,7 @@ from textwrap import dedent
 
 from flask import url_for
 from flask.ext import restplus
+from werkzeug.datastructures import FileStorage
 
 from . import TestCase
 
@@ -474,7 +475,7 @@ class SwaggerTestCase(TestCase):
         op = data['paths']['/with-parser/']['post']
         self.assertEqual(len(op['parameters']), 0)
 
-    def test_parser_parameters_ovrride(self):
+    def test_parser_parameters_override(self):
         api = restplus.Api(self.app)
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param')
@@ -496,6 +497,55 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['type'], 'integer')
         self.assertEqual(parameter['in'], 'query')
         self.assertEqual(parameter['description'], 'New description')
+
+    def test_parser_parameter_in_form(self):
+        api = restplus.Api(self.app)
+        parser = api.parser()
+        parser.add_argument('param', type=int, help='Some param', location='form')
+
+        @api.route('/with-parser/', endpoint='with-parser')
+        class WithParserResource(restplus.Resource):
+            @api.doc(parser=parser)
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+        self.assertIn('/with-parser/', data['paths'])
+
+        op = data['paths']['/with-parser/']['get']
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'param')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['in'], 'formData')
+        self.assertEqual(parameter['description'], 'Some param')
+
+        self.assertEqual(op['consumes'], ['application/x-www-form-urlencoded', 'multipart/form-data'])
+
+    def test_parser_parameter_in_files(self):
+        api = restplus.Api(self.app)
+        parser = api.parser()
+        parser.add_argument('in_files', type=FileStorage, location='files')
+
+        @api.route('/with-parser/', endpoint='with-parser')
+        class WithParserResource(restplus.Resource):
+            @api.doc(parser=parser)
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+        self.assertIn('/with-parser/', data['paths'])
+
+        op = data['paths']['/with-parser/']['get']
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'in_files')
+        self.assertEqual(parameter['type'], 'file')
+        self.assertEqual(parameter['in'], 'formData')
+
+        self.assertEqual(op['consumes'], ['multipart/form-data'])
 
     def test_explicit_parameters(self):
         api = restplus.Api(self.app)

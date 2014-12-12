@@ -4,8 +4,9 @@ from __future__ import unicode_literals
 import unittest
 
 from flask import Flask
+from werkzeug.datastructures import FileStorage
 
-from flask.ext.restplus import fields, reqparse, Api
+from flask.ext.restplus import fields, reqparse, Api, SpecsError
 from flask.ext.restplus.swagger import extract_path, extract_path_params, field_to_property, parser_to_params
 
 from . import TestCase
@@ -453,8 +454,8 @@ class ParserToParamsTestCase(unittest.TestCase):
     def test_location(self):
         parser = reqparse.RequestParser()
         parser.add_argument('default', type=int)
-        parser.add_argument('in_form', type=int, location='form')
-        parser.add_argument('in_json', type=str, location='json')
+        # parser.add_argument('in_form', type=int, location='form')
+        # parser.add_argument('in_json', type=str, location='json')
         parser.add_argument('in_values', type=int, location='values')
         parser.add_argument('in_query', type=int, location='args')
         parser.add_argument('in_headers', type=int, location='headers')
@@ -463,14 +464,6 @@ class ParserToParamsTestCase(unittest.TestCase):
             'default': {
                 'type': 'integer',
                 'in': 'query',
-            },
-            'in_form': {
-                'type': 'integer',
-                'in': 'form',
-            },
-            'in_json': {
-                'type': 'string',
-                'in': 'body',
             },
             'in_values': {
                 'type': 'integer',
@@ -485,6 +478,56 @@ class ParserToParamsTestCase(unittest.TestCase):
                 'in': 'header',
             },
         })
+
+    def test_location_json(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('in_json', type=str, location='json')
+        self.assertEqual(parser_to_params(parser), {
+            'in_json': {
+                'type': 'string',
+                'in': 'body',
+            },
+        })
+
+    def test_location_form(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('in_form', type=int, location='form')
+        self.assertEqual(parser_to_params(parser), {
+            'in_form': {
+                'type': 'integer',
+                'in': 'formData',
+            },
+        })
+
+    def test_location_files(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('in_files', type=FileStorage, location='files')
+        self.assertEqual(parser_to_params(parser), {
+            'in_files': {
+                'type': 'file',
+                'in': 'formData',
+            },
+        })
+
+    def test_form_and_body_location(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('default', type=int)
+        parser.add_argument('in_form', type=int, location='form')
+        parser.add_argument('in_json', type=str, location='json')
+        with self.assertRaises(SpecsError) as cm:
+            parser_to_params(parser)
+
+        self.assertEqual(cm.exception.msg, "Can't use formData and body at the same time")
+
+    def test_files_and_body_location(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('default', type=int)
+        parser.add_argument('in_files', type=FileStorage, location='files')
+        parser.add_argument('in_json', type=str, location='json')
+        with self.assertRaises(SpecsError) as cm:
+            parser_to_params(parser)
+
+        self.assertEqual(cm.exception.msg, "Can't use formData and body at the same time")
 
     def test_models(self):
         app = Flask(__name__)
