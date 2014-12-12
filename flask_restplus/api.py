@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import six
+
 from flask import url_for, Blueprint, render_template, redirect
 from flask.ext import restful
 
@@ -312,7 +314,7 @@ class Api(restful.Api):
 def unshortcut_params_description(data):
     if 'params' in data:
         for name, description in data['params'].items():
-            if isinstance(description, basestring):
+            if isinstance(description, six.string_types):
                 data['params'][name] = {'description': description}
 
 

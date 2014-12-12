@@ -2,12 +2,13 @@
 from __future__ import unicode_literals, absolute_import
 
 import re
+import six
 
 from inspect import isclass
 from collections import Hashable
 from six import string_types
 
-from flask import current_app, url_for
+from flask import current_app
 
 
 from . import fields
@@ -231,7 +232,7 @@ class Swagger(object):
             'basePath': basepath,
             'paths': paths,
             'info': infos,
-            'produces': self.api.representations.keys(),
+            'produces': list(self.api.representations.keys()),
             'consumes': ['application/json'],
             'securityDefinitions': self.api.authorizations or None,
             'security': self.security_requirements(self.api.security) or None,
@@ -246,7 +247,11 @@ class Swagger(object):
         doc['params'] = self.merge_params(extract_path_params(url), doc)
         for method in [m.lower() for m in resource.methods or []]:
             method_doc = doc.get(method, {})
-            method_impl = getattr(resource, method).im_func
+            method_impl = getattr(resource, method)
+            if hasattr(method_impl, 'im_func'):
+                method_impl = method_impl.im_func
+            elif hasattr(method_impl, '__func__'):
+                method_impl = method_impl.__func__
             method_doc = merge(method_doc, getattr(method_impl, '__apidoc__', {}))
             method_doc['docstring'] = getattr(method_impl, '__doc__')
             method_doc['params'] = self.merge_params({}, method_doc)
@@ -347,7 +352,7 @@ class Swagger(object):
                         responses[code]['schema'] = self.serialize_schema(model)
             if 'model' in d:
                 code = str(d.get('default_code', 200))
-                if not code in responses:
+                if code not in responses:
                     responses[code] = DEFAULT_RESPONSE.copy()
                 responses[code]['schema'] = self.serialize_schema(d['model'])
 
@@ -391,7 +396,7 @@ class Swagger(object):
                 schema['items'] = ref(model)
                 return schema
 
-            elif isinstance(model, basestring):
+            elif isinstance(model, six.string_types):
                 self.register_model(model)
                 schema['items'] = ref(model)
                 return schema
@@ -405,7 +410,7 @@ class Swagger(object):
             self.register_model(model)
             return ref(model)
 
-        elif isinstance(model, basestring):
+        elif isinstance(model, six.string_types):
             self.register_model(model)
             return ref(model)
 
@@ -452,7 +457,7 @@ class Swagger(object):
             return []
 
     def security_requirement(self, value):
-        if isinstance(value, basestring):
+        if isinstance(value, (six.string_types)):
             return {value: []}
         elif isinstance(value, dict):
             return dict(

@@ -4,7 +4,8 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Switch to Swagger 2.0 (Major breakage)
+
 
 0.2.4
 -----

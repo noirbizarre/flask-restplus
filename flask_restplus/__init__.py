@@ -9,7 +9,17 @@ try:
     from .api import Api  # noqa
     from .resource import Resource  # noqa
 
-    __all__ = ('__version__', '__description__', 'Api', 'Resource', 'marshal', 'marshal_with', 'abort', 'fields', 'reqparse')
+    __all__ = (
+        '__version__',
+        '__description__',
+        'Api',
+        'Resource',
+        'marshal',
+        'marshal_with',
+        'abort',
+        'fields',
+        'reqparse',
+    )
 
 except ImportError:
     pass

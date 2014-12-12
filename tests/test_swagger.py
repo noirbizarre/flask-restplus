@@ -516,7 +516,6 @@ class SwaggerTestCase(TestCase):
         self.assertIn('/name/{age}/', data['paths'])
 
         op = data['paths']['/name/{age}/']['get']
-        print op['parameters']
         self.assertEqual(len(op['parameters']), 2)
 
         by_name = dict((p['name'], p) for p in op['parameters'])
@@ -1014,7 +1013,7 @@ class SwaggerTestCase(TestCase):
         self.assertIn('Person', data['definitions'])
 
         path = data['paths']['/model-as-dict/']
-        self.assertEqual(path['delete']['responses'].keys(), ['204'])
+        self.assertEqual(list(path['delete']['responses'].keys()), ['204'])
         self.assertEqual(path['delete']['responses']['204']['schema']['$ref'], '#/definitions/Person')
 
     def test_model_as_flat_dict_with_marchal_decorator_list(self):
