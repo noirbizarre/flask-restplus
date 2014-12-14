@@ -15,8 +15,13 @@ TODOS = {
     'todo3': {'task': 'profit!'},
 }
 
-todo_fields = api.model('Todo', {
+todo = api.model('Todo', {
     'task': fields.String(required=True, description='The task details')
+})
+
+listed_todo = api.model('ListedTodo', {
+    'id': fields.String(required=True, description='The todo ID'),
+    'todo': fields.Nested(todo, description='The Todo')
 })
 
 
@@ -25,7 +30,7 @@ def abort_if_todo_doesnt_exist(todo_id):
         api.abort(404, "Todo {} doesn't exist".format(todo_id))
 
 parser = api.parser()
-parser.add_argument('task', type=str, required=True, help='The task details')
+parser.add_argument('task', type=str, required=True, help='The task details', location='form')
 
 
 @ns.route('/<string:todo_id>')
@@ -33,7 +38,7 @@ parser.add_argument('task', type=str, required=True, help='The task details')
 class Todo(Resource):
     '''Show a single todo item and lets you delete them'''
     @api.doc(description='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
-    @api.marshal_with(todo_fields)
+    @api.marshal_with(todo)
     def get(self, todo_id):
         '''Fetch a given resource'''
         abort_if_todo_doesnt_exist(todo_id)
@@ -47,7 +52,7 @@ class Todo(Resource):
         return '', 204
 
     @api.doc(parser=parser)
-    @api.marshal_with(todo_fields)
+    @api.marshal_with(todo)
     def put(self, todo_id):
         '''Update a given resource'''
         args = parser.parse_args()
@@ -59,13 +64,13 @@ class Todo(Resource):
 @ns.route('/')
 class TodoList(Resource):
     '''Shows a list of all todos, and lets you POST to add new tasks'''
-    @api.marshal_with(todo_fields, as_list=True)
+    @api.marshal_list_with(listed_todo)
     def get(self):
         '''List all todos'''
-        return TODOS
+        return [{'id': id, 'todo': todo} for id, todo in TODOS.items()]
 
     @api.doc(parser=parser)
-    @api.marshal_with(todo_fields, code=201)
+    @api.marshal_with(todo, code=201)
     def post(self):
         '''Create a todo'''
         args = parser.parse_args()

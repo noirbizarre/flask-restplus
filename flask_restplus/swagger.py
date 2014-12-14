@@ -304,11 +304,11 @@ class Swagger(object):
             'summary': self.summary_for(doc, method) or None,
             'description': self.description_for(doc, method) or None,
             'operationId': self.operation_id_for(doc, method),
-            'parameters': self.parameters_for(doc, method),
+            'parameters': self.parameters_for(doc, method) or None,
             'security': self.security_for(doc, method),
         }
         # Handle form exceptions:
-        if any(p['in'] == 'formData' for p in operation['parameters']):
+        if operation['parameters'] and any(p['in'] == 'formData' for p in operation['parameters']):
             if any(p['type'] == 'file' for p in operation['parameters']):
                 operation['consumes'] = ['multipart/form-data']
             else:

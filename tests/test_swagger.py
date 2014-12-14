@@ -159,7 +159,7 @@ class SwaggerTestCase(TestCase):
         op = paths['/ns/']['get']
         self.assertEqual(op['tags'], ['ns'])
         self.assertEqual(op['operationId'], 'get_test_resource')
-        self.assertEqual(op['parameters'], [])
+        self.assertNotIn('parameters', op)
         self.assertNotIn('summary', op)
         self.assertNotIn('description', op)
         self.assertEqual(op['responses'], {
@@ -253,6 +253,7 @@ class SwaggerTestCase(TestCase):
                 'description': 'Success',
             }
         })
+        self.assertNotIn('parameters', op)
 
         self.assertEqual(len(data['tags']), 2)
         tag = data['tags'][-1]
@@ -473,7 +474,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'Some param')
 
         op = data['paths']['/with-parser/']['post']
-        self.assertEqual(len(op['parameters']), 0)
+        self.assertNotIn('parameters', op)
 
     def test_parser_parameters_override(self):
         api = restplus.Api(self.app)
