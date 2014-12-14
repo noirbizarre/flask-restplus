@@ -5,7 +5,11 @@ Current
 -------
 
 - Switch to Swagger 2.0 (Major breakage)
+    - ``notes`` documentation is now ``description``
+    - ``nickname`` documentation is now ``id``
+    - new responses declaration format
 - Added missing ``body`` parameter to document ``body`` input
+- Last release before Flask-Restful 0.3+ compatibility switch
 
 
 0.2.4
