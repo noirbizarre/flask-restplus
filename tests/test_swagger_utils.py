@@ -6,8 +6,8 @@ import unittest
 from flask import Flask
 from werkzeug.datastructures import FileStorage
 
-from flask.ext.restplus import fields, reqparse, Api, SpecsError
-from flask.ext.restplus.swagger import extract_path, extract_path_params, field_to_property, parser_to_params
+from flask_restplus import fields, reqparse, Api, SpecsError
+from flask_restplus.swagger import extract_path, extract_path_params, field_to_property, parser_to_params
 
 from . import TestCase
 
@@ -454,8 +454,6 @@ class ParserToParamsTestCase(unittest.TestCase):
     def test_location(self):
         parser = reqparse.RequestParser()
         parser.add_argument('default', type=int)
-        # parser.add_argument('in_form', type=int, location='form')
-        # parser.add_argument('in_json', type=str, location='json')
         parser.add_argument('in_values', type=int, location='values')
         parser.add_argument('in_query', type=int, location='args')
         parser.add_argument('in_headers', type=int, location='headers')

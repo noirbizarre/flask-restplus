@@ -5,6 +5,7 @@ Current
 -------
 
 - Switch to Swagger 2.0 (Major breakage)
+- Added missing ``body`` parameter to document ``body`` input
 
 
 0.2.4

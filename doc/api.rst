@@ -13,12 +13,12 @@ API
 
 All fields accept a ``required`` boolean and a ``description`` string in ``kwargs``.
 
-.. automodule:: flask_restful.fields
+.. automodule:: flask_restplus.fields
     :members:
 
 
 :mod:`flask.ext.restplus.reqparse`
 ----------------------------------
 
-.. automodule:: flask_restful.reqparse
+.. automodule:: flask_restplus.reqparse
     :members:

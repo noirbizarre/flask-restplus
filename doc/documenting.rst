@@ -149,6 +149,96 @@ both ``min`` and ``max`` arguments to restrict the possible values.
     })
 
 
+Documenting the methods
+-----------------------
+
+Each resource will be documented as a Swagger path.
+
+Each resource method (``get``, ``post``, ``put``, ``delete``, ``path``, ``options``, ``head``)
+will be documented as a swagger operation.
+
+You can specify the Swagger unique ``operationId`` with the ``id`` documentation.
+
+.. code-block:: python
+
+    @api.route('/my-resource/<id>', endpoint='my-resource')
+    @api.doc(params={'id': 'An ID'})
+    class MyResource(Resource):
+        @api.doc(id='get_something')
+        def get(self, id):
+            return {}
+
+If not specified, a default operationId is providen with the following pattern::
+
+    {{verb}}_{{resource class name | camelCase2dashes }}
+
+In the previous example, the default generated operationId will be ``get_my_resource``
+
+
+Each operation will automatically receive the namespace tag.
+If the resource is attached to the root API, it will receive the default namespace tag.
+
+
+Method parameters
+~~~~~~~~~~~~~~~~~
+
+For each method, the path parameter are automatically extracted.
+You can provide additional parameters (from query parameters, body or form)
+or additionnal details on path parameters with the ``params`` documentation.
+
+Input and output models
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You can specify the serialized output model with the ``model`` documentation.
+
+You can specify an input format for ``POST`` and ``PUT`` iwth the ``body`` documentation.
+
+
+.. code-block:: python
+
+    fields = api.model('MyModel', {
+        'name': fields.String(description='The name', required=True),
+        'type': fields.String(description='The object type', enum=['A', 'B']),
+        'age': fields.Integer(min=0),
+    })
+
+
+    @api.model(fields={'name': fields.String, 'age': fields.Integer})
+    class Person(fields.Raw):
+        def format(self, value):
+            return {'name': value.name, 'age': value.age}
+
+
+    @api.route('/my-resource/<id>', endpoint='my-resource')
+    @api.doc(params={'id': 'An ID'})
+    class MyResource(Resource):
+        @api.doc(model=fields)
+        def get(self, id):
+            return {}
+
+        @api.doc(model='MyModel', body=Person)
+        def post(self, id):
+            return {}
+
+
+You can't have body and form or file parameters at the same time,
+it will raise a SpecsError.
+
+Models can be specified with a RequestParser.
+
+.. code-block:: python
+
+    parser = api.parser()
+    parser.add_argument('param', type=int, help='Some param', location='form')
+    parser.add_argument('in_files', type=FileStorage, location='files')
+
+    @api.route('/with-parser/', endpoint='with-parser')
+    class WithParserResource(restplus.Resource):
+        @api.doc(parser=parser)
+        def get(self):
+            return {}
+
+
 Cascading
 ---------
 

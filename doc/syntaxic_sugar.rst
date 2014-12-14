@@ -37,6 +37,15 @@ You can optionnaly provide class-wide documentation:
         def get(self, id):
             return {}
 
+But it will be easier to read with two decorators for the same effect:
+
+.. code-block:: python
+
+    @api.route('/my-resource/<id>', endpoint='my-resource')
+    @api.doc(params={'id': 'An ID'})
+    class MyResource(Resource):
+        def get(self, id):
+            return {}
 
 The namespace object provide the same feature:
 
