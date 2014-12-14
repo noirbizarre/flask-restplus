@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.3.0
+-----
 
 - Switch to Swagger 2.0 (Major breakage)
     - ``notes`` documentation is now ``description``
