@@ -11,7 +11,7 @@ ROOT = abspath(join(dirname(__file__)))
 @task
 def clean(docs=False, bytecode=False, extra=''):
     '''Cleanup all build artifacts'''
-    patterns = ['build', 'dist', 'cover', 'docs/_build', '**/*.pyc', '*.egg-info']
+    patterns = ['build', 'dist', 'cover', 'docs/_build', '**/*.pyc', '*.egg-info', '.tox']
     for pattern in patterns:
         print('Removing {0}'.format(pattern))
         run('cd {0} && rm -rf {1}'.format(ROOT, pattern))

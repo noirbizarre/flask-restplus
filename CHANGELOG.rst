@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Port to Flask-Restful 0.3+
 
 0.3.0
 -----

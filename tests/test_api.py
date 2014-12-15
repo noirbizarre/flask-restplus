@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import json
 
-from flask import url_for
+from flask import url_for, Blueprint
 from flask.ext import restplus
 
 from . import TestCase
@@ -14,7 +14,7 @@ class APITestCase(TestCase):
         api = restplus.Api(self.app, version='1.0')
 
         with self.context():
-            url = url_for('api.root')
+            url = url_for('root')
             self.assertEqual(url, '/')
             self.assertEqual(api.base_url, 'http://localhost/')
 
@@ -28,7 +28,7 @@ class APITestCase(TestCase):
         api.init_app(self.app)
 
         with self.context():
-            url = url_for('api.root')
+            url = url_for('root')
             self.assertEqual(url, '/')
             self.assertEqual(api.base_url, 'http://localhost/')
 
@@ -37,12 +37,14 @@ class APITestCase(TestCase):
             self.assertEquals(response.status_code, 200)
             self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
-    def test_root_endpoint_with_params(self):
-        api = restplus.Api(version='1.0', prefix='/api', endpoint='apiv1')
-        api.init_app(self.app)
+    def test_root_endpoint_with_blueprint(self):
+        blueprint = Blueprint('api', __name__, url_prefix='/api')
+        api = restplus.Api(blueprint, version='1.0')
+        # api.init_app(self.app)
+        self.app.register_blueprint(blueprint)
 
         with self.context():
-            url = url_for('apiv1.root')
+            url = url_for('api.root')
             self.assertEqual(url, '/api/')
             self.assertEqual(api.base_url, 'http://localhost/api/')
 

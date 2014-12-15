@@ -10,11 +10,6 @@ class ApiNamespace(object):
         self.description = description
         self.resources = []
         self.models = []
-        self.endpoint = str(endpoint or 'ns-{0}'.format(self.name.lower().replace(' ', '-')))
-
-    @property
-    def full_endpoint(self):
-        return '{0}.{1}'.format(self.api.endpoint, self.endpoint)
 
     def add_resource(self, resource, *urls, **kwargs):
         self.resources.append((resource, urls, kwargs))

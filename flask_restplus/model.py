@@ -9,6 +9,3 @@ class ApiModel(dict, MutableMapping):
     def __init__(self, *args, **kwargs):
         self.__apidoc__ = {}
         super(ApiModel, self).__init__(*args, **kwargs)
-
-    # def __call__(self, raw=None, **kwargs):
-    #     print 'call', raw, kwargs

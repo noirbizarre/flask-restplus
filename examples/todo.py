@@ -1,10 +1,9 @@
-from flask import Flask, redirect
+from flask import Flask
 from flask.ext.restplus import Api, Resource, fields
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Todo API',
     description='A simple TODO API extracted from the original flask-restful example',
-    prefix='/api'
 )
 
 ns = api.namespace('todos', description='TODO operations')
@@ -77,16 +76,6 @@ class TodoList(Resource):
         todo_id = 'todo%d' % (len(TODOS) + 1)
         TODOS[todo_id] = {'task': args['task']}
         return TODOS[todo_id], 201
-
-
-@app.route('/')
-def redirect_to_api():
-    '''
-    Redirect on API until root API is supported by SwaggerJS/UI.
-
-    See: https://github.com/swagger-api/swagger-js/issues/116
-    '''
-    return redirect(api.base_path)
 
 
 if __name__ == '__main__':

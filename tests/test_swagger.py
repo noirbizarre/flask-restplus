@@ -5,7 +5,7 @@ import json
 
 from textwrap import dedent
 
-from flask import url_for
+from flask import url_for, Blueprint
 from flask.ext import restplus
 from werkzeug.datastructures import FileStorage
 
@@ -13,6 +13,15 @@ from . import TestCase
 
 
 class SwaggerTestCase(TestCase):
+    def build_api(self, **kwargs):
+        if 'prefix' in kwargs:
+            blueprint = Blueprint('api', __name__, url_prefix=kwargs.pop('prefix'))
+        else:
+            blueprint = Blueprint('api', __name__)
+        api = restplus.Api(blueprint, **kwargs)
+        self.app.register_blueprint(blueprint)
+        return api
+
     def get_specs(self, prefix='', app=None, status=200):
         '''Get a Swagger specification for a RestPlus API'''
         with self.app.test_client() as client:
@@ -34,7 +43,8 @@ class SwaggerTestCase(TestCase):
         self.assertIn('info', data)
 
     def test_specs_endpoint_with_prefix(self):
-        api = restplus.Api(self.app, prefix='/api')
+        api = self.build_api(prefix='/api')
+        # api = restplus.Api(self.app, prefix='/api')
 
         data = self.get_specs('/api')
         self.assertEqual(data['swagger'], '2.0')
@@ -45,7 +55,7 @@ class SwaggerTestCase(TestCase):
         self.assertIn('info', data)
 
     def test_specs_endpoint_produces(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         def output_xml(data, code, headers=None):
             pass
@@ -142,7 +152,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(data['securityDefinitions'], authorizations)
 
     def test_minimal_documentation(self):
-        api = restplus.Api(self.app, prefix='/api')
+        api = self.build_api(prefix='/api')
         ns = api.namespace('ns', 'Test namespace')
 
         @ns.route('/', endpoint='test')
@@ -172,7 +182,7 @@ class SwaggerTestCase(TestCase):
             self.assertEqual(url_for('api.test'), '/api/ns/')
 
     def test_default_ns_resource_documentation(self):
-        api = restplus.Api(self.app, prefix='/api', version='1.0')
+        api = self.build_api(prefix='/api', version='1.0')
 
         @api.route('/test/', endpoint='test')
         class TestResource(restplus.Resource):
@@ -202,7 +212,7 @@ class SwaggerTestCase(TestCase):
             self.assertEqual(url_for('api.test'), '/api/test/')
 
     def test_default_ns_resource_documentation_with_override(self):
-        api = restplus.Api(self.app, default='site', default_label='Site namespace')
+        api = self.build_api(default='site', default_label='Site namespace')
 
         @api.route('/test/', endpoint='test')
         class TestResource(restplus.Resource):
@@ -232,7 +242,7 @@ class SwaggerTestCase(TestCase):
             self.assertEqual(url_for('api.test'), '/test/')
 
     def test_ns_resource_documentation(self):
-        api = restplus.Api(self.app, prefix='/api')
+        api = self.build_api(prefix='/api')
         ns = api.namespace('ns', 'Test namespace')
 
         @ns.route('/', endpoint='test')
@@ -294,10 +304,10 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(tag['description'], 'Test namespace')
 
         with self.context():
-            self.assertEqual(url_for('api.test'), '/ns/')
+            self.assertEqual(url_for('test'), '/ns/')
 
     def test_methods_docstring_to_summary(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/test/', endpoint='test')
         class TestResource(restplus.Resource):
@@ -338,7 +348,7 @@ class SwaggerTestCase(TestCase):
             # self.assertEqual(operation['parameters'], [])
 
     def test_path_parameter_no_type(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/id/<id>/', endpoint='by-id')
         class ByIdResource(restplus.Resource):
@@ -358,7 +368,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['required'], True)
 
     def test_path_parameter_with_type(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/name/<int:age>/', endpoint='by-name')
         class ByNameResource(restplus.Resource):
@@ -378,7 +388,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['required'], True)
 
     def test_path_parameter_with_explicit_details(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/name/<int:age>/', endpoint='by-name')
         class ByNameResource(restplus.Resource):
@@ -402,7 +412,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'An age')
 
     def test_parser_parameters(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param')
 
@@ -425,7 +435,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'Some param')
 
     def test_parser_parameters_on_class(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param')
 
@@ -448,7 +458,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'Some param')
 
     def test_method_parser_on_class(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param')
 
@@ -477,7 +487,7 @@ class SwaggerTestCase(TestCase):
         self.assertNotIn('parameters', op)
 
     def test_parser_parameters_override(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param')
 
@@ -500,7 +510,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'New description')
 
     def test_parser_parameter_in_form(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param', location='form')
 
@@ -525,7 +535,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(op['consumes'], ['application/x-www-form-urlencoded', 'multipart/form-data'])
 
     def test_parser_parameter_in_files(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
         parser = api.parser()
         parser.add_argument('in_files', type=FileStorage, location='files')
 
@@ -549,7 +559,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(op['consumes'], ['multipart/form-data'])
 
     def test_explicit_parameters(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/name/<int:age>/', endpoint='by-name')
         class ByNameResource(restplus.Resource):
@@ -584,7 +594,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'A query string')
 
     def test_class_explicit_parameters(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
             'params': {
@@ -620,7 +630,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'A query string')
 
     def test_explicit_parameters_override(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
             'params': {
@@ -661,7 +671,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'A query string')
 
     def test_explicit_parameters_override_by_method(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
             'get': {
@@ -719,7 +729,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'An age')
 
     def test_explicit_parameters_desription_shortcut(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
             'get': {
@@ -771,7 +781,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'An age')
 
     def test_response_on_method(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         api.model('ErrorModel', {
             'message': restplus.fields.String,
@@ -811,7 +821,7 @@ class SwaggerTestCase(TestCase):
         self.assertIn('ErrorModel', data['definitions'])
 
     def test_description(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/description/', endpoint='description', doc={
             'description': 'Parent description.',
@@ -865,7 +875,7 @@ class SwaggerTestCase(TestCase):
         self.assertNotIn('description', data['paths']['/descriptionless/']['get'])
 
     def test_operation_id(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/test/', endpoint='test')
         class TestResource(restplus.Resource):
@@ -883,7 +893,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['post']['operationId'], 'post_test_resource')
 
     def test_model_primitive_types(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/model-int/')
         class ModelInt(restplus.Resource):
@@ -904,7 +914,7 @@ class SwaggerTestCase(TestCase):
         })
 
     def test_model_as_flat_dict(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -947,7 +957,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['post']['responses']['200']['schema']['$ref'], '#/definitions/Person')
 
     def test_model_as_nested_dict(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         address_fields = api.model('Address', {
             'road': restplus.fields.String,
@@ -1007,7 +1017,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['post']['responses']['200']['schema']['$ref'], '#/definitions/Person')
 
     def test_model_as_flat_dict_with_marchal_decorator(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1044,7 +1054,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['responses']['200']['schema']['$ref'], '#/definitions/Person')
 
     def test_marchal_decorator_with_code(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1068,7 +1078,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['delete']['responses']['204']['schema']['$ref'], '#/definitions/Person')
 
     def test_model_as_flat_dict_with_marchal_decorator_list(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1108,7 +1118,7 @@ class SwaggerTestCase(TestCase):
         })
 
     def test_model_as_flat_dict_with_marchal_decorator_list_alt(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1148,7 +1158,7 @@ class SwaggerTestCase(TestCase):
         })
 
     def test_model_as_dict_with_list(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1187,7 +1197,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Person'})
 
     def test_model_list_of_primitive_types(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/model-list/')
         class ModelAsDict(restplus.Resource):
@@ -1214,7 +1224,7 @@ class SwaggerTestCase(TestCase):
         })
 
     def test_model_list_as_flat_dict(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1245,7 +1255,7 @@ class SwaggerTestCase(TestCase):
             })
 
     def test_model_doc_on_class(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1271,7 +1281,7 @@ class SwaggerTestCase(TestCase):
             self.assertEqual(path[method]['responses']['200']['schema'], {'$ref': '#/definitions/Person'})
 
     def test_model_doc_for_method_on_class(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1297,7 +1307,7 @@ class SwaggerTestCase(TestCase):
         self.assertNotIn('schema', path['post']['responses']['200'])
 
     def test_model_not_found(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.route('/model-not-found/')
         class ModelAsDict(restplus.Resource):
@@ -1310,7 +1320,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(data['status'], 500)
 
     def test_model_as_class(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.model(fields={'name': restplus.fields.String})
         class MyModel(restplus.fields.Raw):
@@ -1354,7 +1364,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Fake'})
 
     def test_nested_model_as_class(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.model(fields={'name': restplus.fields.String})
         class MyModel(restplus.fields.Raw):
@@ -1404,7 +1414,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['post']['responses']['200']['schema'], {'$ref': '#/definitions/Fake'})
 
     def test_model_list_as_class(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.model(fields={'name': restplus.fields.String})
         class MyModel(restplus.fields.Raw):
@@ -1451,7 +1461,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Fake'})
 
     def test_custom_field(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         @api.model(type='integer', format='int64')
         class MyModel(restplus.fields.Raw):
@@ -1489,7 +1499,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Fake'})
 
     def test_body_model(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -1536,7 +1546,7 @@ class SwaggerTestCase(TestCase):
         self.assertNotIn('description', parameter)
 
     def test_body_model_as_tuple(self):
-        api = restplus.Api(self.app)
+        api = self.build_api()
 
         fields = api.model('Person', {
             'name': restplus.fields.String,
