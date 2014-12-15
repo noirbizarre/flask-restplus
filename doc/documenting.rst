@@ -280,7 +280,45 @@ The following example will produce the same documentation than the two previous 
             return {}
 
 
-Overriding the API root view
-----------------------------
+Hiding from documentation
+-------------------------
 
-TODO
+You can hide some ressources or methods from documentation using one of the following syntaxes:
+
+.. code-block:: python
+
+    # Hide the full ressource
+    @api.route('/resource1/', doc=False)
+    class Resource1(Resource):
+        def get(self):
+            return {}
+
+    @api.route('/resource2/')
+    @api.doc(False)
+    class Resource2(Resource):
+        def get(self):
+            return {}
+
+    @api.route('/resource3/')
+    @api.hide
+    class Resource3(Resource):
+        def get(self):
+            return {}
+
+    # Hide methods
+    @api.route('/resource4/')
+    @api.doc(delete=False)
+    class Resource4(Resource):
+        def get(self):
+            return {}
+
+        @api.doc(False)
+        def post(self):
+            return {}
+
+        @api.hide
+        def put(self):
+            return {}
+
+        def delete(self):
+            return {}

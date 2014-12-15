@@ -238,7 +238,7 @@ class Swagger(object):
         specs = {
             'swagger': '2.0',
             'basePath': basepath,
-            'paths': paths,
+            'paths': not_none(paths),
             'info': infos,
             'produces': list(self.api.representations.keys()),
             'consumes': ['application/json'],
@@ -251,6 +251,8 @@ class Swagger(object):
 
     def extract_resource_doc(self, resource, url):
         doc = getattr(resource, '__apidoc__', {})
+        if doc is False:
+            return False
         doc['name'] = resource.__name__
         doc['params'] = self.merge_params(extract_path_params(url), doc)
         for method in [m.lower() for m in resource.methods or []]:
@@ -261,8 +263,9 @@ class Swagger(object):
             elif hasattr(method_impl, '__func__'):
                 method_impl = method_impl.__func__
             method_doc = merge(method_doc, getattr(method_impl, '__apidoc__', {}))
-            method_doc['docstring'] = getattr(method_impl, '__doc__')
-            method_doc['params'] = self.merge_params({}, method_doc)
+            if method_doc is not False:
+                method_doc['docstring'] = getattr(method_impl, '__doc__')
+                method_doc['params'] = self.merge_params({}, method_doc)
             doc[method] = method_doc
         return doc
 
@@ -292,8 +295,12 @@ class Swagger(object):
 
     def serialize_resource(self, ns, resource, url):
         doc = self.extract_resource_doc(resource, url)
+        if doc is False:
+            return
         operations = {}
         for method in [m.lower() for m in resource.methods or []]:
+            if doc[method] is False:
+                continue
             operations[method] = self.serialize_operation(doc, method)
             operations[method]['tags'] = [ns.name]
         return operations

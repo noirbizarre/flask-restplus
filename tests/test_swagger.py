@@ -1819,3 +1819,71 @@ class SwaggerTestCase(TestCase):
         path = data['paths']['/authorizations/']
         for method in 'get', 'post':
             self.assertEqual(path[method]['security'], [])
+
+    def test_hidden_resource(self):
+        api = self.build_api()
+
+        @api.route('/test/', endpoint='test', doc=False)
+        class TestResource(restplus.Resource):
+            def get(self):
+                '''
+                GET operation
+                '''
+                return {}
+
+        @api.hide
+        @api.route('/test2/', endpoint='test2')
+        class TestResource2(restplus.Resource):
+            def get(self):
+                '''
+                GET operation
+                '''
+                return {}
+
+        @api.doc(False)
+        @api.route('/test3/', endpoint='test3')
+        class TestResource3(restplus.Resource):
+            def get(self):
+                '''
+                GET operation
+                '''
+                return {}
+
+        data = self.get_specs()
+        for path in '/test/', '/test2/', '/test3/':
+            self.assertNotIn(path, data['paths'])
+
+    def test_hidden_methods(self):
+        api = self.build_api()
+
+        @api.route('/test/', endpoint='test')
+        @api.doc(delete=False)
+        class TestResource(restplus.Resource):
+            def get(self):
+                '''
+                GET operation
+                '''
+                return {}
+
+            @api.doc(False)
+            def post(self):
+                '''POST operation.
+
+                Should be ignored
+                '''
+                return {}
+
+            @api.hide
+            def put(self):
+                '''PUT operation. Should be ignored'''
+                return {}
+
+            def delete(self):
+                return {}
+
+        data = self.get_specs()
+        path = data['paths']['/test/']
+
+        self.assertIn('get', path)
+        self.assertNotIn('post', path)
+        self.assertNotIn('put', path)

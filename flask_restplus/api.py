@@ -127,25 +127,30 @@ class Api(restful.Api):
         self.license = kwargs.get('license', self.license)
         self.license_url = kwargs.get('license_url', self.license_url)
 
+        self.add_resource(self.swagger_view(), '/swagger.json', endpoint='specs', doc=False)
+
         super(Api, self).init_app(app)
 
         if self.blueprint:
-            view_func = self.output(SwaggerView.as_view(str('specs'), api=self))
-            url = self._complete_url('/swagger.json', '')
-            self.blueprint.add_url_rule(url, view_func=view_func)
-            self.endpoints.add('specs')
             self.blueprint.add_url_rule('/', 'root', self.render_root)
 
     def _init_app(self, app):
         super(Api, self)._init_app(app)
         if not self.blueprint:
-            view_func = self.output(SwaggerView.as_view(str('specs'), api=self))
-            url = self._complete_url('/swagger.json', '')
-            app.add_url_rule(url, view_func=view_func)
-            self.endpoints.add('specs')
             app.add_url_rule('/', 'root', self.render_root)
         if self.ui:
             apidoc.init_app(app)
+
+    def swagger_view(self):
+        class SwaggerView(Resource):
+            api = self
+
+            def get(self):
+                return Swagger(self.api).as_dict()
+
+            def mediatypes(self):
+                return ['application/json']
+        return SwaggerView
 
     def render_root(self):
         '''Override this method to customize the documentation page'''
@@ -156,7 +161,7 @@ class Api(restful.Api):
     def add_resource(self, resource, *urls, **kwargs):
         '''Register a Swagger API declaration for a given API Namespace'''
         kwargs['endpoint'] = str(kwargs.pop('endpoint', None) or resource.__name__.lower())
-        if not kwargs.pop('namespace', None):
+        if kwargs.pop('doc', True) and not kwargs.pop('namespace', None):
             self.default_namespace.resources.append((resource, urls, kwargs))
 
         super(Api, self).add_resource(resource, *urls, **kwargs)
@@ -173,16 +178,21 @@ class Api(restful.Api):
     def route(self, *urls, **kwargs):
         def wrapper(cls):
             doc = kwargs.pop('doc', None)
-            if doc:
+            if doc is not None:
                 self._handle_api_doc(cls, doc)
             self.add_resource(cls, *urls, **kwargs)
             return cls
         return wrapper
 
     def _handle_api_doc(self, cls, doc):
+        if doc is False:
+            cls.__apidoc__ = False
+            return
         unshortcut_params_description(doc)
         for key in 'get', 'post', 'put', 'delete', 'options', 'head', 'patch':
             if key in doc:
+                if doc[key] is False:
+                    continue
                 unshortcut_params_description(doc[key])
         cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
 
@@ -204,12 +214,15 @@ class Api(restful.Api):
     def base_path(self):
         return url_for(self.endpoint('root'))
 
-    def doc(self, **kwargs):
+    def doc(self, show=True, **kwargs):
         '''Add some api documentation to the decorated object'''
         def wrapper(documented):
-            self._handle_api_doc(documented, kwargs)
+            self._handle_api_doc(documented, kwargs if show else False)
             return documented
         return wrapper
+
+    def hide(self, func):
+        return self.doc(False)(func)
 
     def abort(self, code=500, message=None, **kwargs):
         '''Properly abort the current request'''
@@ -278,14 +291,3 @@ def unshortcut_params_description(data):
         for name, description in data['params'].items():
             if isinstance(description, six.string_types):
                 data['params'][name] = {'description': description}
-
-
-class SwaggerView(Resource):
-    def __init__(self, api=None):
-        self.api = api
-
-    def get(self):
-        return Swagger(self.api).as_dict()
-
-    def mediatypes(self):
-        return ['application/json']
