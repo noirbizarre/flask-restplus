@@ -1,12 +1,12 @@
 Changelog
 =========
 
-Current
+0.4.0
 -------
 
 - Port to Flask-Restful 0.3+
 - Use the default Blueprint/App mecanism
-- Allow to hide some ressources or methods using @api.doc(False) or @api.hide
+- Allow to hide some ressources or methods using ``@api.doc(False)`` or ``@api.hide``
 - Allow to globally customize the default operationId with the ``default_id`` callable parameter
 
 0.3.0
