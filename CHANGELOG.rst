@@ -1,8 +1,14 @@
 Changelog
 =========
 
-0.4.0
+Current
 -------
+
+- Nothing yet
+
+
+0.4.0
+-----
 
 - Port to Flask-Restful 0.3+
 - Use the default Blueprint/App mecanism
