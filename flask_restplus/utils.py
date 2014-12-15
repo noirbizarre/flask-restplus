@@ -28,5 +28,11 @@ def merge(first, second):
 
 
 def camel_to_dash(value):
+    '''Transform a CamelCase string into a low_dashed one'''
     first_cap = FIRST_CAP_RE.sub(r'\1_\2', value)
     return ALL_CAP_RE.sub(r'\1_\2', first_cap).lower()
+
+
+def default_id(resource, method):
+    '''Default operation ID generator'''
+    return '{0}_{1}'.format(method, camel_to_dash(resource))

@@ -892,6 +892,27 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['operationId'], 'get_objects')
         self.assertEqual(path['post']['operationId'], 'post_test_resource')
 
+    def test_custom_default_operation_id(self):
+        def default_id(resource, method):
+            return '{0}{1}'.format(method, resource)
+
+        api = self.build_api(default_id=default_id)
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            @api.doc(id='get_objects')
+            def get(self):
+                return {}
+
+            def post(self):
+                return {}
+
+        data = self.get_specs()
+        path = data['paths']['/test/']
+
+        self.assertEqual(path['get']['operationId'], 'get_objects')
+        self.assertEqual(path['post']['operationId'], 'postTestResource')
+
     def test_model_primitive_types(self):
         api = self.build_api()
 

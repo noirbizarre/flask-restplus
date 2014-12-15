@@ -175,6 +175,22 @@ If not specified, a default operationId is providen with the following pattern::
 In the previous example, the default generated operationId will be ``get_my_resource``
 
 
+You can override the default operationId genertor by giving a callable as ``default_id`` parameter to your API.
+This callable will receive two positionnal arguments:
+
+ - the resource class name
+ - this lower cased HTTP method
+
+.. code-block:: python
+
+    def default_id(resource, method):
+        return ''.join((method, resource))
+
+    api = Api(app, default_id=default_id)
+
+In the previous example, the generated operationId will be ``getMyResource``
+
+
 Each operation will automatically receive the namespace tag.
 If the resource is attached to the root API, it will receive the default namespace tag.
 

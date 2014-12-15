@@ -11,7 +11,7 @@ from .model import ApiModel
 from .namespace import ApiNamespace
 from .resource import Resource
 from .swagger import Swagger
-from .utils import merge
+from .utils import merge, default_id
 from .reqparse import RequestParser
 
 
@@ -93,7 +93,7 @@ class Api(restful.Api):
     def __init__(self, app=None, version='1.0', title=None, description=None,
             terms_url=None, license=None, license_url=None,
             contact=None, contact_url=None, contact_email=None,
-            authorizations=None, security=None, ui=True,
+            authorizations=None, security=None, ui=True, default_id=default_id,
             default='default', default_label='Default namespace', **kwargs):
         self.version = version
         self.title = title or 'API'
@@ -107,6 +107,7 @@ class Api(restful.Api):
         self.authorizations = authorizations
         self.security = security
         self.ui = ui
+        self.default_id = default_id
 
         self.models = {}
         self.namespaces = []

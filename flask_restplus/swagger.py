@@ -13,7 +13,7 @@ from flask import current_app
 
 from . import fields
 from .exceptions import SpecsError
-from .utils import camel_to_dash, merge
+from .utils import merge
 
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
@@ -345,7 +345,7 @@ class Swagger(object):
 
     def operation_id_for(self, doc, method):
         '''Extract the operation id'''
-        return doc[method]['id'] if 'id' in doc[method] else '{0}_{1}'.format(method, camel_to_dash(doc['name']))
+        return doc[method]['id'] if 'id' in doc[method] else self.api.default_id(doc['name'], method)
 
     def parameters_for(self, doc, method):
         params = []
