@@ -39,6 +39,7 @@ Documentation
     quickstart
     syntaxic_sugar
     documenting
+    swaggerui
     example
     api
     changelog

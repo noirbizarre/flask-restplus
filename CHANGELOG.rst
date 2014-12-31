@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Added ``SWAGGER_VALIDATOR_URL`` config parameter
 
 
 0.4.0
