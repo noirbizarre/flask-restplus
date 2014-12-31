@@ -5,7 +5,7 @@ __description__ = 'Helpers, syntaxic sugar and Swagger documentation for Flask-R
 try:
     from flask.ext.restful import marshal, marshal_with, abort  # noqa
 
-    from . import fields, reqparse
+    from . import fields, reqparse, apidoc
     from .api import Api  # noqa
     from .resource import Resource  # noqa
     from .exceptions import RestException, SpecsError, ValidationError
@@ -16,6 +16,7 @@ try:
         '__description__',
         'Api',
         'Resource',
+        'apidoc',
         'marshal',
         'marshal_with',
         'abort',

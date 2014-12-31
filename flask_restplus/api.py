@@ -139,8 +139,6 @@ class Api(restful.Api):
         super(Api, self)._init_app(app)
         if not self.blueprint:
             app.add_url_rule('/', 'root', self.render_root)
-        if self.ui:
-            apidoc.init_app(app)
 
     def swagger_view(self):
         class SwaggerView(Resource):

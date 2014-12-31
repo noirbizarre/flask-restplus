@@ -9,6 +9,10 @@ from . import TestCase
 
 
 class APIDocTestCase(TestCase):
+    def setUp(self):
+        super(APIDocTestCase, self).setUp()
+        restplus.apidoc.apidoc.registered = False  # Avoid collision with other tests
+
     def test_default_apidoc_on_root(self):
         restplus.Api(self.app, version='1.0')
 
@@ -45,3 +49,21 @@ class APIDocTestCase(TestCase):
             self.assertEquals(response.status_code, 200)
             self.assertEquals(response.content_type, 'text/html; charset=utf-8')
             self.assertIn('validatorUrl: "http://somewhere.com/validator" || null,', response.data)
+
+    def test_custom_apidoc_url(self):
+        blueprint = Blueprint('api', __name__, url_prefix='/api')
+        api = restplus.Api(blueprint, version='1.0', ui=False)
+
+        @blueprint.route('/doc/', endpoint='doc')
+        def swagger_ui():
+            return restplus.apidoc.ui_for(api)
+
+        self.app.register_blueprint(blueprint)
+
+        with self.context(), self.app.test_client() as client:
+            response = client.get(url_for('api.root'))
+            self.assertEquals(response.status_code, 404)
+
+            response = client.get(url_for('api.doc'))
+            self.assertEquals(response.status_code, 200)
+            self.assertEquals(response.content_type, 'text/html; charset=utf-8')

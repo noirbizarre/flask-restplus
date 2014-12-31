@@ -72,8 +72,8 @@ You can also provide a custom UI by reusing the apidoc blueprint or rolling your
 
 .. code-block:: python
 
-    from flask import Flask, Blueprint
-    from flask.ext.restplus import API, apidoc, url_for
+    from flask import Flask, Blueprint, url_for
+    from flask.ext.restplus import API, apidoc
 
     app = Flask(__name__)
     blueprint = Blueprint('api', __name__, url_prefix='/api')
@@ -82,7 +82,7 @@ You can also provide a custom UI by reusing the apidoc blueprint or rolling your
     '...'
 
     @blueprint.route('/doc/', endpoint='doc')
-    def swagger_ui(self):
+    def swagger_ui():
         return apidoc.ui_for(api)
 
 
