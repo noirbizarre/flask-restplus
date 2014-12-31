@@ -9,6 +9,7 @@ try:
     from .api import Api  # noqa
     from .resource import Resource  # noqa
     from .exceptions import RestException, SpecsError, ValidationError
+    from .swagger import Swagger
 
     __all__ = (
         '__version__',
@@ -22,6 +23,7 @@ try:
         'reqparse',
         'RestException',
         'SpecsError',
+        'Swagger',
         'ValidationError',
     )
 

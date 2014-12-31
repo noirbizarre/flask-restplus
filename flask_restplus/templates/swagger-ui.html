@@ -8,6 +8,7 @@
         $(function () {
             window.swaggerUi = new SwaggerUi({
                 url: "{{ specs_url }}",
+                validatorUrl: "{{ config.SWAGGER_VALIDATOR_URL }}" || null,
                 dom_id: "swagger-ui-container",
                 supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
                 onComplete: function(swaggerApi, swaggerUi){

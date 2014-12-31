@@ -18,11 +18,6 @@ class APITestCase(TestCase):
             self.assertEqual(url, '/')
             self.assertEqual(api.base_url, 'http://localhost/')
 
-        with self.app.test_client() as client:
-            response = client.get(url)
-            self.assertEquals(response.status_code, 200)
-            self.assertEquals(response.content_type, 'text/html; charset=utf-8')
-
     def test_root_endpoint_lazy(self):
         api = restplus.Api(version='1.0')
         api.init_app(self.app)
@@ -31,11 +26,6 @@ class APITestCase(TestCase):
             url = url_for('root')
             self.assertEqual(url, '/')
             self.assertEqual(api.base_url, 'http://localhost/')
-
-        with self.app.test_client() as client:
-            response = client.get(url)
-            self.assertEquals(response.status_code, 200)
-            self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
     def test_root_endpoint_with_blueprint(self):
         blueprint = Blueprint('api', __name__, url_prefix='/api')
@@ -48,10 +38,6 @@ class APITestCase(TestCase):
             self.assertEqual(url, '/api/')
             self.assertEqual(api.base_url, 'http://localhost/api/')
 
-        with self.app.test_client() as client:
-            response = client.get(url)
-            self.assertEquals(response.status_code, 200)
-            self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
     def test_abort_code_only_with_defaults(self):
         api = restplus.Api(self.app)
