@@ -48,7 +48,7 @@ class APIDocTestCase(TestCase):
             response = client.get(url_for('root'))
             self.assertEquals(response.status_code, 200)
             self.assertEquals(response.content_type, 'text/html; charset=utf-8')
-            self.assertIn('validatorUrl: "http://somewhere.com/validator" || null,', response.data)
+            self.assertIn('validatorUrl: "http://somewhere.com/validator" || null,', str(response.data))
 
     def test_custom_apidoc_url(self):
         blueprint = Blueprint('api', __name__, url_prefix='/api')
