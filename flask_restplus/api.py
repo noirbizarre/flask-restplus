@@ -136,6 +136,13 @@ class Api(restful.Api):
         super(Api, self)._init_app(app)
         if not self.blueprint:
             app.add_url_rule('/', 'root', self.render_root)
+        self.register_apidoc(app)
+
+    def register_apidoc(self, app):
+        conf = app.extensions.setdefault('restplus', {})
+        if not conf.get('apidoc_registered', False):
+            app.register_blueprint(apidoc.apidoc)
+        conf['apidoc_registered'] = True
 
     def swagger_view(self):
         class SwaggerView(Resource):

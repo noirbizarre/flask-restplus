@@ -9,10 +9,6 @@ from . import TestCase
 
 
 class APIDocTestCase(TestCase):
-    def setUp(self):
-        super(APIDocTestCase, self).setUp()
-        restplus.apidoc.apidoc.registered = False  # Avoid collision with other tests
-
     def test_default_apidoc_on_root(self):
         restplus.Api(self.app, version='1.0')
 
