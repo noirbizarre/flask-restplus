@@ -21,6 +21,6 @@
     "tests"
   ],
   "dependencies": {
-    "swagger-ui": "https://github.com/swagger-api/swagger-ui.git#f1e394b3c9061b9cf7aaa786ea5daa79360033e6"
+    "swagger-ui": "https://github.com/swagger-api/swagger-ui.git#abd67ca"
   }
 }

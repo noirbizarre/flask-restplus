@@ -6,6 +6,7 @@ Current
 
 - Added ``SWAGGER_VALIDATOR_URL`` config parameter
 - Added ``readonly`` field parameter
+- Upgraded to latest version of Swagger UI
 
 
 0.4.0
