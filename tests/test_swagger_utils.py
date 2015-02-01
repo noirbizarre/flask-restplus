@@ -122,6 +122,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Raw(required=True))
         self.assertEqual(prop, {'type': 'object', 'required': True})
 
+    def test_raw_field_with_readonly(self):
+        prop = field_to_property(fields.Raw(readonly=True))
+        self.assertEqual(prop, {'type': 'object', 'readOnly': True})
+
     def test_raw_field_with_default(self):
         prop = field_to_property(fields.Raw(default='aaa'))
         self.assertEqual(prop, {'type': 'object', 'default': 'aaa'})
@@ -137,6 +141,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_string_field_with_required(self):
         prop = field_to_property(fields.String(required=True))
         self.assertEqual(prop, {'type': 'string', 'required': True})
+
+    def test_string_field_with_readonly(self):
+        prop = field_to_property(fields.String(readonly=True))
+        self.assertEqual(prop, {'type': 'string', 'readOnly': True})
 
     def test_string_field_with_enum(self):
         prop = field_to_property(fields.String(enum=['A', 'B', 'C']))
@@ -158,6 +166,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Integer(required=True))
         self.assertEqual(prop, {'type': 'integer', 'required': True})
 
+    def test_integer_field_with_readonly(self):
+        prop = field_to_property(fields.Integer(readonly=True))
+        self.assertEqual(prop, {'type': 'integer', 'readOnly': True})
+
     def test_integer_field_with_min_max(self):
         prop = field_to_property(fields.Integer(min=0, max=5))
         self.assertEqual(prop, {'type': 'integer', 'minimum': 0, 'maximum': 5})
@@ -178,6 +190,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Boolean(required=True))
         self.assertEqual(prop, {'type': 'boolean', 'required': True})
 
+    def test_boolean_field_with_readonly(self):
+        prop = field_to_property(fields.Boolean(readonly=True))
+        self.assertEqual(prop, {'type': 'boolean', 'readOnly': True})
+
     def test_boolean_field_with_default(self):
         prop = field_to_property(fields.Boolean(default=True))
         self.assertEqual(prop, {'type': 'boolean', 'default': True})
@@ -193,6 +209,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_float_field_with_required(self):
         prop = field_to_property(fields.Float(required=True))
         self.assertEqual(prop, {'type': 'number', 'required': True})
+
+    def test_float_field_with_readonly(self):
+        prop = field_to_property(fields.Float(readonly=True))
+        self.assertEqual(prop, {'type': 'number', 'readOnly': True})
 
     def test_float_field_with_min_max(self):
         prop = field_to_property(fields.Float(min=0, max=5))
@@ -214,6 +234,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Fixed(required=True))
         self.assertEqual(prop, {'type': 'number', 'required': True})
 
+    def test_fixed_field_with_readonly(self):
+        prop = field_to_property(fields.Fixed(readonly=True))
+        self.assertEqual(prop, {'type': 'number', 'readOnly': True})
+
     def test_fixed_field_with_min_max(self):
         prop = field_to_property(fields.Fixed(min=0, max=5))
         self.assertEqual(prop, {'type': 'number', 'minimum': 0, 'maximum': 5})
@@ -233,6 +257,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_arbitrary_field_with_required(self):
         prop = field_to_property(fields.Arbitrary(required=True))
         self.assertEqual(prop, {'type': 'number', 'required': True})
+
+    def test_arbitrary_field_with_readonly(self):
+        prop = field_to_property(fields.Arbitrary(readonly=True))
+        self.assertEqual(prop, {'type': 'number', 'readOnly': True})
 
     def test_arbitrary_field_with_min_max(self):
         prop = field_to_property(fields.Arbitrary(min=0, max=5))
@@ -269,6 +297,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_formatted_string_field_with_required(self):
         prop = field_to_property(fields.FormattedString('Hello {name}', required=True))
         self.assertEqual(prop, {'type': 'string', 'required': True})
+
+    def test_formatted_string_field_with_readonly(self):
+        prop = field_to_property(fields.FormattedString('Hello {name}', readonly=True))
+        self.assertEqual(prop, {'type': 'string', 'readOnly': True})
 
     def test_simple_url_field(self):
         prop = field_to_property(fields.Url('endpoint'))

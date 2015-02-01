@@ -5,6 +5,7 @@ Current
 -------
 
 - Added ``SWAGGER_VALIDATOR_URL`` config parameter
+- Added ``readonly`` field parameter
 
 
 0.4.0

@@ -149,6 +149,8 @@ def field_to_property(field):
         prop['enum'] = field.enum
     if getattr(field, 'required', None):
         prop['required'] = field.required
+    if getattr(field, 'readonly', None):
+        prop['readOnly'] = field.readonly
     if getattr(field, 'default', None):
         prop['default'] = field.default
 

@@ -13,6 +13,7 @@ class DescriptionMixin(object):
 class DetailsMixin(DescriptionMixin):
     def __init__(self, *args, **kwargs):
         self.required = kwargs.pop('required', None)
+        self.readonly = kwargs.pop('readonly', None)
         super(DetailsMixin, self).__init__(*args, **kwargs)
 
 
