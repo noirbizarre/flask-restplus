@@ -64,9 +64,6 @@ class Api(restful.Api):
     :param default_label: The default namespace label (used in Swagger documentation)
     :type default_label: str
 
-    :param prefix: Prefix all routes with a value, eg v1 or 2010-04-01
-    :type prefix: str
-
     :param default_mediatype: The default media type to return
     :type default_mediatype: str
 
