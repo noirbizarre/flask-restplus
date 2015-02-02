@@ -36,15 +36,17 @@ long_description = '\n'.join((
     ''
 ))
 
+
+exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
+
 tests_require = ['nose', 'rednose']
 
 setup(
     name='flask-restplus',
-    version=__import__('flask_restplus').__version__,
-    description=__import__('flask_restplus').__description__,
+    version=__version__,
+    description=__description__,
     long_description=long_description,
     url='https://github.com/noirbizarre/flask-restplus',
-    download_url='http://pypi.python.org/pypi/flask-restplus',
     author='Axel Haustant',
     author_email='axel@data.gouv.fr',
     packages=find_packages(),
