@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Rename apidoc blueprint into restplus_doc to avoid collisions
 
 
 0.4.1
