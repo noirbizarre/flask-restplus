@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.4.1
+-----
 
 - Added ``SWAGGER_VALIDATOR_URL`` config parameter
 - Added ``readonly`` field parameter
