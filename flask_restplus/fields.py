@@ -7,6 +7,7 @@ from flask.ext.restful import fields as base_fields
 class DescriptionMixin(object):
     def __init__(self, *args, **kwargs):
         self.description = kwargs.pop('description', None)
+        self.title = kwargs.pop('title', None)
         super(DescriptionMixin, self).__init__(*args, **kwargs)
 
 

@@ -118,6 +118,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Raw(description='A description'))
         self.assertEqual(prop, {'type': 'object', 'description': 'A description'})
 
+    def test_raw_field_with_title(self):
+        prop = field_to_property(fields.Raw(title='A title'))
+        self.assertEqual(prop, {'type': 'object', 'title': 'A title'})
+
     def test_raw_field_with_required(self):
         prop = field_to_property(fields.Raw(required=True))
         self.assertEqual(prop, {'type': 'object', 'required': True})
@@ -137,6 +141,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_string_field_with_description(self):
         prop = field_to_property(fields.String(description='A description'))
         self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
+
+    def test_string_field_with_title(self):
+        prop = field_to_property(fields.String(title='A title'))
+        self.assertEqual(prop, {'type': 'string', 'title': 'A title'})
 
     def test_string_field_with_required(self):
         prop = field_to_property(fields.String(required=True))
@@ -162,6 +170,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Integer(description='A description'))
         self.assertEqual(prop, {'type': 'integer', 'description': 'A description'})
 
+    def test_integer_field_with_title(self):
+        prop = field_to_property(fields.Integer(title='A title'))
+        self.assertEqual(prop, {'type': 'integer', 'title': 'A title'})
+
     def test_integer_field_with_required(self):
         prop = field_to_property(fields.Integer(required=True))
         self.assertEqual(prop, {'type': 'integer', 'required': True})
@@ -186,6 +198,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Boolean(description='A description'))
         self.assertEqual(prop, {'type': 'boolean', 'description': 'A description'})
 
+    def test_boolean_field_with_title(self):
+        prop = field_to_property(fields.Boolean(title='A title'))
+        self.assertEqual(prop, {'type': 'boolean', 'title': 'A title'})
+
     def test_boolean_field_with_required(self):
         prop = field_to_property(fields.Boolean(required=True))
         self.assertEqual(prop, {'type': 'boolean', 'required': True})
@@ -205,6 +221,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_float_field_with_description(self):
         prop = field_to_property(fields.Float(description='A description'))
         self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
+
+    def test_float_field_with_title(self):
+        prop = field_to_property(fields.Float(title='A title'))
+        self.assertEqual(prop, {'type': 'number', 'title': 'A title'})
 
     def test_float_field_with_required(self):
         prop = field_to_property(fields.Float(required=True))
@@ -230,6 +250,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Fixed(description='A description'))
         self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
 
+    def test_fixed_field_with_title(self):
+        prop = field_to_property(fields.Fixed(title='A title'))
+        self.assertEqual(prop, {'type': 'number', 'title': 'A title'})
+
     def test_fixed_field_with_required(self):
         prop = field_to_property(fields.Fixed(required=True))
         self.assertEqual(prop, {'type': 'number', 'required': True})
@@ -253,6 +277,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_arbitrary_field_with_description(self):
         prop = field_to_property(fields.Arbitrary(description='A description'))
         self.assertEqual(prop, {'type': 'number', 'description': 'A description'})
+
+    def test_arbitrary_field_with_title(self):
+        prop = field_to_property(fields.Arbitrary(title='A title'))
+        self.assertEqual(prop, {'type': 'number', 'title': 'A title'})
 
     def test_arbitrary_field_with_required(self):
         prop = field_to_property(fields.Arbitrary(required=True))
@@ -282,6 +310,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.DateTime(description='A description'))
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'description': 'A description'})
 
+    def test_datetime_field_with_title(self):
+        prop = field_to_property(fields.DateTime(title='A title'))
+        self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'title': 'A title'})
+
     def test_datetime_field_with_default(self):
         prop = field_to_property(fields.DateTime(default='2014-08-25'))
         self.assertEqual(prop, {'type': 'string', 'format': 'date-time', 'default': '2014-08-25'})
@@ -293,6 +325,10 @@ class FieldToPropertyTestCase(TestCase):
     def test_formatted_string_field_with_description(self):
         prop = field_to_property(fields.FormattedString('Hello {name}', description='A description'))
         self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
+
+    def test_formatted_field_with_title(self):
+        prop = field_to_property(fields.FormattedString('Hello {name}', title='A title'))
+        self.assertEqual(prop, {'type': 'string', 'title': 'A title'})
 
     def test_formatted_string_field_with_required(self):
         prop = field_to_property(fields.FormattedString('Hello {name}', required=True))
@@ -310,6 +346,14 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Url('endpoint', description='A description'))
         self.assertEqual(prop, {'type': 'string', 'description': 'A description'})
 
+    def test_url_field_with_title(self):
+        prop = field_to_property(fields.Url('endpoint', title='A title'))
+        self.assertEqual(prop, {'type': 'string', 'title': 'A title'})
+
+    def test_url_field_with_readonly(self):
+        prop = field_to_property(fields.Url('endpoint', readonly=True))
+        self.assertEqual(prop, {'type': 'string', 'readOnly': True})
+
     def test_url_field_with_required(self):
         prop = field_to_property(fields.Url('endpoint', required=True))
         self.assertEqual(prop, {'type': 'string', 'required': True})
@@ -325,6 +369,12 @@ class FieldToPropertyTestCase(TestCase):
             pass
         prop = field_to_property(Custom(description='A description'))
         self.assertEqual(prop, {'type': 'object', 'description': 'A description'})
+
+    def test_custom_field_with_title(self):
+        class Custom(fields.Raw):
+            pass
+        prop = field_to_property(Custom(title='A title'))
+        self.assertEqual(prop, {'type': 'object', 'title': 'A title'})
 
     def test_custom_field_with_type(self):
         api = Api(self.app)
@@ -371,6 +421,12 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.Nested(nested_fields, description='A description'))
         self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'required': True, 'description': 'A description'})
 
+    def test_nested_field_with_title(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        prop = field_to_property(fields.Nested(nested_fields, title='A title'))
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'required': True, 'title': 'A title'})
+
     def test_nullable_nested_field(self):
         api = Api(self.app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
@@ -401,9 +457,17 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.List(fields.String, description='A description'))
         self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}, 'description': 'A description'})
 
+    def test_list_field_with_title(self):
+        prop = field_to_property(fields.List(fields.String, title='A title'))
+        self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}, 'title': 'A title'})
+
     def test_list_field_with_required(self):
         prop = field_to_property(fields.List(fields.String, required=True))
         self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}, 'required': True})
+
+    def test_list_field_with_readonly(self):
+        prop = field_to_property(fields.List(fields.String, readonly=True))
+        self.assertEqual(prop, {'type': 'array', 'items': {'type': 'string'}, 'readOnly': True})
 
     def test_list_field_with_custom_nested_field(self):
         api = Api(self.app)

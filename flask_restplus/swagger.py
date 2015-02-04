@@ -139,6 +139,9 @@ def field_to_property(field):
                 prop = FIELDS[cls].copy()
                 break
 
+
+    if getattr(field, 'title', None):
+        prop['title'] = field.title
     if getattr(field, 'description', None):
         prop['description'] = field.description
     if getattr(field, 'minimum', None) is not None:

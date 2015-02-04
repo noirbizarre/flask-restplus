@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothin yet
+- Added ``title`` attribute to fields
 
 
 0.4.2
