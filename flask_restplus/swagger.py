@@ -5,7 +5,7 @@ import re
 import six
 
 from inspect import isclass
-from collections import Hashable
+from collections import Hashable, OrderedDict
 from six import string_types
 
 from flask import current_app
@@ -67,6 +67,10 @@ def not_none(data):
     '''Remove all keys where value is None'''
     return dict((k, v) for k, v in data.items() if v is not None)
 
+def not_none_sorted(data):
+    '''Remove all keys where value is None'''
+    ordered_items = OrderedDict(sorted(data.items()))
+    return OrderedDict((k, v) for k, v in ordered_items.iteritems() if v is not None)
 
 def ref(model):
     '''Return a reference to model in definitions'''
@@ -243,7 +247,7 @@ class Swagger(object):
         specs = {
             'swagger': '2.0',
             'basePath': basepath,
-            'paths': not_none(paths),
+            'paths': not_none_sorted(paths),
             'info': infos,
             'produces': list(self.api.representations.keys()),
             'consumes': ['application/json'],
