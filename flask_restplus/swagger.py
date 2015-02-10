@@ -70,7 +70,7 @@ def not_none(data):
 def not_none_sorted(data):
     '''Remove all keys where value is None'''
     ordered_items = OrderedDict(sorted(data.items()))
-    return OrderedDict((k, v) for k, v in ordered_items.iteritems() if v is not None)
+    return OrderedDict((k, v) for k, v in ordered_items.items() if v is not None)
 
 def ref(model):
     '''Return a reference to model in definitions'''
