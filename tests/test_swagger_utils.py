@@ -419,13 +419,31 @@ class FieldToPropertyTestCase(TestCase):
         api = Api(self.app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
         prop = field_to_property(fields.Nested(nested_fields, description='A description'))
-        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'required': True, 'description': 'A description'})
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'description': 'A description', 'required': True})
 
     def test_nested_field_with_title(self):
         api = Api(self.app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
         prop = field_to_property(fields.Nested(nested_fields, title='A title'))
-        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'required': True, 'title': 'A title'})
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'title': 'A title', 'required': True})
+
+    def test_nested_field_with_allow_null(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        prop = field_to_property(fields.Nested(nested_fields, allow_null=True))
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel'})
+
+    def test_nested_field_with_required(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        prop = field_to_property(fields.Nested(nested_fields, required=True))
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'required': True})
+
+    def test_nested_field_with_readonly(self):
+        api = Api(self.app)
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        prop = field_to_property(fields.Nested(nested_fields, readonly=True))
+        self.assertEqual(prop, {'$ref': '#/definitions/NestedModel', 'readOnly': True})
 
     def test_nullable_nested_field(self):
         api = Api(self.app)
