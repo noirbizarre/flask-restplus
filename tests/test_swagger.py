@@ -1481,6 +1481,56 @@ class SwaggerTestCase(TestCase):
         path = data['paths']['/model-list-as-class/']
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Fake'})
 
+    def test_extend_flat_dict_model(self):
+        api = self.build_api()
+
+        parent = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        child = api.extend('Child', parent, {
+            'extra': restplus.fields.String,
+        })
+
+        @api.route('/extend/')
+        class ModelAsDict(restplus.Resource):
+            @api.doc(model=child)
+            def get(self):
+                return {}
+
+            @api.doc(model='Child')
+            def post(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertNotIn('Person', data['definitions'])
+        self.assertIn('Child', data['definitions'])
+        self.assertEqual(data['definitions']['Child'], {
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                },
+                'extra': {
+                    'type': 'string'
+                }
+            }
+        })
+
+        path = data['paths']['/extend/']
+        self.assertEqual(path['get']['responses']['200']['schema']['$ref'], '#/definitions/Child')
+        self.assertEqual(path['post']['responses']['200']['schema']['$ref'], '#/definitions/Child')
+
     def test_custom_field(self):
         api = self.build_api()
 

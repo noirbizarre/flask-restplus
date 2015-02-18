@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import copy
 import six
 
 from flask import url_for
@@ -254,6 +255,16 @@ class Api(restful.Api):
                 self.models[name or cls.__name__] = kwargs.get('fields', cls)
                 return cls
             return wrapper
+
+    def extend(self, name, parent, fields):
+        '''
+        Extend a model
+        '''
+        model = ApiModel(copy.deepcopy(parent))
+        model.__apidoc__['name'] = name
+        model.update(fields)
+        self.models[name] = model
+        return model
 
     def parser(self):
         '''Instanciate a RequestParser'''

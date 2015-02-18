@@ -67,10 +67,12 @@ def not_none(data):
     '''Remove all keys where value is None'''
     return dict((k, v) for k, v in data.items() if v is not None)
 
+
 def not_none_sorted(data):
     '''Remove all keys where value is None'''
     ordered_items = OrderedDict(sorted(data.items()))
     return OrderedDict((k, v) for k, v in ordered_items.items() if v is not None)
+
 
 def ref(model):
     '''Return a reference to model in definitions'''
@@ -120,7 +122,7 @@ def field_to_property(field):
         prop = ref(nested_field.__apidoc__['name'])
         if getattr(field, '__apidoc__', {}).get('as_list'):
             prop = {'type': 'array', 'items': prop}
-        elif not field.allow_null:
+        elif not field.allow_null and not field.readonly:
             prop['required'] = True
 
     elif field in FIELDS:
