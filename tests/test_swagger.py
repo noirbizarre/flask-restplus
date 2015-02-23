@@ -1624,10 +1624,14 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(len(op['parameters']), 1)
 
         parameter = op['parameters'][0]
-        self.assertEqual(parameter['name'], 'payload')
-        self.assertEqual(parameter['in'], 'body')
-        self.assertEqual(parameter['required'], True)
-        self.assertEqual(parameter['schema']['$ref'], '#/definitions/Person')
+        self.assertEqual(parameter, {
+            'name': 'payload',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                '$ref': '#/definitions/Person'
+            }
+        })
         self.assertNotIn('description', parameter)
 
     def test_body_model_shortcut(self):
@@ -1672,10 +1676,14 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(len(op['parameters']), 1)
 
         parameter = op['parameters'][0]
-        self.assertEqual(parameter['name'], 'payload')
-        self.assertEqual(parameter['in'], 'body')
-        self.assertEqual(parameter['required'], True)
-        self.assertEqual(parameter['schema']['$ref'], '#/definitions/Person')
+        self.assertEqual(parameter, {
+            'name': 'payload',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                '$ref': '#/definitions/Person'
+            }
+        })
         self.assertNotIn('description', parameter)
 
     def test_body_primitive_list(self):
@@ -1691,12 +1699,14 @@ class SwaggerTestCase(TestCase):
 
         op = data['paths']['/model-list/']['post']
         parameter = op['parameters'][0]
-        self.assertEqual(parameter['name'], 'payload')
-        self.assertEqual(parameter['in'], 'body')
-        self.assertEqual(parameter['required'], True)
-        self.assertEqual(parameter['schema'], {
-            'type': 'array',
-            'items': {'type': 'string'},
+        self.assertEqual(parameter, {
+            'name': 'payload',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'type': 'array',
+                'items': {'type': 'string'},
+            }
         })
 
     def test_body_model_list(self):
@@ -1735,12 +1745,15 @@ class SwaggerTestCase(TestCase):
 
         op = data['paths']['/model-list/']['post']
         parameter = op['parameters'][0]
-        self.assertEqual(parameter['name'], 'payload')
-        self.assertEqual(parameter['in'], 'body')
-        self.assertEqual(parameter['required'], True)
-        self.assertEqual(parameter['schema'], {
-            'type': 'array',
-            'items': {'$ref': '#/definitions/Person'},
+
+        self.assertEqual(parameter, {
+            'name': 'payload',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'type': 'array',
+                'items': {'$ref': '#/definitions/Person'},
+            }
         })
 
     def test_body_model_as_tuple(self):
@@ -1784,11 +1797,16 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(len(op['parameters']), 1)
 
         parameter = op['parameters'][0]
-        self.assertEqual(parameter['name'], 'payload')
-        self.assertEqual(parameter['in'], 'body')
-        self.assertEqual(parameter['required'], True)
-        self.assertEqual(parameter['description'], 'Body description')
-        self.assertEqual(parameter['schema']['$ref'], '#/definitions/Person')
+
+        self.assertEqual(parameter, {
+            'name': 'payload',
+            'in': 'body',
+            'required': True,
+            'description': 'Body description',
+            'schema': {
+                '$ref': '#/definitions/Person'
+            }
+        })
 
     def test_authorizations(self):
         api = restplus.Api(self.app, authorizations={

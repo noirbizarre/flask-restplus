@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Fix for parameter with schema (do not set type=string)
 
 
 0.5.0

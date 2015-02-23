@@ -362,7 +362,7 @@ class Swagger(object):
         params = []
         for name, param in merge(doc['params'], doc[method]['params']).items():
             param['name'] = name
-            if 'type' not in param:
+            if 'type' not in param and 'schema' not in param:
                 param['type'] = 'string'
             if 'in' not in param:
                 param['in'] = 'query'
