@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.5.1
+-----
 
 - Fix for parameter with schema (do not set type=string)
 
