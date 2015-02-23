@@ -218,8 +218,12 @@ class Api(restful.Api):
     def base_path(self):
         return url_for(self.endpoint('root'))
 
-    def doc(self, show=True, **kwargs):
+    def doc(self, shortcut=None, **kwargs):
         '''Add some api documentation to the decorated object'''
+        if isinstance(shortcut, six.text_type):
+            kwargs['id'] = shortcut
+        show = shortcut if isinstance(shortcut, bool) else True
+
         def wrapper(documented):
             self._handle_api_doc(documented, kwargs if show else False)
             return documented
@@ -265,6 +269,10 @@ class Api(restful.Api):
         model.update(fields)
         self.models[name] = model
         return model
+
+    def expect(self, body):
+        '''Specify the expected input model'''
+        return self.doc(body=body)
 
     def parser(self):
         '''Instanciate a RequestParser'''

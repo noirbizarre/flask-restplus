@@ -2,10 +2,10 @@ Documenting your API with Swagger
 =================================
 
 A Swagger API documentation is automatically generated and available on your API root
-but you need to provide some details with the ``Api.doc()`` decorator.
+but you need to provide some details with the ``@api.doc()`` decorator.
 
 
-Documenting with the ``Api.doc()`` decorator
+Documenting with the ``@api.doc()`` decorator
 --------------------------------------------
 
 This decorator allows you specify some details about your API.
@@ -27,10 +27,10 @@ You can document a class or a method.
             api.abort(403)
 
 
-Documenting with the ``Api.model()`` decorator
-----------------------------------------------
+Documenting with the ``@api.model()`` and ``@api.extend`` decorators
+--------------------------------------------------------------------
 
-The ``Api.model`` decorator allows you to declare the models that your API can serialize.
+The ``@api.model`` decorator allows you to declare the models that your API can serialize.
 
 You can use it either on a fields dictionnary or a ``field.Raw`` subclass:
 
@@ -53,9 +53,21 @@ You can use it either on a fields dictionnary or a ``field.Raw`` subclass:
         def format(self, value):
             return {'name': value.name, 'age': value.age}
 
+The ``api.extend`` method allows you to register an augmented model.
+It saves you duplicating all fields.
+
+.. code-block:: python
+
+    parent = api.model('Parent', {
+        'name': fields.String
+    })
+
+    child = api.extend('Child', parent, {
+        'age': fields.Integer
+    })
 
 
-Documenting with the ``Api.marshal_with()`` decorator
+Documenting with the ``@api.marshal_with()`` decorator
 -----------------------------------------------------
 
 This decorator works like the Flask-Restful ``marshal_with`` decorator
@@ -79,7 +91,7 @@ The optionnal parameter ``as_list`` allows you to specify wether or not the obje
             return create_object()
 
 
-The ``Api.marshal_list_with()`` decorator is strictly equivalent to ``Api.marshal_with(fields, as_list=True)``.
+The ``@pi.marshal_list_with()`` decorator is strictly equivalent to ``Api.marshal_with(fields, as_list=True)``.
 
 .. code-block:: python
 
@@ -98,9 +110,56 @@ The ``Api.marshal_list_with()`` decorator is strictly equivalent to ``Api.marsha
             return create_object()
 
 
+Documenting with the ``@api.expect()`` decorator
+------------------------------------------------
 
-Documenting with the ``Api.route()`` decorator
-----------------------------------------------
+The ``@api.expect()`` decorator allows you to specify the expected input fields
+and is a shortcut for ``@api.doc(body=<fields>)``.
+
+The following synatxes are equivalents:
+
+.. code-block:: python
+
+    resource_fields = api.model('Resource', {
+        'name': fields.String,
+    })
+
+    @api.route('/my-resource/<id>')
+    class MyResource(Resource):
+        @api.expect(resource_fields)
+        def get(self):
+            pass
+
+.. code-block:: python
+
+    resource_fields = api.model('Resource', {
+        'name': fields.String,
+    })
+
+    @api.route('/my-resource/<id>')
+    class MyResource(Resource):
+        @api.doc(body=resource_fields)
+        def get(self):
+            pass
+
+It allows you specify lists as expected input too:
+
+
+.. code-block:: python
+
+    resource_fields = api.model('Resource', {
+        'name': fields.String,
+    })
+
+    @api.route('/my-resource/<id>')
+    class MyResource(Resource):
+        @api.expect([resource_fields])
+        def get(self):
+            pass
+
+
+Documenting with the ``@api.route()`` decorator
+-----------------------------------------------
 
 You can provide class-wide documentation by using the ``Api.route()``'s' ``doc`` parameter.
 It accept the same attribute/syntax than the ``Api.doc()`` decorator.

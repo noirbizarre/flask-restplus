@@ -892,6 +892,20 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['operationId'], 'get_objects')
         self.assertEqual(path['post']['operationId'], 'post_test_resource')
 
+    def test_operation_id_shortcut(self):
+        api = self.build_api()
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            @api.doc('get_objects')
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+        path = data['paths']['/test/']
+
+        self.assertEqual(path['get']['operationId'], 'get_objects')
+
     def test_custom_default_operation_id(self):
         def default_id(resource, method):
             return '{0}{1}'.format(method, resource)
@@ -1615,6 +1629,119 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['required'], True)
         self.assertEqual(parameter['schema']['$ref'], '#/definitions/Person')
         self.assertNotIn('description', parameter)
+
+    def test_body_model_shortcut(self):
+        api = self.build_api()
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @api.doc(model='Person')
+            @api.expect(fields)
+            def post(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertEqual(data['definitions']['Person'], {
+            # 'id': 'Person',
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                }
+            }
+        })
+
+        op = data['paths']['/model-as-dict/']['post']
+        self.assertEqual(op['responses']['200']['schema']['$ref'], '#/definitions/Person')
+
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'payload')
+        self.assertEqual(parameter['in'], 'body')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['schema']['$ref'], '#/definitions/Person')
+        self.assertNotIn('description', parameter)
+
+    def test_body_primitive_list(self):
+        api = self.build_api()
+
+        @api.route('/model-list/')
+        class ModelAsDict(restplus.Resource):
+            @api.doc(body=[restplus.fields.String])
+            def post(self):
+                return {}
+
+        data = self.get_specs()
+
+        op = data['paths']['/model-list/']['post']
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'payload')
+        self.assertEqual(parameter['in'], 'body')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['schema'], {
+            'type': 'array',
+            'items': {'type': 'string'},
+        })
+
+    def test_body_model_list(self):
+        api = self.build_api()
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/model-list/')
+        class ModelAsDict(restplus.Resource):
+            @api.doc(body=[fields])
+            def post(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertEqual(data['definitions']['Person'], {
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                }
+            }
+        })
+
+        op = data['paths']['/model-list/']['post']
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'payload')
+        self.assertEqual(parameter['in'], 'body')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['schema'], {
+            'type': 'array',
+            'items': {'$ref': '#/definitions/Person'},
+        })
 
     def test_body_model_as_tuple(self):
         api = self.build_api()

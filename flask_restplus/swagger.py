@@ -291,7 +291,7 @@ class Swagger(object):
             params = merge(params, doc['params'])
 
         if 'body' in doc:
-            model, description = doc['body'] if isinstance(doc['body'], (list, tuple)) else (doc['body'], None)
+            model, description = doc['body'] if isinstance(doc['body'], (list, tuple)) and len(doc['body']) == 2 else (doc['body'], None)
             params = merge(params, {
                 'payload': not_none({
                     'name': 'payload',
@@ -437,6 +437,10 @@ class Swagger(object):
                 schema['items'] = {'type': PY_TYPES[model]}
                 return schema
 
+            elif model in FIELDS:
+                schema['items'] = FIELDS[model]
+                return schema
+
         elif isinstance(model, dict) and hasattr(model, '__apidoc__'):
             model = model.__apidoc__['name']
             self.register_model(model)
@@ -452,7 +456,7 @@ class Swagger(object):
         raise ValueError('Model {0} not registered'.format(model))
 
     def register_model(self, model):
-        if model not in self.api.models:
+        if model not in self.api.models and model not in FIELDS:
             raise ValueError('Model {0} not registered'.format(model))
         specs = self.api.models[model]
         self._registered_models[model] = specs

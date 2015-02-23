@@ -4,7 +4,13 @@ Changelog
 Current
 -------
 
+- Allow shorter syntax to set operation id: ``@api.doc('my-operation')``
+- Added a shortcut to specify the expected input model: ``@api.expect(my_fields)``
 - Added ``title`` attribute to fields
+- Added ``@api.extend()`` to extend models
+- Ensure coherence between ``required`` and ``allow_null`` for ``NestedField``
+- Support list of primitive types and list of models as body
+- Fixes
 
 
 0.4.2
