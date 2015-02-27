@@ -51,7 +51,7 @@ setup(
     author_email='axel@data.gouv.fr',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['flask-restful >= 0.3'],
+    install_requires=['flask-restful >= 0.3.2'],
     tests_require=tests_require,
     extras_require={
         'test': tests_require,
