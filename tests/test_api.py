@@ -164,3 +164,16 @@ class APITestCase(TestCase):
             },
             'other': {'description': 'another param'},
         }})
+
+    def test_specs_endpoint_not_added(self):
+        api = restplus.Api()
+        api.init_app(self.app, add_specs=False)
+        self.assertNotIn('specs', api.endpoints)
+        self.assertNotIn('specs', self.app.view_functions)
+
+    def test_specs_endpoint_not_found_if_not_added(self):
+        api = restplus.Api()
+        api.init_app(self.app, add_specs=False)
+        with self.app.test_client() as client:
+            resp = client.get('/swagger.json')
+        self.assertEqual(resp.status_code, 404)
