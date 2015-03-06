@@ -126,7 +126,8 @@ class Api(restful.Api):
         self.license = kwargs.get('license', self.license)
         self.license_url = kwargs.get('license_url', self.license_url)
 
-        self.add_resource(self.swagger_view(), '/swagger.json', endpoint='specs', doc=False)
+        if kwargs.get('add_specs', True):
+            self.add_resource(self.swagger_view(), '/swagger.json', endpoint='specs', doc=False)
 
         super(Api, self).init_app(app)
 
