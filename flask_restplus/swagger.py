@@ -5,7 +5,11 @@ import re
 import six
 
 from inspect import isclass
-from collections import Hashable, OrderedDict
+from collections import Hashable
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 from six import string_types
 
 from flask import current_app

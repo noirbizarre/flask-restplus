@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from flask import Flask
 from werkzeug.datastructures import FileStorage

@@ -2,7 +2,10 @@
 from __future__ import unicode_literals
 
 import json
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from contextlib import contextmanager
 
