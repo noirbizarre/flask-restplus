@@ -1341,6 +1341,60 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Person'})
         self.assertNotIn('schema', path['post']['responses']['200'])
 
+    def test_model_with_discriminator(self):
+        api = self.build_api()
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String(discriminator=True),
+            'age': restplus.fields.Integer,
+        })
+
+        @api.route('/model-with-discriminator/')
+        class ModelAsDict(restplus.Resource):
+            @api.marshal_with(fields)
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertEqual(data['definitions']['Person'], {
+            'properties': {
+                'name': {'type': 'string'},
+                'age': {'type': 'integer'},
+            },
+            'discriminator': 'name',
+            'required': ['name']
+        })
+
+    def test_model_with_discriminator_override_require(self):
+        api = self.build_api()
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String(discriminator=True, required=False),
+            'age': restplus.fields.Integer,
+        })
+
+        @api.route('/model-with-discriminator/')
+        class ModelAsDict(restplus.Resource):
+            @api.marshal_with(fields)
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertEqual(data['definitions']['Person'], {
+            'properties': {
+                'name': {'type': 'string'},
+                'age': {'type': 'integer'},
+            },
+            'discriminator': 'name',
+            'required': ['name']
+        })
+
     def test_model_not_found(self):
         api = self.build_api()
 

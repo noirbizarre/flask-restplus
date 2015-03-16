@@ -165,6 +165,10 @@ class FieldToPropertyTestCase(TestCase):
         prop = field_to_property(fields.String(default='aaa'))
         self.assertEqual(prop, {'type': 'string', 'default': 'aaa'})
 
+    def test_string_field_with_discriminator(self):
+        prop = field_to_property(fields.String(discriminator=True))
+        self.assertEqual(prop, {'type': 'string', 'discriminator': True})
+
     def test_simple_integer_field(self):
         prop = field_to_property(fields.Integer)
         self.assertEqual(prop, {'type': 'integer'})

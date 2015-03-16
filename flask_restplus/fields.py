@@ -23,6 +23,7 @@ class MinMaxMixin(object):
 class String(DetailsMixin, base_fields.String):
     def __init__(self, *args, **kwargs):
         self.enum = kwargs.pop('enum', None)
+        self.discriminator = kwargs.pop('discriminator', None)
         super(String, self).__init__(*args, **kwargs)
 
 

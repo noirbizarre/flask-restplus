@@ -166,6 +166,8 @@ def field_to_property(field):
         prop['readOnly'] = field.readonly
     if getattr(field, 'default', None):
         prop['default'] = field.default
+    if getattr(field, 'discriminator', None):
+        prop['discriminator'] = True
 
     return prop
 
@@ -398,18 +400,24 @@ class Swagger(object):
 
     def serialize_model(self, name, fields):
         properties = {}
-        required = []
+        required = set()
+        discriminator = None
         for name, field in fields.items():
             prop = field_to_property(field)
             if prop.get('required'):
-                required.append(name)
+                required.add(name)
             if 'required' in prop:
                 del prop['required']
+            if prop.get('discriminator'):
+                discriminator = name
+                required.add(name)
+                del prop['discriminator']
             properties[name] = prop
 
         return not_none({
-            'required': required or None,
+            'required': list(required) or None,
             'properties': properties,
+            'discriminator': discriminator,
         })
 
     def serialize_definitions(self):
