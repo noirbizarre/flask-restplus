@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import re
+import sys
 
 from setuptools import setup, find_packages
 
@@ -40,6 +42,12 @@ long_description = '\n'.join((
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
 tests_require = ['nose', 'rednose']
+install_requires = ['flask-restful >= 0.3.2']
+
+
+if sys.version_info[0:2] < (2, 7):
+    install_requires += ['ordereddict']
+    tests_require += ['unittest2']
 
 setup(
     name='flask-restplus',
@@ -51,7 +59,7 @@ setup(
     author_email='axel@data.gouv.fr',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['flask-restful >= 0.3.2'],
+    install_requires=install_requires,
     tests_require=tests_require,
     extras_require={
         'test': tests_require,
@@ -69,6 +77,7 @@ setup(
         'Topic :: System :: Software Distribution',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',

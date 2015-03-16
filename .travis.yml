@@ -8,6 +8,7 @@ python:
 install:
   - pip install -e .
   - pip install nose rednose coverage coveralls
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install unittest2; fi
 script:
   - nosetests --with-coverage
 after_success:
