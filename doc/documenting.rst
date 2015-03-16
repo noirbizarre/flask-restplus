@@ -6,7 +6,7 @@ but you need to provide some details with the ``@api.doc()`` decorator.
 
 
 Documenting with the ``@api.doc()`` decorator
---------------------------------------------
+---------------------------------------------
 
 This decorator allows you specify some details about your API.
 They will be used in the Swagger API declarations.
@@ -68,7 +68,7 @@ It saves you duplicating all fields.
 
 
 Documenting with the ``@api.marshal_with()`` decorator
------------------------------------------------------
+------------------------------------------------------
 
 This decorator works like the Flask-Restful ``marshal_with`` decorator
 with the difference that it documents the methods.
