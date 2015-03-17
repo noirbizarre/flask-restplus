@@ -149,7 +149,6 @@ def field_to_property(field):
                 prop = FIELDS[cls].copy()
                 break
 
-
     if getattr(field, 'title', None):
         prop['title'] = field.title
     if getattr(field, 'description', None):
@@ -297,7 +296,10 @@ class Swagger(object):
             params = merge(params, doc['params'])
 
         if 'body' in doc:
-            model, description = doc['body'] if isinstance(doc['body'], (list, tuple)) and len(doc['body']) == 2 else (doc['body'], None)
+            if isinstance(doc['body'], (list, tuple)) and len(doc['body']) == 2:
+                model, description = doc['body']
+            else:
+                model, description = doc['body'], None
             params = merge(params, {
                 'payload': not_none({
                     'name': 'payload',

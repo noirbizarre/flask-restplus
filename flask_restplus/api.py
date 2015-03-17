@@ -319,8 +319,6 @@ class Api(restful.Api):
         return restful.marshal(data, resolve_fields(fields))
 
 
-
-
 def unshortcut_params_description(data):
     if 'params' in data:
         for name, description in data['params'].items():
