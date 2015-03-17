@@ -421,7 +421,7 @@ class Swagger(object):
         })
 
         if getattr(fields, '__parent__', None):
-            return {'allOf': [ref(fields.__parent__), schema]}
+            return {'allOf': [ref(fields.__parent__.__apidoc__['name']), schema]}
         else:
             return schema
 
@@ -479,7 +479,7 @@ class Swagger(object):
         self._registered_models[model] = specs
         if isinstance(specs, dict):
             if getattr(specs, '__parent__', None):
-                self.register_model(specs.__parent__)
+                self.register_model(specs.__parent__.__apidoc__['name'])
             for name, field in specs.items():
                 if isinstance(field, fields.Nested) and hasattr(field.nested, '__apidoc__'):
                     self.register_model(field.nested.__apidoc__['name'])

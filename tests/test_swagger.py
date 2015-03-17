@@ -1549,7 +1549,7 @@ class SwaggerTestCase(TestCase):
         path = data['paths']['/model-list-as-class/']
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Fake'})
 
-    def test_extend_flat_dict_model(self):
+    def test_extend(self):
         api = self.build_api()
 
         parent = api.model('Person', {
@@ -1599,13 +1599,12 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(path['get']['responses']['200']['schema']['$ref'], '#/definitions/Child')
         self.assertEqual(path['post']['responses']['200']['schema']['$ref'], '#/definitions/Child')
 
-    def test_inherit_flat_dict_model(self):
+    def test_inherit(self):
         api = self.build_api()
 
         parent = api.model('Person', {
             'name': restplus.fields.String,
             'age': restplus.fields.Integer,
-            'birthdate': restplus.fields.DateTime,
         })
 
         child = api.inherit('Child', parent, {
@@ -1614,9 +1613,13 @@ class SwaggerTestCase(TestCase):
 
         @api.route('/inherit/')
         class ModelAsDict(restplus.Resource):
-            @api.doc(model=child)
+            @api.marshal_with(child)
             def get(self):
-                return {}
+                return {
+                    'name': 'John',
+                    'age': 42,
+                    'extra': 'test',
+                }
 
             @api.doc(model='Child')
             def post(self):
@@ -1629,16 +1632,8 @@ class SwaggerTestCase(TestCase):
         self.assertIn('Child', data['definitions'])
         self.assertEqual(data['definitions']['Person'], {
             'properties': {
-                'name': {
-                    'type': 'string'
-                },
-                'age': {
-                    'type': 'integer'
-                },
-                'birthdate': {
-                    'type': 'string',
-                    'format': 'date-time'
-                }
+                'name': {'type': 'string'},
+                'age': {'type': 'integer'},
             }
         })
         self.assertEqual(data['definitions']['Child'], {
@@ -1646,9 +1641,7 @@ class SwaggerTestCase(TestCase):
                     '$ref': '#/definitions/Person'
                 }, {
                     'properties': {
-                        'extra': {
-                            'type': 'string'
-                        }
+                        'extra': {'type': 'string'}
                     }
                 }
             ]
@@ -1657,6 +1650,13 @@ class SwaggerTestCase(TestCase):
         path = data['paths']['/inherit/']
         self.assertEqual(path['get']['responses']['200']['schema']['$ref'], '#/definitions/Child')
         self.assertEqual(path['post']['responses']['200']['schema']['$ref'], '#/definitions/Child')
+
+        data = self.get_json('/inherit/')
+        self.assertEqual(data, {
+            'name': 'John',
+            'age': 42,
+            'extra': 'test',
+        })
 
     def test_custom_field(self):
         api = self.build_api()

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from flask.ext.restful import fields as base_fields
 
 from .utils import camel_to_dash
+from .model import resolve_fields
 
 
 class DetailsMixin(object):
@@ -81,3 +82,29 @@ class ClassName(String):
     def output(self, key, obj):
         classname = obj.__class__.__name__
         return camel_to_dash(classname) if self.dash else classname
+
+
+class Polymorph(Nested):
+    def __init__(self, mapping, **kwargs):
+        self.mapping = mapping
+        super(Polymorph, self).__init__(None, **kwargs)
+
+    def output(self, key, obj):
+        value = base_fields.get_value(key if self.attribute is None else self.attribute, obj)
+        if value is None:
+            if self.allow_null:
+                return None
+            elif self.default is not None:
+                return self.default
+
+        if not hasattr(value, '__class__'):
+            raise ValueError('Polymorph field only accept class instances')
+
+        candidates = [fields for cls, fields in self.mapping.items() if isinstance(value, cls)]
+
+        if len(candidates) <= 0:
+            raise ValueError('Unknown class: ' + value.__class__.__name__)
+        elif len(candidates) > 1:
+            raise ValueError('Unable to determine a candidate for: ' + value.__class__.__name__)
+        else:
+            return base_fields.marshal(value, resolve_fields(candidates[0]))
