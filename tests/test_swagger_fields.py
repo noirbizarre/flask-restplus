@@ -78,3 +78,57 @@ class SwaggerFieldsTestCase(TestCase):
             'name': 'child2',
             'extra2': 'extra2'
         }})
+
+    def test_discriminator_field(self):
+        model = self.api.model('Test', {
+            'name': fields.String(discriminator=True),
+        })
+
+        data = self.api.marshal(object(), model)
+        self.assertEqual(data, {'name': 'Test'})
+
+    def test_polymorph_with_discriminator(self):
+        parent = self.api.model('Person', {
+            'name': fields.String,
+            'model': fields.String(discriminator=True),
+        })
+
+        child1 = self.api.inherit('Child1', parent, {
+            'extra1': fields.String,
+        })
+
+        child2 = self.api.inherit('Child2', parent, {
+            'extra2': fields.String,
+        })
+
+        class Child1(object):
+            name = 'child1'
+            extra1 = 'extra1'
+
+        class Child2(object):
+            name = 'child2'
+            extra2 = 'extra2'
+
+        mapping = {
+            Child1: child1,
+            Child2: child2
+        }
+
+        thing = self.api.model('Thing', {
+            'owner': fields.Polymorph(mapping),
+        })
+
+        def data(cls):
+            return self.api.marshal({'owner': cls()}, thing)
+
+        self.assertEqual(data(Child1), {'owner': {
+            'name': 'child1',
+            'model': 'Child1',
+            'extra1': 'extra1'
+        }})
+
+        self.assertEqual(data(Child2), {'owner': {
+            'name': 'child2',
+            'model': 'Child2',
+            'extra2': 'extra2'
+        }})
