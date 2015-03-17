@@ -38,3 +38,11 @@ class TestCase(unittest.TestCase):
             self.assertEquals(response.status_code, status)
             self.assertEquals(response.content_type, 'application/json')
             return json.loads(response.data.decode('utf8'))
+
+    def get_json(self, url, status=200):
+        with self.app.test_client() as client:
+            response = client.get(url)
+
+        self.assertEquals(response.status_code, status)
+        self.assertEquals(response.content_type, 'application/json')
+        return json.loads(response.data.decode('utf8'))

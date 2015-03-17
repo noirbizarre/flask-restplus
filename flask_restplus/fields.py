@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from flask.ext.restful import fields as base_fields
 
+from .utils import camel_to_dash
+
 
 class DetailsMixin(object):
     def __init__(self, *args, **kwargs):
@@ -69,3 +71,13 @@ class Fixed(DetailsMixin, MinMaxMixin, base_fields.Fixed):
 
 class FormattedString(DetailsMixin, base_fields.FormattedString):
     pass
+
+
+class ClassName(String):
+    def __init__(self, dash=False, **kwargs):
+        super(ClassName, self).__init__(**kwargs)
+        self.dash = dash
+
+    def output(self, key, obj):
+        classname = obj.__class__.__name__
+        return camel_to_dash(classname) if self.dash else classname
