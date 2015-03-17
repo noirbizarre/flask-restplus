@@ -414,11 +414,16 @@ class Swagger(object):
                 del prop['discriminator']
             properties[name] = prop
 
-        return not_none({
+        schema = not_none({
             'required': list(required) or None,
             'properties': properties,
             'discriminator': discriminator,
         })
+
+        if getattr(fields, '__parent__', None):
+            return {'allOf': [ref(fields.__parent__), schema]}
+        else:
+            return schema
 
     def serialize_definitions(self):
         return dict(
@@ -473,6 +478,8 @@ class Swagger(object):
         specs = self.api.models[model]
         self._registered_models[model] = specs
         if isinstance(specs, dict):
+            if getattr(specs, '__parent__', None):
+                self.register_model(specs.__parent__)
             for name, field in specs.items():
                 if isinstance(field, fields.Nested) and hasattr(field.nested, '__apidoc__'):
                     self.register_model(field.nested.__apidoc__['name'])

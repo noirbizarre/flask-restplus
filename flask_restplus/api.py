@@ -263,11 +263,21 @@ class Api(restful.Api):
 
     def extend(self, name, parent, fields):
         '''
-        Extend a model
+        Extend a model (Duplicate all fields)
         '''
         model = ApiModel(copy.deepcopy(parent))
         model.__apidoc__['name'] = name
         model.update(fields)
+        self.models[name] = model
+        return model
+
+    def inherit(self, name, parent, fields):
+        '''
+        Inherit a modal (use the Swagger composition pattern aka. allOf)
+        '''
+        model = ApiModel(fields)
+        model.__apidoc__['name'] = name
+        model.__parent__ = parent.__apidoc__['name']
         self.models[name] = model
         return model
 

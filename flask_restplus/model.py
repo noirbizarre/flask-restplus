@@ -8,4 +8,5 @@ class ApiModel(dict, MutableMapping):
     '''A thin wrapper on dict to store API doc metadata'''
     def __init__(self, *args, **kwargs):
         self.__apidoc__ = {}
+        self.__parent__ = None
         super(ApiModel, self).__init__(*args, **kwargs)
