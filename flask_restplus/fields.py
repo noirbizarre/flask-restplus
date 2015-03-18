@@ -118,7 +118,8 @@ class Polymorph(Nested):
         trees = [set(f.tree) for f in fields]
         candidates = set.intersection(*trees)
         if len(candidates) != 1:
-            raise ValueError('Unable to determine the common ancestor')
+            field_names = [f.name for f in fields]
+            raise ValueError('Unable to determine the common ancestor for: ' + ', '.join(field_names))
 
         parent_name = candidates.pop()
         return fields[0].get_parent(parent_name)
