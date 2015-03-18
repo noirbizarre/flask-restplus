@@ -4,8 +4,12 @@ Changelog
 Current
 -------
 
-- Nothing yet
-
+- Python 2.6 support
+- Experimental polymorphism support (single inheritance only)
+    - Added ``Polymorph`` field
+    - Added ``discriminator`` attribute support on ``String`` fields
+    - Added ``api.inherit()`` method
+- Added ``ClassName`` field
 
 0.5.1
 -----
