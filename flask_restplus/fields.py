@@ -54,7 +54,9 @@ class Raw(DetailsMixin, base_fields.Raw):
 
 
 class Nested(DetailsMixin, base_fields.Nested):
-    pass
+    def __init__(self, model, **kwargs):
+        self.model = model
+        super(Nested, self).__init__(getattr(model, 'resolved', model), **kwargs)
 
 
 class List(DetailsMixin, base_fields.List):

@@ -1658,6 +1658,68 @@ class SwaggerTestCase(TestCase):
             'extra': 'test',
         })
 
+    def test_inherit_inline(self):
+        api = self.build_api()
+
+        parent = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+        })
+
+        child = api.inherit('Child', parent, {
+            'extra': restplus.fields.String,
+        })
+
+        output = api.model('Output', {
+            'child': restplus.fields.Nested(child),
+            'children': restplus.fields.List(restplus.fields.Nested(child))
+        })
+
+        @api.route('/inherit/')
+        class ModelAsDict(restplus.Resource):
+            @api.marshal_with(output)
+            def get(self):
+                return {
+                    'child': {
+                        'name': 'John',
+                        'age': 42,
+                        'extra': 'test',
+                    },
+                    'children': [{
+                        'name': 'John',
+                        'age': 42,
+                        'extra': 'test',
+                    }, {
+                        'name': 'Doe',
+                        'age': 33,
+                        'extra': 'test2',
+                    }]
+                }
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertIn('Child', data['definitions'])
+
+        data = self.get_json('/inherit/')
+        self.assertEqual(data, {
+            'child': {
+                'name': 'John',
+                'age': 42,
+                'extra': 'test',
+            },
+            'children': [{
+                'name': 'John',
+                'age': 42,
+                'extra': 'test',
+            }, {
+                'name': 'Doe',
+                'age': 33,
+                'extra': 'test2',
+            }]
+        })
+
     def test_polymorph_inherit(self):
         api = self.build_api()
 
