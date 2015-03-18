@@ -90,6 +90,7 @@ class Polymorph(Nested):
         super(Polymorph, self).__init__(parent, allow_null=not required, **kwargs)
 
     def output(self, key, obj):
+        # Copied from upstream NestedField
         value = base_fields.get_value(key if self.attribute is None else self.attribute, obj)
         if value is None:
             if self.allow_null:
@@ -97,6 +98,7 @@ class Polymorph(Nested):
             elif self.default is not None:
                 return self.default
 
+        # Handle mappings
         if not hasattr(value, '__class__'):
             raise ValueError('Polymorph field only accept class instances')
 

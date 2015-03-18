@@ -15,9 +15,6 @@ class ApiNamespace(object):
         self.resources.append((resource, urls, kwargs))
         self.api.add_resource(resource, *urls, namespace=self, **kwargs)
 
-    def add_model(self, model):
-        self.models.append(model)
-
     def route(self, *urls, **kwargs):
         def wrapper(cls):
             doc = kwargs.pop('doc', None)
