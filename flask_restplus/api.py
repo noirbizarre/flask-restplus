@@ -8,7 +8,7 @@ from flask import url_for
 from flask.ext import restful
 
 from . import apidoc
-from .model import ApiModel, resolve_fields
+from .model import ApiModel
 from .namespace import ApiNamespace
 from .resource import Resource
 from .swagger import Swagger
@@ -307,7 +307,7 @@ class Api(restful.Api):
             doc = {'model': [fields]} if as_list else {'model': fields}
             doc['default_code'] = code
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            return restful.marshal_with(resolve_fields(fields), **kwargs)(func)
+            return restful.marshal_with(fields.resolved, **kwargs)(func)
         return wrapper
 
     def marshal_list_with(self, fields, code=200):
@@ -316,7 +316,7 @@ class Api(restful.Api):
 
     def marshal(self, data, fields):
         '''A shortcut to the ``marshal`` helper'''
-        return restful.marshal(data, resolve_fields(fields))
+        return restful.marshal(data, fields.resolved)
 
 
 def unshortcut_params_description(data):

@@ -45,7 +45,7 @@ class SwaggerFieldsTestCase(TestCase):
             'extra1': fields.String,
         })
 
-        child2 = self.api.inherit('Child1', parent, {
+        child2 = self.api.inherit('Child2', parent, {
             'extra2': fields.String,
         })
 

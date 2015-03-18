@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from flask.ext.restful import fields as base_fields
 
 from .utils import camel_to_dash
-from .model import resolve_fields
 
 
 class DetailsMixin(object):
@@ -85,9 +84,10 @@ class ClassName(String):
 
 
 class Polymorph(Nested):
-    def __init__(self, mapping, **kwargs):
+    def __init__(self, mapping, required=False, **kwargs):
         self.mapping = mapping
-        super(Polymorph, self).__init__(None, **kwargs)
+        parent = self.resolve_ancestor(list(mapping.values()))
+        super(Polymorph, self).__init__(parent, allow_null=not required, **kwargs)
 
     def output(self, key, obj):
         value = base_fields.get_value(key if self.attribute is None else self.attribute, obj)
@@ -107,4 +107,18 @@ class Polymorph(Nested):
         elif len(candidates) > 1:
             raise ValueError('Unable to determine a candidate for: ' + value.__class__.__name__)
         else:
-            return base_fields.marshal(value, resolve_fields(candidates[0]))
+            return base_fields.marshal(value, candidates[0].resolved)
+
+    def resolve_ancestor(self, fields):
+        '''
+        Resolve the common ancestor for all fields.
+
+        Assume there is only one common ancestor.
+        '''
+        trees = [set(f.tree) for f in fields]
+        candidates = set.intersection(*trees)
+        if len(candidates) != 1:
+            raise ValueError('Unable to determine the common ancestor')
+
+        parent_name = candidates.pop()
+        return fields[0].get_parent(parent_name)

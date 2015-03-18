@@ -1658,6 +1658,61 @@ class SwaggerTestCase(TestCase):
             'extra': 'test',
         })
 
+    def test_polymorph_inherit(self):
+        api = self.build_api()
+
+        class Child1:
+            pass
+
+        class Child2:
+            pass
+
+        parent = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+        })
+
+        child1 = api.inherit('Child1', parent, {
+            'extra1': restplus.fields.String,
+        })
+
+        child2 = api.inherit('Child2', parent, {
+            'extra2': restplus.fields.String,
+        })
+
+        mapping = {
+            Child1: child1,
+            Child2: child2,
+        }
+
+        output = api.model('Output', {
+            'child': restplus.fields.Polymorph(mapping)
+        })
+
+        @api.route('/polymorph/')
+        class ModelAsDict(restplus.Resource):
+            @api.marshal_with(output)
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertIn('Child1', data['definitions'])
+        self.assertIn('Child2', data['definitions'])
+        self.assertIn('Output', data['definitions'])
+
+        # Should use the common ancestor
+        self.assertEqual(data['definitions']['Output'], {
+            'properties': {
+                'child': {'$ref': '#/definitions/Person'},
+            }
+        })
+
+        path = data['paths']['/polymorph/']
+        self.assertEqual(path['get']['responses']['200']['schema']['$ref'], '#/definitions/Output')
+
     def test_custom_field(self):
         api = self.build_api()
 

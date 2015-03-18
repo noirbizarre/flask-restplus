@@ -17,6 +17,7 @@ from flask import current_app
 
 from . import fields
 from .exceptions import SpecsError
+from .model import ApiModel
 from .utils import merge
 
 
@@ -80,7 +81,8 @@ def not_none_sorted(data):
 
 def ref(model):
     '''Return a reference to model in definitions'''
-    return {'$ref': '#/definitions/{0}'.format(model)}
+    name = model.name if isinstance(model, ApiModel) else model
+    return {'$ref': '#/definitions/{0}'.format(name)}
 
 
 def extract_path(path):
@@ -423,7 +425,7 @@ class Swagger(object):
         })
 
         if getattr(fields, '__parent__', None):
-            return {'allOf': [ref(fields.__parent__.__apidoc__['name']), schema]}
+            return {'allOf': [ref(fields.__parent__.name), schema]}
         else:
             return schema
 
@@ -441,8 +443,7 @@ class Swagger(object):
             schema = {'type': 'array'}
             model = model[0]
 
-            if isinstance(model, dict) and hasattr(model, '__apidoc__'):
-                model = model.__apidoc__['name']
+            if isinstance(model, ApiModel):
                 self.register_model(model)
                 schema['items'] = ref(model)
                 return schema
@@ -460,8 +461,7 @@ class Swagger(object):
                 schema['items'] = FIELDS[model]
                 return schema
 
-        elif isinstance(model, dict) and hasattr(model, '__apidoc__'):
-            model = model.__apidoc__['name']
+        elif isinstance(model, ApiModel):
             self.register_model(model)
             return ref(model)
 
@@ -475,15 +475,20 @@ class Swagger(object):
         raise ValueError('Model {0} not registered'.format(model))
 
     def register_model(self, model):
-        if model not in self.api.models and model not in FIELDS:
-            raise ValueError('Model {0} not registered'.format(model))
-        specs = self.api.models[model]
-        self._registered_models[model] = specs
+        name = model.name if isinstance(model, ApiModel) else model
+        if name not in self.api.models and name not in FIELDS:
+            raise ValueError('Model {0} not registered'.format(name))
+        specs = self.api.models[name]
+        self._registered_models[name] = specs
         if isinstance(specs, dict):
             if getattr(specs, '__parent__', None):
-                self.register_model(specs.__parent__.__apidoc__['name'])
+                for ancestor in specs.ancestors:
+                    self.register_model(ancestor)
             for name, field in specs.items():
-                if isinstance(field, fields.Nested) and hasattr(field.nested, '__apidoc__'):
+                if isinstance(field, fields.Polymorph):
+                    for model in field.mapping.values():
+                        self.register_model(model)
+                elif isinstance(field, fields.Nested) and hasattr(field.nested, '__apidoc__'):
                     self.register_model(field.nested.__apidoc__['name'])
                 elif isinstance(field, fields.List) and hasattr(field.container, '__apidoc__'):
                     self.register_model(field.container.__apidoc__['name'])
