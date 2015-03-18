@@ -27,8 +27,8 @@ You can document a class or a method.
             api.abort(403)
 
 
-Documenting with the ``@api.model()`` and ``@api.extend`` decorators
---------------------------------------------------------------------
+Documenting with the ``@api.model()`` decorator
+-----------------------------------------------
 
 The ``@api.model`` decorator allows you to declare the models that your API can serialize.
 
@@ -53,6 +53,11 @@ You can use it either on a fields dictionnary or a ``field.Raw`` subclass:
         def format(self, value):
             return {'name': value.name, 'age': value.age}
 
+
+
+Duplicating with ``api.extend``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The ``api.extend`` method allows you to register an augmented model.
 It saves you duplicating all fields.
 
@@ -64,6 +69,65 @@ It saves you duplicating all fields.
 
     child = api.extend('Child', parent, {
         'age': fields.Integer
+    })
+
+
+Polymorphism with ``api.inherit``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``api.inherit`` method allows to extend a model in the "Swagger way"
+and to start handling polymorphism.
+It will register both the parent and the child in the Swagger models definitions.
+
+.. code-block:: python
+
+    parent = api.model('Parent', {
+        'name': fields.String,
+        'class': fields.String(discriminator=True)
+    })
+
+    child = api.inherit('Child', parent, {
+        'extra': fields.String
+    })
+
+Will produce the following Swagger definitions:
+
+.. code-block:: json
+
+    "Child": {
+        "properties": {
+            "name": {"type": "string"},
+            "class": {"type": "string"}
+        },
+        "discriminator": "class",
+        "required": ["class"]
+    },
+    "Child": {
+        "allOf": [{
+                "$ref": "#/definitions/Parent"
+            }, {
+                "properties": {
+                    "extra": {"type": "string"}
+                }
+            }
+        ]
+    }
+
+The ``class`` field in this example will be populated with the serialized model name
+only if the property does not exists in the serialized object.
+
+The ``Polymorph`` field allows you to specify a mapping between Python classes
+and fields specifications.
+
+.. code-block:: python
+
+    mapping = {
+        Child1: child1_fields,
+        Child2: child2_fields,
+    }
+
+    fields = api.model('Thing', {
+        owner: fields.Polymorph(mapping)
     })
 
 
