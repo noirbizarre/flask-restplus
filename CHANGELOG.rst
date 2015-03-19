@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Current
+-------
+
+- Nothing yet
+
+
 0.6.0
 -----
 
