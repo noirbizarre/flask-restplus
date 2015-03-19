@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.6.0
+-----
 
 - Python 2.6 support
 - Experimental polymorphism support (single inheritance only)
