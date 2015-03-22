@@ -492,6 +492,11 @@ class Swagger(object):
                     self.register_model(field.nested.__apidoc__['name'])
                 elif isinstance(field, fields.List) and hasattr(field.container, '__apidoc__'):
                     self.register_model(field.container.__apidoc__['name'])
+                elif (isinstance(field, fields.List) and
+                          isinstance(field.container, fields.Nested) and
+                          hasattr(field.container.nested, '__apidoc__')):
+                    self.register_model(
+                        field.container.nested.__apidoc__['name'])
                 elif (isinstance(field, fields.Raw)
                         or (isclass(field) and issubclass(field, fields.Raw))
                         ) and hasattr(field, '__apidoc__') and not field.__apidoc__.get('type'):
