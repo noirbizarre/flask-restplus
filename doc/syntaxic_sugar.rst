@@ -97,3 +97,24 @@ You can use the ``Api.marshal()`` shortcut to serialize your objects.
 .. code-block:: python
 
     return api.marshal(todos, fields), 201
+
+
+Handle errors with ``@api.errorhandler()`` decorator
+----------------------------------------------------
+
+The ``@api.errorhandler()`` decorator allows you to register
+a specific handler for a given exception, in the same maner
+than you can do with Flask/Blueprint ``@errorhandler`` decorator.
+
+.. code-block:: python
+
+    @api.errorhandler(CustomException)
+    def handle_custom_exception(error):
+        '''Return a custom message and 400 status code'''
+        return {'message': 'What you want'}, 400
+
+
+    @api.errorhandler(AnotherException)
+    def handle_another_exception(error):
+        '''Return a custom message and 500 status code'''
+        return {'message': error.specific}

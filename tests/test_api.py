@@ -128,6 +128,32 @@ class APITestCase(TestCase):
             self.assertEqual(data['status'], 500)
             self.assertIn('message', data)
 
+    def test_errorhandler(self):
+        api = restplus.Api(self.app)
+
+        class CustomException(RuntimeError):
+            pass
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise CustomException('error')
+
+        @api.errorhandler(CustomException)
+        def handle_custom_exception(error):
+            return {'message': str(error), 'test': 'value'}, 400
+
+        with self.app.test_client() as client:
+            response = client.get('/test/')
+            self.assertEquals(response.status_code, 400)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertEqual(data, {
+                'message': 'error',
+                'test': 'value',
+            })
+
     def test_parser(self):
         api = restplus.Api()
         self.assertIsInstance(api.parser(), restplus.reqparse.RequestParser)

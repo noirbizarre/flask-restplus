@@ -7,6 +7,8 @@ import six
 from flask import url_for
 from flask.ext import restful
 
+from werkzeug.exceptions import HTTPException
+
 from . import apidoc
 from .model import ApiModel
 from .namespace import ApiNamespace
@@ -107,6 +109,7 @@ class Api(restful.Api):
         self.ui = ui
         self.default_id = default_id
 
+        self._error_handlers = {}
         self.models = {}
         self.namespaces = []
         self.default_namespace = ApiNamespace(self, default, default_label,
@@ -317,6 +320,21 @@ class Api(restful.Api):
     def marshal(self, data, fields):
         '''A shortcut to the ``marshal`` helper'''
         return restful.marshal(data, fields.resolved)
+
+    def errorhandler(self, exception):
+        '''Register an error handler for a given exception'''
+        def wrapper(func):
+            self._error_handlers[exception] = func
+            return func
+        return wrapper
+
+    def handle_error(self, e):
+        if e.__class__ in self._error_handlers:
+            handler = self._error_handlers[e.__class__]
+            result = handler(e)
+            e = HTTPException(str(e))
+            e.data, e.code = result if len(result) == 2 else (result, 500)
+        return super(Api, self).handle_error(e)
 
 
 def unshortcut_params_description(data):

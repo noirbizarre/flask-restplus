@@ -6,6 +6,7 @@ Current
 
 - Expose models and fields schema through the ``__schema__`` attribute
 - Drop support for model as class
+- Added ``@api.errorhandler()`` to register custom error handlers
 
 
 0.6.0
