@@ -3,16 +3,33 @@ from __future__ import unicode_literals
 
 from flask.ext.restful import fields as base_fields
 
-from .utils import camel_to_dash
+from .utils import camel_to_dash, not_none
 
 
-class DetailsMixin(object):
+class BaseField(object):
+    __schema_type__ = 'string'
+    __schema_format__ = None
+
     def __init__(self, *args, **kwargs):
         self.description = kwargs.pop('description', None)
         self.title = kwargs.pop('title', None)
         self.required = kwargs.pop('required', None)
         self.readonly = kwargs.pop('readonly', None)
-        super(DetailsMixin, self).__init__(*args, **kwargs)
+        super(BaseField, self).__init__(*args, **kwargs)
+
+    @property
+    def __schema__(self):
+        return not_none(self.schema())
+
+    def schema(self):
+        return {
+            'type': self.__schema_type__,
+            'format': self.__schema_format__,
+            'title': self.title,
+            'description': self.description,
+            'readOnly': self.readonly,
+            'default': self.default,
+        }
 
 
 class MinMaxMixin(object):
@@ -21,57 +38,92 @@ class MinMaxMixin(object):
         self.maximum = kwargs.pop('max', None)
         super(MinMaxMixin, self).__init__(*args, **kwargs)
 
+    def schema(self):
+        schema = super(MinMaxMixin, self).schema()
+        schema.update(minimum=self.minimum, maximum=self.maximum)
+        return schema
 
-class String(DetailsMixin, base_fields.String):
+
+class String(BaseField, base_fields.String):
     def __init__(self, *args, **kwargs):
         self.enum = kwargs.pop('enum', None)
         self.discriminator = kwargs.pop('discriminator', None)
         super(String, self).__init__(*args, **kwargs)
+        self.required = self.discriminator or self.required
+
+    def schema(self):
+        schema = super(String, self).schema()
+        schema.update(enum=self.enum)
+        return schema
 
 
-class Integer(DetailsMixin, MinMaxMixin, base_fields.Integer):
-    pass
+class Integer(MinMaxMixin, BaseField, base_fields.Integer):
+    __schema_type__ = 'integer'
+
+    def __init__(self, default=None, **kwargs):
+        super(Integer, self).__init__(default=default, **kwargs)
 
 
-class Float(DetailsMixin, MinMaxMixin, base_fields.Float):
-    pass
+class Float(MinMaxMixin, BaseField, base_fields.Float):
+    __schema_type__ = 'number'
 
 
-class Arbitrary(DetailsMixin, MinMaxMixin, base_fields.Arbitrary):
-    pass
+class Arbitrary(MinMaxMixin, BaseField, base_fields.Arbitrary):
+    __schema_type__ = 'number'
 
 
-class Boolean(DetailsMixin, base_fields.Boolean):
-    pass
+class Boolean(BaseField, base_fields.Boolean):
+    __schema_type__ = 'boolean'
 
 
-class DateTime(DetailsMixin, base_fields.DateTime):
-    pass
+class DateTime(BaseField, base_fields.DateTime):
+    __schema_format__ = 'date-time'
 
 
-class Raw(DetailsMixin, base_fields.Raw):
-    pass
+class Raw(BaseField, base_fields.Raw):
+    __schema_type__ = 'object'
 
 
-class Nested(DetailsMixin, base_fields.Nested):
-    def __init__(self, model, **kwargs):
+class Nested(BaseField, base_fields.Nested):
+    __schema_type__ = None
+
+    def __init__(self, model, as_list=False, **kwargs):
         self.model = model
+        self.as_list = as_list
         super(Nested, self).__init__(getattr(model, 'resolved', model), **kwargs)
 
+    def schema(self):
+        schema = super(Nested, self).schema()
+        ref = '#/definitions/{0}'.format(self.nested.name)
 
-class List(DetailsMixin, base_fields.List):
+        if self.as_list:
+            schema['type'] = 'array'
+            schema['items'] = {'$ref': ref}
+        else:
+            schema['$ref'] = ref
+            # if not self.allow_null and not self.readonly:
+            #     schema['required'] = True
+
+        return schema
+
+
+class List(BaseField, base_fields.List):
+    def schema(self):
+        schema = super(List, self).schema()
+        schema['type'] = 'array'
+        schema['items'] = self.container.__schema__
+        return schema
+
+
+class Url(BaseField, base_fields.Url):
     pass
 
 
-class Url(DetailsMixin, base_fields.Url):
-    pass
+class Fixed(MinMaxMixin, BaseField, base_fields.Fixed):
+    __schema_type__ = 'number'
 
 
-class Fixed(DetailsMixin, MinMaxMixin, base_fields.Fixed):
-    pass
-
-
-class FormattedString(DetailsMixin, base_fields.FormattedString):
+class FormattedString(BaseField, base_fields.FormattedString):
     pass
 
 

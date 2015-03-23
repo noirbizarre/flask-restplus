@@ -18,7 +18,7 @@ from flask import current_app
 from . import fields
 from .exceptions import SpecsError
 from .model import ApiModel
-from .utils import merge
+from .utils import merge, not_none, not_none_sorted
 
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
@@ -27,19 +27,6 @@ PATH_TYPES = {
     'float': 'number',
     'string': 'string',
     None: 'string',
-}
-
-
-#: Maps Flask-Restful/plus fields types to Swagger ones
-FIELDS = {
-    fields.Raw: {'type': 'object'},
-    fields.String: {'type': 'string'},
-    fields.Integer: {'type': 'integer'},
-    fields.Boolean: {'type': 'boolean'},
-    fields.Float: {'type': 'number'},
-    fields.Arbitrary: {'type': 'number'},
-    fields.DateTime: {'type': 'string', 'format': 'date-time'},
-    fields.Fixed: {'type': 'number'},
 }
 
 
@@ -66,17 +53,6 @@ RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
 RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
 
 DEFAULT_RESPONSE = {'description': 'Success'}
-
-
-def not_none(data):
-    '''Remove all keys where value is None'''
-    return dict((k, v) for k, v in data.items() if v is not None)
-
-
-def not_none_sorted(data):
-    '''Remove all keys where value is None'''
-    ordered_items = OrderedDict(sorted(data.items()))
-    return OrderedDict((k, v) for k, v in ordered_items.items() if v is not None)
 
 
 def ref(model):
@@ -113,64 +89,6 @@ def extract_path_params(path):
             raise ValueError('Unsupported type converter')
         params[name] = param
     return params
-
-
-def field_to_property(field):
-    '''Convert a restful.Field into a Swagger property declaration'''
-    prop = {'type': 'string'}
-
-    if isinstance(field, fields.List):
-        nested_field = field.container
-        prop = {'type': 'array', 'items': field_to_property(nested_field)}
-
-    elif isinstance(field, fields.Nested):
-        nested_field = field.nested
-        prop = ref(nested_field.__apidoc__['name'])
-        if getattr(field, '__apidoc__', {}).get('as_list'):
-            prop = {'type': 'array', 'items': prop}
-        elif not field.allow_null and not field.readonly:
-            prop['required'] = True
-
-    elif field in FIELDS:
-        prop = FIELDS[field].copy()
-
-    elif field.__class__ in FIELDS:
-        prop = FIELDS[field.__class__].copy()
-
-    elif hasattr(field, '__apidoc__'):
-        if 'type' in field.__apidoc__:
-            prop = {'type': field.__apidoc__['type']}
-            if 'format' in field.__apidoc__:
-                prop['format'] = field.__apidoc__['format']
-        elif 'fields' in field.__apidoc__:
-            prop = ref(field.__apidoc__.get('name', field.__class__.__name__))
-
-    else:
-        for cls in FIELDS:
-            if isinstance(field, cls) or (isclass(field) and issubclass(field, cls)):
-                prop = FIELDS[cls].copy()
-                break
-
-    if getattr(field, 'title', None):
-        prop['title'] = field.title
-    if getattr(field, 'description', None):
-        prop['description'] = field.description
-    if getattr(field, 'minimum', None) is not None:
-        prop['minimum'] = field.minimum
-    if getattr(field, 'maximum', None):
-        prop['maximum'] = field.maximum
-    if getattr(field, 'enum', None):
-        prop['enum'] = field.enum
-    if getattr(field, 'required', None):
-        prop['required'] = field.required
-    if getattr(field, 'readonly', None):
-        prop['readOnly'] = field.readonly
-    if getattr(field, 'default', None):
-        prop['default'] = field.default
-    if getattr(field, 'discriminator', None):
-        prop['discriminator'] = True
-
-    return prop
 
 
 def parser_to_params(parser):
@@ -402,64 +320,19 @@ class Swagger(object):
             responses['200'] = DEFAULT_RESPONSE.copy()
         return responses
 
-    def serialize_model(self, name, fields):
-        properties = {}
-        required = set()
-        discriminator = None
-        for name, field in fields.items():
-            prop = field_to_property(field)
-            if prop.get('required'):
-                required.add(name)
-            if 'required' in prop:
-                del prop['required']
-            if prop.get('discriminator'):
-                discriminator = name
-                required.add(name)
-                del prop['discriminator']
-            properties[name] = prop
-
-        schema = not_none({
-            'required': list(required) or None,
-            'properties': properties,
-            'discriminator': discriminator,
-        })
-
-        if getattr(fields, '__parent__', None):
-            return {'allOf': [ref(fields.__parent__.name), schema]}
-        else:
-            return schema
-
     def serialize_definitions(self):
         return dict(
-            (name, self.serialize_model(name, model))
+            (name, model.__schema__)
             for name, model in self._registered_models.items()
         )
 
-    def serialize_field(self, field):
-        return field_to_property(field)
-
     def serialize_schema(self, model):
         if isinstance(model, (list, tuple)):
-            schema = {'type': 'array'}
             model = model[0]
-
-            if isinstance(model, ApiModel):
-                self.register_model(model)
-                schema['items'] = ref(model)
-                return schema
-
-            elif isinstance(model, six.string_types):
-                self.register_model(model)
-                schema['items'] = ref(model)
-                return schema
-
-            elif model in PY_TYPES:
-                schema['items'] = {'type': PY_TYPES[model]}
-                return schema
-
-            elif model in FIELDS:
-                schema['items'] = FIELDS[model]
-                return schema
+            return {
+                'type': 'array',
+                'items': self.serialize_schema(model),
+            }
 
         elif isinstance(model, ApiModel):
             self.register_model(model)
@@ -469,6 +342,12 @@ class Swagger(object):
             self.register_model(model)
             return ref(model)
 
+        elif isclass(model) and issubclass(model, fields.BaseField):
+            return self.serialize_schema(model())
+
+        elif isinstance(model, fields.BaseField):
+            return model.__schema__
+
         elif isinstance(model, (type, type(None))) and model in PY_TYPES:
             return {'type': PY_TYPES[model]}
 
@@ -476,26 +355,21 @@ class Swagger(object):
 
     def register_model(self, model):
         name = model.name if isinstance(model, ApiModel) else model
-        if name not in self.api.models and name not in FIELDS:
+        if name not in self.api.models:
             raise ValueError('Model {0} not registered'.format(name))
         specs = self.api.models[name]
         self._registered_models[name] = specs
-        if isinstance(specs, dict):
-            if getattr(specs, '__parent__', None):
-                for ancestor in specs.ancestors:
-                    self.register_model(ancestor)
+        if isinstance(specs, ApiModel):
+            if specs.__parent__:
+                self.register_model(specs.__parent__)
             for name, field in specs.items():
                 if isinstance(field, fields.Polymorph):
                     for model in field.mapping.values():
                         self.register_model(model)
-                elif isinstance(field, fields.Nested) and hasattr(field.nested, '__apidoc__'):
-                    self.register_model(field.nested.__apidoc__['name'])
-                elif isinstance(field, fields.List) and hasattr(field.container, '__apidoc__'):
-                    self.register_model(field.container.__apidoc__['name'])
-                elif (isinstance(field, fields.Raw)
-                        or (isclass(field) and issubclass(field, fields.Raw))
-                        ) and hasattr(field, '__apidoc__') and not field.__apidoc__.get('type'):
-                    self.register_model(field.__apidoc__['name'])
+                elif isinstance(field, fields.Nested):
+                    self.register_model(field.nested)
+                elif isinstance(field, fields.List) and isinstance(field.container, ApiModel):
+                    self.register_model(field.container)
 
     def security_for(self, doc, method):
         security = None

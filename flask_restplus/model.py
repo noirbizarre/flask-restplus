@@ -5,6 +5,14 @@ import copy
 
 from collections import MutableMapping
 
+from .utils import not_none
+
+
+def instance(cls):
+    if isinstance(cls, type):
+        return cls()
+    return cls
+
 
 class ApiModel(dict, MutableMapping):
     '''A thin wrapper on dict to store API doc metadata'''
@@ -62,3 +70,32 @@ class ApiModel(dict, MutableMapping):
             return self.__parent__.get_parent(name)
         else:
             raise ValueError('Parent ' + name + ' not found')
+
+    @property
+    def __schema__(self):
+        properties = {}
+        required = set()
+        discriminator = None
+        for name, field in self.items():
+            field = instance(field)
+            properties[name] = field.__schema__
+            if field.required:
+                required.add(name)
+            if getattr(field, 'discriminator', False):
+                discriminator = name
+
+        schema = not_none({
+            'required': sorted(list(required)) or None,
+            'properties': properties,
+            'discriminator': discriminator,
+        })
+
+        if self.__parent__:
+            return {
+                'allOf': [
+                    {'$ref': '#/definitions/{0}'.format(self.__parent__.name)},
+                    schema
+                ]
+            }
+        else:
+            return schema

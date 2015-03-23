@@ -42,7 +42,7 @@ long_description = '\n'.join((
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
 tests_require = ['nose', 'rednose']
-install_requires = ['flask-restful >= 0.3.2']
+install_requires = ['flask-restful >= 0.3.2', 'webargs', 'jsonschema']
 
 
 if sys.version_info[0:2] < (2, 7):

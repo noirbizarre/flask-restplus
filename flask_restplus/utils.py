@@ -5,6 +5,11 @@ import re
 
 from copy import deepcopy
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+
 FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
 ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
@@ -36,3 +41,14 @@ def camel_to_dash(value):
 def default_id(resource, method):
     '''Default operation ID generator'''
     return '{0}_{1}'.format(method, camel_to_dash(resource))
+
+
+def not_none(data):
+    '''Remove all keys where value is None'''
+    return dict((k, v) for k, v in data.items() if v is not None)
+
+
+def not_none_sorted(data):
+    '''Remove all keys where value is None'''
+    ordered_items = OrderedDict(sorted(data.items()))
+    return OrderedDict((k, v) for k, v in ordered_items.items() if v is not None)
