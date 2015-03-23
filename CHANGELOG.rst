@@ -4,7 +4,8 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Expose models and fields schema through the ``__schema__`` attribute
+- Drop support for model as class
 
 
 0.6.0
