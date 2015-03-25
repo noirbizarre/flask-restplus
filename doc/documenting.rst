@@ -32,7 +32,7 @@ Documenting with the ``@api.model()`` decorator
 
 The ``@api.model`` decorator allows you to declare the models that your API can serialize.
 
-You can use it either on a fields dictionnary or a ``field.Raw`` subclass:
+You can use it either on a fields dictionary or a ``field.Raw`` subclass:
 
 .. code-block:: python
 
