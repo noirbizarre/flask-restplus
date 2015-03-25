@@ -330,7 +330,7 @@ Input and output models
 
 You can specify the serialized output model with the ``model`` documentation.
 
-You can specify an input format for ``POST`` and ``PUT`` iwth the ``body`` documentation.
+You can specify an input format for ``POST`` and ``PUT`` with the ``body`` documentation.
 
 
 .. code-block:: python
