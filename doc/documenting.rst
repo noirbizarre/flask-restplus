@@ -32,26 +32,22 @@ Documenting with the ``@api.model()`` decorator
 
 The ``@api.model`` decorator allows you to declare the models that your API can serialize.
 
-You can use it either on a fields dictionary or a ``field.Raw`` subclass:
+You can also extend fields and use the ``__schema_format__`` and ``__schema_type__``
+to specify the produced types:
 
 .. code-block:: python
 
     my_fields = api.model('MyModel', {
-        'name': fields.String
+        'name': fields.String,
+        'age': fields.Integer(min=0)
     })
 
-    @api.model('MyField')
+    class MyIntField(fields.Integer):
+        __schema_format__ = 'int64'
+
     class MySpecialField(fields.Raw):
-        pass
-
-    @api.model(type='integer', format='int64')
-    class MyIntField(fields.Raw):
-        pass
-
-    @api.model(fields={'name': fields.String, 'age': fields.Integer})
-    class Person(fields.Raw):
-        def format(self, value):
-            return {'name': value.name, 'age': value.age}
+        __schema_type__ = 'some-type'
+        __schema_format__ = 'some-format'
 
 
 
