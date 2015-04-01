@@ -7,9 +7,9 @@ import six
 from inspect import isclass
 from collections import Hashable
 try:
-    from collections import OrderedDict
+    from collections import OrderedDict  # noqa
 except ImportError:
-    from ordereddict import OrderedDict
+    from ordereddict import OrderedDict  # noqa
 from six import string_types
 
 from flask import current_app
@@ -362,14 +362,17 @@ class Swagger(object):
         if isinstance(specs, ApiModel):
             if specs.__parent__:
                 self.register_model(specs.__parent__)
-            for name, field in specs.items():
-                if isinstance(field, fields.Polymorph):
-                    for model in field.mapping.values():
-                        self.register_model(model)
-                elif isinstance(field, fields.Nested):
-                    self.register_model(field.nested)
-                elif isinstance(field, fields.List) and isinstance(field.container, fields.Nested):
-                    self.register_model(field.container.nested)
+            for field in specs.values():
+                self.register_field(field)
+
+    def register_field(self, field):
+        if isinstance(field, fields.Polymorph):
+            for model in field.mapping.values():
+                self.register_model(model)
+        elif isinstance(field, fields.Nested):
+            self.register_model(field.nested)
+        elif isinstance(field, fields.List):
+            self.register_field(field.container)
 
     def security_for(self, doc, method):
         security = None

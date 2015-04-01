@@ -310,7 +310,8 @@ class Api(restful.Api):
             doc = {'model': [fields]} if as_list else {'model': fields}
             doc['default_code'] = code
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            return restful.marshal_with(fields.resolved, **kwargs)(func)
+            resolved = getattr(fields, 'resolved', fields)
+            return restful.marshal_with(resolved, **kwargs)(func)
         return wrapper
 
     def marshal_list_with(self, fields, code=200):
@@ -319,7 +320,8 @@ class Api(restful.Api):
 
     def marshal(self, data, fields):
         '''A shortcut to the ``marshal`` helper'''
-        return restful.marshal(data, fields.resolved)
+        resolved = getattr(fields, 'resolved', fields)
+        return restful.marshal(data, resolved)
 
     def errorhandler(self, exception):
         '''Register an error handler for a given exception'''
