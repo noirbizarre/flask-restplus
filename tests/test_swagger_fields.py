@@ -437,6 +437,12 @@ class ListFieldTest(FieldTestCase):
         field = fields.List(fields.String, readonly=True)
         self.assertEqual(field.__schema__, {'type': 'array', 'items': {'type': 'string'}, 'readOnly': True})
 
+    def test_list_field_with_nested_field(self):
+        nested_fields = self.api.model('NestedModel', {'name': fields.String})
+        field = fields.List(fields.Nested(nested_fields))
+        self.assertEqual(field.__schema__, {'type': 'array', 'items': {'$ref': '#/definitions/NestedModel'}})
+
+
 
 class ClassNameFieldTest(FieldTestCase):
     def test_simple_string_field(self):

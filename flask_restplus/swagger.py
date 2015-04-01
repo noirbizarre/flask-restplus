@@ -368,8 +368,8 @@ class Swagger(object):
                         self.register_model(model)
                 elif isinstance(field, fields.Nested):
                     self.register_model(field.nested)
-                elif isinstance(field, fields.List) and isinstance(field.container, ApiModel):
-                    self.register_model(field.container)
+                elif isinstance(field, fields.List) and isinstance(field.container, fields.Nested):
+                    self.register_model(field.container.nested)
 
     def security_for(self, doc, method):
         security = None

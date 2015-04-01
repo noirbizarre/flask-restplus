@@ -99,6 +99,48 @@ class ModelTestCase(TestCase):
             }
         })
 
+    def test_model_as_nested_dict_with_list(self):
+        address = self.api.model('Address', {
+            'road': fields.String,
+        })
+
+        person = self.api.model('Person', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'birthdate': fields.DateTime,
+            'addresses': fields.List(fields.Nested(address))
+        })
+
+        self.assertEqual(person.__schema__, {
+            # 'required': ['address'],
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                },
+                'addresses': {
+                    'type': 'array',
+                    'items': {
+                        '$ref': '#/definitions/Address',
+                    }
+                }
+            }
+        })
+
+        self.assertEqual(address.__schema__, {
+            'properties': {
+                'road': {
+                    'type': 'string'
+                },
+            }
+        })
+
     def test_model_with_required(self):
         model = self.api.model('Person', {
             'name': fields.String(required=True),

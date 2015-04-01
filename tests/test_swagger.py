@@ -1184,6 +1184,32 @@ class SwaggerTestCase(TestCase):
         path = data['paths']['/model-with-list/']
         self.assertEqual(path['get']['responses']['200']['schema'], {'$ref': '#/definitions/Person'})
 
+    def test_model_as_nested_dict_with_list(self):
+        api = self.build_api()
+
+        address = api.model('Address', {
+            'road': restplus.fields.String,
+        })
+
+        person = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+            'addresses': restplus.fields.List(restplus.fields.Nested(address))
+        })
+
+        @api.route('/model-with-list/')
+        class ModelAsDict(restplus.Resource):
+            @api.doc(model=person)
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertIn('Address', data['definitions'])
+
     def test_model_list_of_primitive_types(self):
         api = self.build_api()
 
