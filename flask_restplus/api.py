@@ -338,6 +338,9 @@ class Api(restful.Api):
             e.data, e.code = result if len(result) == 2 else (result, 500)
         return super(Api, self).handle_error(e)
 
+    def response(self, code, description, model=None, **kwargs):
+        return self.doc(responses={code: (description, model) if model else description})
+
 
 def unshortcut_params_description(data):
     if 'params' in data:

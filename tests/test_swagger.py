@@ -820,6 +820,99 @@ class SwaggerTestCase(TestCase):
         self.assertIn('definitions', data)
         self.assertIn('ErrorModel', data['definitions'])
 
+    def test_api_response(self):
+        api = self.build_api()
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+
+            @api.response(200, 'Success')
+            def get(self):
+                pass
+
+        data = self.get_specs('')
+        paths = data['paths']
+
+        op = paths['/test/']['get']
+        self.assertEqual(op['responses'], {
+            '200': {
+                'description': 'Success',
+            }
+        })
+
+    def test_api_response_multiple(self):
+        api = self.build_api()
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+
+            @api.response(200, 'Success')
+            @api.response(400, 'Validation error')
+            def get(self):
+                pass
+
+        data = self.get_specs('')
+        paths = data['paths']
+
+        op = paths['/test/']['get']
+        self.assertEqual(op['responses'], {
+            '200': {
+                'description': 'Success',
+            },
+            '400': {
+                'description': 'Validation error',
+            }
+        })
+
+    def test_api_response_with_model(self):
+        api = self.build_api()
+
+        model = api.model('SomeModel', {
+            'message': restplus.fields.String,
+        })
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+
+            @api.response(200, 'Success', model)
+            def get(self):
+                pass
+
+        data = self.get_specs('')
+        paths = data['paths']
+
+        op = paths['/test/']['get']
+        self.assertEqual(op['responses'], {
+            '200': {
+                'description': 'Success',
+                'schema': {
+                    '$ref': '#/definitions/SomeModel',
+                }
+            }
+        })
+
+        self.assertIn('SomeModel', data['definitions'])
+
+    def test_api_response_default(self):
+        api = self.build_api()
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+
+            @api.response('default', 'Error')
+            def get(self):
+                pass
+
+        data = self.get_specs('')
+        paths = data['paths']
+
+        op = paths['/test/']['get']
+        self.assertEqual(op['responses'], {
+            'default': {
+                'description': 'Error',
+            }
+        })
+
     def test_description(self):
         api = self.build_api()
 
