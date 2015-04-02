@@ -52,7 +52,8 @@ PY_TYPES = {
 RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
 RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
 
-DEFAULT_RESPONSE = {'description': 'Success'}
+DEFAULT_RESPONSE_DESCRIPTION = 'Success'
+DEFAULT_RESPONSE = {'description': DEFAULT_RESPONSE_DESCRIPTION}
 
 
 def ref(model):
@@ -298,12 +299,14 @@ class Swagger(object):
         return params
 
     def responses_for(self, doc, method):
+        # TODO: simplify/refactor responses/model handling
         responses = {}
 
         for d in doc, doc[method]:
             if 'responses' in d:
                 for code, response in d['responses'].items():
                     description, model = (response, None) if isinstance(response, string_types) else response
+                    description = description or DEFAULT_RESPONSE_DESCRIPTION
                     if code in responses:
                         responses[code].update(description=description)
                     else:

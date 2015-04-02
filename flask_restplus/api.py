@@ -297,7 +297,7 @@ class Api(restful.Api):
         field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
         return field
 
-    def marshal_with(self, fields, as_list=False, code=200, **kwargs):
+    def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
         '''
         A decorator specifying the fields to use for serialization.
 
@@ -307,8 +307,14 @@ class Api(restful.Api):
         :type code: integer
         '''
         def wrapper(func):
-            doc = {'model': [fields]} if as_list else {'model': fields}
-            doc['default_code'] = code
+            doc = {
+                'responses': {
+                    code: (description, [fields]) if as_list else (description, fields)
+                }
+            }
+            # doc = {'model': [fields]} if as_list else {'model': fields}
+            # doc['default_code'] = code
+            # doc['description'] = description
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
             resolved = getattr(fields, 'resolved', fields)
             return restful.marshal_with(resolved, **kwargs)(func)

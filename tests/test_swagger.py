@@ -803,9 +803,6 @@ class SwaggerTestCase(TestCase):
         op = paths['/test/']['get']
         self.assertEqual(op['tags'], ['default'])
         self.assertEqual(op['responses'], {
-            # '200': {
-            #     'description': 'Success',
-            # },
             '404': {
                 'description': 'Not found',
             },
@@ -1131,8 +1128,15 @@ class SwaggerTestCase(TestCase):
         self.assertIn('definitions', data)
         self.assertIn('Person', data['definitions'])
 
-        path = data['paths']['/model-as-dict/']
-        self.assertEqual(path['get']['responses']['200']['schema']['$ref'], '#/definitions/Person')
+        responses = data['paths']['/model-as-dict/']['get']['responses']
+        self.assertEqual(responses, {
+            '200': {
+                'description': 'Success',
+                'schema': {
+                    '$ref': '#/definitions/Person'
+                }
+            }
+        })
 
     def test_marchal_decorator_with_code(self):
         api = self.build_api()
@@ -1154,9 +1158,46 @@ class SwaggerTestCase(TestCase):
         self.assertIn('definitions', data)
         self.assertIn('Person', data['definitions'])
 
-        path = data['paths']['/model-as-dict/']
-        self.assertEqual(list(path['delete']['responses'].keys()), ['204'])
-        self.assertEqual(path['delete']['responses']['204']['schema']['$ref'], '#/definitions/Person')
+        responses = data['paths']['/model-as-dict/']['delete']['responses']
+        self.assertEqual(responses, {
+            '204': {
+                'description': 'Success',
+                'schema': {
+                    '$ref': '#/definitions/Person'
+                }
+            }
+        })
+
+    def test_marchal_decorator_with_description(self):
+        api = self.build_api()
+
+        person = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @api.marshal_with(person, description='Some details')
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+
+
+        responses = data['paths']['/model-as-dict/']['get']['responses']
+        self.assertEqual(responses, {
+            '200': {
+                'description': 'Some details',
+                'schema': {
+                    '$ref': '#/definitions/Person'
+                }
+            }
+        })
 
     def test_model_as_flat_dict_with_marchal_decorator_list(self):
         api = self.build_api()

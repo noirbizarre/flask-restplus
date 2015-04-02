@@ -218,6 +218,74 @@ It allows you specify lists as expected input too:
             pass
 
 
+Documenting with the ``@api.response()`` decorator
+--------------------------------------------------
+
+The ``@api.response()`` decorator allows you to document the known responses
+and is a shortcut for ``@api.doc(responses='...')``.
+
+The following synatxes are equivalents:
+
+.. code-block:: python
+
+    @api.route('/my-resource/')
+    class MyResource(Resource):
+        @api.response(200, 'Success')
+        @api.response(400, 'Validation Error')
+        def get(self):
+            pass
+
+
+    @api.route('/my-resource/')
+    class MyResource(Resource):
+        @api.doc(responses={
+            200: 'Success',
+            400: 'Validation Error'
+        })
+        def get(self):
+            pass
+
+You can optionnaly specify a response model as third argument:
+
+
+.. code-block:: python
+
+    model = api.model('Model', {
+        'name': fields.String,
+    })
+
+    @api.route('/my-resource/')
+    class MyResource(Resource):
+        @api.response(200, 'Success', model)
+        def get(self):
+            pass
+
+If you use the ``@api.marshal_with()`` decorator, it automatically document the response:
+
+.. code-block:: python
+
+    model = api.model('Model', {
+        'name': fields.String,
+    })
+
+    @api.route('/my-resource/')
+    class MyResource(Resource):
+        @api.response(400, 'Validation error')
+        @api.marshal_with(model, code=201, description='Object created')
+        def post(self):
+            pass
+
+At least, you can specify a default response sent without knowing the response code
+
+.. code-block:: python
+
+    @api.route('/my-resource/')
+    class MyResource(Resource):
+        @api.response('default', 'Error')
+        def get(self):
+            pass
+
+
 Documenting with the ``@api.route()`` decorator
 -----------------------------------------------
 
@@ -280,11 +348,20 @@ You can specify the Swagger unique ``operationId`` with the ``id`` documentation
 
 .. code-block:: python
 
-    @api.route('/my-resource/<id>', endpoint='my-resource')
-    @api.doc(params={'id': 'An ID'})
+    @api.route('/my-resource/')
     class MyResource(Resource):
         @api.doc(id='get_something')
-        def get(self, id):
+        def get(self):
+            return {}
+
+You can also use the first argument for the same purpose:
+
+.. code-block:: python
+
+    @api.route('/my-resource/')
+    class MyResource(Resource):
+        @api.doc('get_something')
+        def get(self):
             return {}
 
 If not specified, a default operationId is providen with the following pattern::
