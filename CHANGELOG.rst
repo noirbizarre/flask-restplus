@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.7.0
+-----
 
 - Expose models and fields schema through the ``__schema__`` attribute
 - Drop support for model as class
