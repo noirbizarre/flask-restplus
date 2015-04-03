@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
-__version__ = '0.7.1.dev'
+__version__ = '0.7.1'
 __description__ = 'Helpers, syntaxic sugar and Swagger documentation for Flask-Restful'

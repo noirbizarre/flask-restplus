@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.7.1
+-----
 
 - Fix ``@api.marshal_with_list()`` keyword arguments handling.
 
