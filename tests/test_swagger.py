@@ -1258,25 +1258,42 @@ class SwaggerTestCase(TestCase):
 
         self.assertIn('definitions', data)
         self.assertIn('Person', data['definitions'])
-        self.assertEqual(data['definitions']['Person'], {
-            'properties': {
-                'name': {
-                    'type': 'string'
-                },
-                'age': {
-                    'type': 'integer'
-                },
-                'birthdate': {
-                    'type': 'string',
-                    'format': 'date-time'
-                }
-            }
-        })
 
         path = data['paths']['/model-as-dict/']
         self.assertEqual(path['get']['responses']['200']['schema'], {
             'type': 'array',
             'items': {'$ref': '#/definitions/Person'},
+        })
+
+    def test_model_as_flat_dict_with_marchal_decorator_list_kwargs(self):
+        api = self.build_api()
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @api.marshal_list_with(fields, code=201, description='Some details')
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+
+        path = data['paths']['/model-as-dict/']
+        self.assertEqual(path['get']['responses'], {
+            '201': {
+                'description': 'Some details',
+                'schema': {
+                    'type': 'array',
+                    'items': {'$ref': '#/definitions/Person'},
+                }
+            }
         })
 
     def test_model_as_dict_with_list(self):

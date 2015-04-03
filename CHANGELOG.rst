@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Fix ``@api.marshal_with_list()`` keyword arguments handling.
 
 
 0.7.0

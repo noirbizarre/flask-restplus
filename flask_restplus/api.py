@@ -320,9 +320,9 @@ class Api(restful.Api):
             return restful.marshal_with(resolved, **kwargs)(func)
         return wrapper
 
-    def marshal_list_with(self, fields, code=200):
+    def marshal_list_with(self, fields, **kwargs):
         '''A shortcut decorator for ``marshal_with(as_list=True, code=code)``'''
-        return self.marshal_with(fields, True)
+        return self.marshal_with(fields, True, **kwargs)
 
     def marshal(self, data, fields):
         '''A shortcut to the ``marshal`` helper'''
