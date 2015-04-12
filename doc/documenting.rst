@@ -151,7 +151,7 @@ The optionnal parameter ``as_list`` allows you to specify wether or not the obje
             return create_object()
 
 
-The ``@pi.marshal_list_with()`` decorator is strictly equivalent to ``Api.marshal_with(fields, as_list=True)``.
+The ``@api.marshal_list_with()`` decorator is strictly equivalent to ``Api.marshal_with(fields, as_list=True)``.
 
 .. code-block:: python
 
