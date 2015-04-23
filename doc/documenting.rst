@@ -132,6 +132,7 @@ Documenting with the ``@api.marshal_with()`` decorator
 
 This decorator works like the Flask-Restful ``marshal_with`` decorator
 with the difference that it documents the methods.
+The optionnal paremeter ``code`` allows you to specify the expected HTTP status code (200 by default).
 The optionnal parameter ``as_list`` allows you to specify wether or not the objects are returned as a list.
 
 .. code-block:: python
@@ -146,9 +147,9 @@ The optionnal parameter ``as_list`` allows you to specify wether or not the obje
         def get(self):
             return get_objects()
 
-        @api.marshal_with(resource_fields)
+        @api.marshal_with(resource_fields, code=201)
         def post(self):
-            return create_object()
+            return create_object(), 201
 
 
 The ``@api.marshal_list_with()`` decorator is strictly equivalent to ``Api.marshal_with(fields, as_list=True)``.
