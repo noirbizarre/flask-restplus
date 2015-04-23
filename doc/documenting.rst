@@ -90,7 +90,7 @@ Will produce the following Swagger definitions:
 
 .. code-block:: json
 
-    "Child": {
+    "Parent": {
         "properties": {
             "name": {"type": "string"},
             "class": {"type": "string"}
