@@ -272,8 +272,9 @@ class ParserToParamsTestCase(unittest.TestCase):
         parser.add_argument('int', type=int, action='append')
         self.assertEqual(parser_to_params(parser), {
             'int': {
-                'type': 'integer',
                 'in': 'query',
-                'allowMultiple': True,
+                'items': True,
+                'type': 'array',
+                'items': {'type': 'integer'}
             }
         })

@@ -108,7 +108,8 @@ def parser_to_params(parser):
         if arg.default:
             param['default'] = arg.default
         if arg.action == 'append':
-            param['allowMultiple'] = True
+            param['items'] = {'type': param['type']}
+            param['type'] = 'array'
         if arg.choices:
             param['enum'] = arg.choices
         # if param['in'] == 'body':
