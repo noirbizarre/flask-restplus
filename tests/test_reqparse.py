@@ -40,3 +40,7 @@ class ReqParseTestCase(TestCase):
 
         data = self.post('/reqparse', {'todo': {'task': 'aaa'}})
         self.assertEqual(data, {'task': 'aaa'})
+
+    def test_copy(self):
+        parser = self.parser
+        cloned = parser.copy()
