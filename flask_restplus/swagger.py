@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, absolute_import
 
 import re
-import six
 
 from inspect import isclass
 from collections import Hashable
@@ -10,7 +9,7 @@ try:
     from collections import OrderedDict  # noqa
 except ImportError:
     from ordereddict import OrderedDict  # noqa
-from six import string_types
+from six import string_types, itervalues, iteritems, iterkeys
 
 from flask import current_app
 
@@ -178,7 +177,7 @@ class Swagger(object):
             'basePath': basepath,
             'paths': not_none_sorted(paths),
             'info': infos,
-            'produces': list(self.api.representations.keys()),
+            'produces': list(iterkeys(self.api.representations)),
             'consumes': ['application/json'],
             'securityDefinitions': self.api.authorizations or None,
             'security': self.security_requirements(self.api.security) or None,
@@ -290,7 +289,7 @@ class Swagger(object):
 
     def parameters_for(self, doc, method):
         params = []
-        for name, param in merge(doc['params'], doc[method]['params']).items():
+        for name, param in iteritems(merge(doc['params'], doc[method]['params'])):
             param['name'] = name
             if 'type' not in param and 'schema' not in param:
                 param['type'] = 'string'
@@ -305,7 +304,7 @@ class Swagger(object):
 
         for d in doc, doc[method]:
             if 'responses' in d:
-                for code, response in d['responses'].items():
+                for code, response in iteritems(d['responses']):
                     description, model = (response, None) if isinstance(response, string_types) else response
                     description = description or DEFAULT_RESPONSE_DESCRIPTION
                     if code in responses:
@@ -327,7 +326,7 @@ class Swagger(object):
     def serialize_definitions(self):
         return dict(
             (name, model.__schema__)
-            for name, model in self._registered_models.items()
+            for name, model in iteritems(self._registered_models)
         )
 
     def serialize_schema(self, model):
@@ -342,7 +341,7 @@ class Swagger(object):
             self.register_model(model)
             return ref(model)
 
-        elif isinstance(model, six.string_types):
+        elif isinstance(model, string_types):
             self.register_model(model)
             return ref(model)
 
@@ -366,12 +365,12 @@ class Swagger(object):
         if isinstance(specs, ApiModel):
             if specs.__parent__:
                 self.register_model(specs.__parent__)
-            for field in specs.values():
+            for field in itervalues(specs):
                 self.register_field(field)
 
     def register_field(self, field):
         if isinstance(field, fields.Polymorph):
-            for model in field.mapping.values():
+            for model in itervalues(field.mapping):
                 self.register_model(model)
         elif isinstance(field, fields.Nested):
             self.register_model(field.nested)
@@ -400,12 +399,12 @@ class Swagger(object):
             return []
 
     def security_requirement(self, value):
-        if isinstance(value, (six.string_types)):
+        if isinstance(value, (string_types)):
             return {value: []}
         elif isinstance(value, dict):
             return dict(
                 (k, v if isinstance(v, (list, tuple)) else [v])
-                for k, v in value.items()
+                for k, v in iteritems(value)
             )
         else:
             return None

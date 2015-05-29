@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from six import iteritems, itervalues
+
 from flask.ext.restful import fields as base_fields
 
 from .utils import camel_to_dash, not_none
@@ -140,7 +142,7 @@ class ClassName(String):
 class Polymorph(Nested):
     def __init__(self, mapping, required=False, **kwargs):
         self.mapping = mapping
-        parent = self.resolve_ancestor(list(mapping.values()))
+        parent = self.resolve_ancestor(list(itervalues(mapping)))
         super(Polymorph, self).__init__(parent, allow_null=not required, **kwargs)
 
     def output(self, key, obj):
@@ -156,7 +158,7 @@ class Polymorph(Nested):
         if not hasattr(value, '__class__'):
             raise ValueError('Polymorph field only accept class instances')
 
-        candidates = [fields for cls, fields in self.mapping.items() if isinstance(value, cls)]
+        candidates = [fields for cls, fields in iteritems(self.mapping) if isinstance(value, cls)]
 
         if len(candidates) <= 0:
             raise ValueError('Unknown class: ' + value.__class__.__name__)

@@ -350,6 +350,6 @@ class Api(restful.Api):
 
 def unshortcut_params_description(data):
     if 'params' in data:
-        for name, description in data['params'].items():
+        for name, description in six.iteritems(data['params']):
             if isinstance(description, six.string_types):
                 data['params'][name] = {'description': description}

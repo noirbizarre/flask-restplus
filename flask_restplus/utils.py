@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import re
 
 from copy import deepcopy
+from six import iteritems
 
 try:
     from collections import OrderedDict
@@ -24,7 +25,7 @@ def merge(first, second):
     if not isinstance(second, dict):
         return second
     result = deepcopy(first)
-    for key, value in second.items():
+    for key, value in iteritems(second):
         if key in result and isinstance(result[key], dict):
                 result[key] = merge(result[key], value)
         else:
@@ -45,10 +46,10 @@ def default_id(resource, method):
 
 def not_none(data):
     '''Remove all keys where value is None'''
-    return dict((k, v) for k, v in data.items() if v is not None)
+    return dict((k, v) for k, v in iteritems(data) if v is not None)
 
 
 def not_none_sorted(data):
     '''Remove all keys where value is None'''
-    ordered_items = OrderedDict(sorted(data.items()))
-    return OrderedDict((k, v) for k, v in ordered_items.items() if v is not None)
+    ordered_items = OrderedDict(sorted(iteritems(data)))
+    return OrderedDict((k, v) for k, v in iteritems(ordered_items) if v is not None)

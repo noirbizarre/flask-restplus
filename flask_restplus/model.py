@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import copy
 
 from collections import MutableMapping
+from six import iteritems, itervalues
 
 from .utils import not_none
 
@@ -34,7 +35,7 @@ class ApiModel(dict, MutableMapping):
             resolved.update(self.__parent__.resolved)
 
         # Handle discriminator
-        candidates = [f for f in resolved.values() if getattr(f, 'discriminator', None)]
+        candidates = [f for f in itervalues(resolved) if getattr(f, 'discriminator', None)]
         # Ensure the is only one discriminator
         if len(candidates) > 1:
             raise ValueError('There can only be one discriminator by schema')
@@ -76,7 +77,7 @@ class ApiModel(dict, MutableMapping):
         properties = {}
         required = set()
         discriminator = None
-        for name, field in self.items():
+        for name, field in iteritems(self):
             field = instance(field)
             properties[name] = field.__schema__
             if field.required:
