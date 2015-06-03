@@ -1,10 +1,13 @@
 Changelog
 =========
 
-Current
--------
+0.7.2
+-----
 
-- Nothing yet
+- Compatibility with flask-restful 0.3.3
+- Fix action=append handling in RequestParser
+- Upgraded to SwaggerUI 2.1.8-M1
+- Miscellaneous fixes
 
 
 0.7.1
