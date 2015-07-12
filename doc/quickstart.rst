@@ -21,7 +21,7 @@ of lazily with the factory pattern:
     api = Api()
 
     app = Flask(__name__)
-    api.init_app(api)
+    api.init_app(app)
 
 
 With Flask-Restplus, you only import the api instance to route and document your endpoints.
