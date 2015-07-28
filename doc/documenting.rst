@@ -132,8 +132,8 @@ Documenting with the ``@api.marshal_with()`` decorator
 
 This decorator works like the Flask-Restful ``marshal_with`` decorator
 with the difference that it documents the methods.
-The optionnal paremeter ``code`` allows you to specify the expected HTTP status code (200 by default).
-The optionnal parameter ``as_list`` allows you to specify wether or not the objects are returned as a list.
+The optional parameter ``code`` allows you to specify the expected HTTP status code (200 by default).
+The optional parameter ``as_list`` allows you to specify whether or not the objects are returned as a list.
 
 .. code-block:: python
 
@@ -246,7 +246,7 @@ The following synatxes are equivalents:
         def get(self):
             pass
 
-You can optionnaly specify a response model as third argument:
+You can optionally specify a response model as third argument:
 
 
 .. code-block:: python
@@ -365,15 +365,15 @@ You can also use the first argument for the same purpose:
         def get(self):
             return {}
 
-If not specified, a default operationId is providen with the following pattern::
+If not specified, a default operationId is provided with the following pattern::
 
     {{verb}}_{{resource class name | camelCase2dashes }}
 
 In the previous example, the default generated operationId will be ``get_my_resource``
 
 
-You can override the default operationId genertor by giving a callable as ``default_id`` parameter to your API.
-This callable will receive two positionnal arguments:
+You can override the default operationId generator by giving a callable as ``default_id`` parameter to your API.
+This callable will receive two positional arguments:
 
  - the resource class name
  - this lower cased HTTP method
@@ -397,7 +397,7 @@ Method parameters
 
 For each method, the path parameter are automatically extracted.
 You can provide additional parameters (from query parameters, body or form)
-or additionnal details on path parameters with the ``params`` documentation.
+or additional details on path parameters with the ``params`` documentation.
 
 Input and output models
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -496,11 +496,11 @@ The following example will produce the same documentation than the two previous 
 Hiding from documentation
 -------------------------
 
-You can hide some ressources or methods from documentation using one of the following syntaxes:
+You can hide some resources or methods from documentation using one of the following syntaxes:
 
 .. code-block:: python
 
-    # Hide the full ressource
+    # Hide the full resource
     @api.route('/resource1/', doc=False)
     class Resource1(Resource):
         def get(self):
