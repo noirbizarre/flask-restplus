@@ -248,7 +248,7 @@ class Api(restful.Api):
         '''
         Register a model
 
-        Model can be either a dictionnary or a fields.Raw subclass.
+        Model can be either a dictionary or a fields. Raw subclass.
         '''
         if isinstance(model, dict):
             model = ApiModel(model)
