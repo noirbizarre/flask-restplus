@@ -132,8 +132,8 @@ Documenting with the ``@api.marshal_with()`` decorator
 
 This decorator works like the Flask-Restful ``marshal_with`` decorator
 with the difference that it documents the methods.
-The optionnal paremeter ``code`` allows you to specify the expected HTTP status code (200 by default).
-The optionnal parameter ``as_list`` allows you to specify wether or not the objects are returned as a list.
+The optional paremeter ``code`` allows you to specify the expected HTTP status code (200 by default).
+The optional parameter ``as_list`` allows you to specify wether or not the objects are returned as a list.
 
 .. code-block:: python
 
@@ -246,7 +246,7 @@ The following synatxes are equivalents:
         def get(self):
             pass
 
-You can optionnaly specify a response model as third argument:
+You can optionally specify a response model as third argument:
 
 
 .. code-block:: python
