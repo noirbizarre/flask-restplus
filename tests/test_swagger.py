@@ -1536,8 +1536,6 @@ class SwaggerTestCase(TestCase):
 
         data = self.get_specs(status=500)
 
-        self.assertEqual(data['status'], 500)
-
     def test_extend(self):
         api = self.build_api()
 

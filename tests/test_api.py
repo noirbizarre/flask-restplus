@@ -38,7 +38,6 @@ class APITestCase(TestCase):
             self.assertEqual(url, '/api/')
             self.assertEqual(api.base_url, 'http://localhost/api/')
 
-
     def test_abort_code_only_with_defaults(self):
         api = restplus.Api(self.app)
 
@@ -53,7 +52,6 @@ class APITestCase(TestCase):
             self.assertEquals(response.content_type, 'application/json')
 
             data = json.loads(response.data.decode('utf8'))
-            self.assertEqual(data['status'], 403)
             self.assertIn('message', data)
 
     def test_abort_with_message(self):
@@ -70,7 +68,6 @@ class APITestCase(TestCase):
             self.assertEquals(response.content_type, 'application/json')
 
             data = json.loads(response.data.decode('utf8'))
-            self.assertEqual(data['status'], 403)
             self.assertEqual(data['message'], 'A message')
 
     def test_abort_with_lazy_init(self):
@@ -89,7 +86,6 @@ class APITestCase(TestCase):
             self.assertEquals(response.content_type, 'application/json')
 
             data = json.loads(response.data.decode('utf8'))
-            self.assertEqual(data['status'], 403)
             self.assertIn('message', data)
 
     def test_abort_on_exception(self):
@@ -106,7 +102,6 @@ class APITestCase(TestCase):
             self.assertEquals(response.content_type, 'application/json')
 
             data = json.loads(response.data.decode('utf8'))
-            self.assertEqual(data['status'], 500)
             self.assertIn('message', data)
 
     def test_abort_on_exception_with_lazy_init(self):
@@ -125,7 +120,6 @@ class APITestCase(TestCase):
             self.assertEquals(response.content_type, 'application/json')
 
             data = json.loads(response.data.decode('utf8'))
-            self.assertEqual(data['status'], 500)
             self.assertIn('message', data)
 
     def test_errorhandler(self):
