@@ -32,8 +32,8 @@ Documenting with the ``@api.model()`` decorator
 
 The ``@api.model`` decorator allows you to declare the models that your API can serialize.
 
-You can also extend fields and use the ``__schema_format__`` and ``__schema_type__``
-to specify the produced types:
+You can also extend fields and use the ``__schema_format__``, ``__schema_type__`` and
+``__schema_example__`` to specify the produced types and examples:
 
 .. code-block:: python
 
@@ -49,6 +49,8 @@ to specify the produced types:
         __schema_type__ = 'some-type'
         __schema_format__ = 'some-format'
 
+    class MyVerySpecialField(fields.Raw):
+        __schema_example__ = 'hello, world'
 
 
 Duplicating with ``api.extend``

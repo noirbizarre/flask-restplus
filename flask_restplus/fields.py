@@ -11,13 +11,14 @@ from .utils import camel_to_dash, not_none
 class BaseField(object):
     __schema_type__ = 'string'
     __schema_format__ = None
+    __schema_example__ = None
 
     def __init__(self, *args, **kwargs):
         self.description = kwargs.pop('description', None)
         self.title = kwargs.pop('title', None)
         self.required = kwargs.pop('required', None)
         self.readonly = kwargs.pop('readonly', None)
-        self.example = kwargs.pop('example', None)
+        self.example = kwargs.pop('example', self.__schema_example__)
         super(BaseField, self).__init__(*args, **kwargs)
 
     @property
