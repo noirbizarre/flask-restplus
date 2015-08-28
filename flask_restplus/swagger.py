@@ -111,6 +111,7 @@ def parser_to_params(parser):
             param['type'] = 'array'
         if arg.choices:
             param['enum'] = arg.choices
+            param['collectionFormat'] = 'multi'
         # if param['in'] == 'body':
         #     params['body'] = param
         # else:
