@@ -320,6 +320,7 @@ Every Flask-Restplus fields accepts additional but optional arguments used to do
 
 - ``required``: a boolean indicating if the field is always set (*default*: ``False``)
 - ``description``: some details about the field (*default*: ``None``)
+- ``example``: an example to use when displaying (*default*: ``None``)
 
 There is also field specific attributes.
 

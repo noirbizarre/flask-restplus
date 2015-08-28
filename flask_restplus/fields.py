@@ -17,6 +17,7 @@ class BaseField(object):
         self.title = kwargs.pop('title', None)
         self.required = kwargs.pop('required', None)
         self.readonly = kwargs.pop('readonly', None)
+        self.example = kwargs.pop('example', None)
         super(BaseField, self).__init__(*args, **kwargs)
 
     @property
@@ -31,6 +32,7 @@ class BaseField(object):
             'description': self.description,
             'readOnly': self.readonly,
             'default': self.default,
+            'example': self.example,
         }
 
 
@@ -56,6 +58,8 @@ class String(BaseField, base_fields.String):
     def schema(self):
         schema = super(String, self).schema()
         schema.update(enum=self.enum)
+        if self.enum and schema['example'] is None:
+            schema['example'] = self.enum[0]
         return schema
 
 
