@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import copy
 import six
 
-from flask import url_for
+from flask import url_for, request
 from flask.ext import restful
 
 from werkzeug import cached_property
@@ -72,6 +72,9 @@ class Api(restful.Api):
     :param default_mediatype: The default media type to return
     :type default_mediatype: str
 
+    :param validate: Whether or not the API should perform input payload validation.
+    :type validate: bool
+
     :param decorators: Decorators to attach to every resource
     :type decorators: list
 
@@ -96,7 +99,7 @@ class Api(restful.Api):
             terms_url=None, license=None, license_url=None,
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, ui=True, default_id=default_id,
-            default='default', default_label='Default namespace', **kwargs):
+            default='default', default_label='Default namespace', validate=None, **kwargs):
         self.version = version
         self.title = title or 'API'
         self.description = description
@@ -110,6 +113,7 @@ class Api(restful.Api):
         self.security = security
         self.ui = ui
         self.default_id = default_id
+        self.validate = validate
 
         self._error_handlers = {}
         self._schema = None
@@ -145,6 +149,7 @@ class Api(restful.Api):
         if not self.blueprint:
             app.add_url_rule('/', 'root', self.render_root)
         self.register_apidoc(app)
+        self.validate = self.validate if self.validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
 
     def register_apidoc(self, app):
         conf = app.extensions.setdefault('restplus', {})
@@ -293,9 +298,9 @@ class Api(restful.Api):
         self.models[name] = model
         return model
 
-    def expect(self, body):
+    def expect(self, body, validate=None):
         '''Specify the expected input model'''
-        return self.doc(body=body)
+        return self.doc(body=body, validate=validate or self.validate)
 
     def parser(self):
         '''Instanciate a RequestParser'''
@@ -363,6 +368,10 @@ class Api(restful.Api):
 
     def as_postman(self, urlvars=False):
         return PostmanCollectionV1(self).as_dict(urlvars=urlvars)
+
+    @property
+    def payload(self):
+        return request.get_json()
 
 
 def unshortcut_params_description(data):

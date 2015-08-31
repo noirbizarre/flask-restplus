@@ -7,6 +7,11 @@ from collections import MutableMapping
 from six import iteritems, itervalues
 from werkzeug import cached_property
 
+from flask.ext.restful import abort
+
+from jsonschema import Draft4Validator
+from jsonschema.exceptions import ValidationError
+
 from .utils import not_none
 
 
@@ -101,3 +106,18 @@ class ApiModel(dict, MutableMapping):
             }
         else:
             return schema
+
+    def validate(self, data):
+        validator = Draft4Validator(self.__schema__)
+        try:
+            validator.validate(data)
+        except ValidationError:
+            abort(400, message='Input payload validation failed',
+                  errors=dict(self.format_error(e) for e in validator.iter_errors(data)))
+
+    def format_error(self, error):
+        path = list(error.path)
+        if error.validator == 'required':
+            path.append(error.validator_value[0])
+        key = '.'.join(path)
+        return key, error.message

@@ -23,6 +23,24 @@ class TestCase(unittest.TestCase):
         with self.app.test_request_context('/'):
             yield
 
+    @contextmanager
+    def settings(self, **settings):
+        '''
+        A context manager to alter app settings during a test and restore it after..
+        '''
+        original = {}
+
+        # backup
+        for key, value in settings.items():
+            original[key] = self.app.config.get(key)
+            self.app.config[key] = value
+
+        yield
+
+        # restore
+        for key, value in original.items():
+            self.app.config[key] = value
+
     def get_specs(self, prefix='/api', app=None, status=200):
         '''Get a Swagger specification for a RestPlus API'''
         with self.app.test_client() as client:
@@ -46,3 +64,4 @@ class TestCase(unittest.TestCase):
         self.assertEquals(response.status_code, status)
         self.assertEquals(response.content_type, 'application/json')
         return json.loads(response.data.decode('utf8'))
+
