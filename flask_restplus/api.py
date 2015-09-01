@@ -268,6 +268,17 @@ class Api(restful.Api):
         '''
         Extend a model (Duplicate all fields)
         '''
+        if isinstance(parent, list):
+            parents = []
+
+            for item in parent:
+                parents.append(copy.deepcopy(item))
+
+            parent = {}
+
+            for value in parents:
+                parent.update(value)
+
         model = ApiModel(copy.deepcopy(parent))
         model.__apidoc__['name'] = name
         model.update(fields)
