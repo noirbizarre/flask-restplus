@@ -110,6 +110,7 @@ class Api(restful.Api):
         self.default_id = default_id
 
         self._error_handlers = {}
+        self._schema = None
         self.models = {}
         self.namespaces = []
         self.default_namespace = ApiNamespace(self, default, default_label,
@@ -154,7 +155,7 @@ class Api(restful.Api):
             api = self
 
             def get(self):
-                return Swagger(self.api).as_dict()
+                return self.api.__schema__
 
             def mediatypes(self):
                 return ['application/json']
@@ -221,6 +222,12 @@ class Api(restful.Api):
     @property
     def base_path(self):
         return url_for(self.endpoint('root'))
+
+    @property
+    def __schema__(self):
+        if not self._schema:
+            self._schema = Swagger(self).as_dict()
+        return self._schema
 
     def doc(self, shortcut=None, **kwargs):
         '''Add some api documentation to the decorated object'''
