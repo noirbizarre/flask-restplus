@@ -7,6 +7,8 @@ import six
 from flask import url_for, request
 from flask.ext import restful
 
+from jsonschema import RefResolver
+
 from werkzeug import cached_property
 from werkzeug.exceptions import HTTPException
 
@@ -118,6 +120,7 @@ class Api(restful.Api):
         self._error_handlers = {}
         self._schema = None
         self.models = {}
+        self._refresolver = None
         self.namespaces = []
         self.default_namespace = ApiNamespace(self, default, default_label,
             endpoint='{0}-declaration'.format(default),
@@ -179,6 +182,12 @@ class Api(restful.Api):
         kwargs['endpoint'] = str(kwargs.pop('endpoint', None) or resource.__name__.lower())
         if kwargs.pop('doc', True) and not kwargs.pop('namespace', None):
             self.default_namespace.resources.append((resource, urls, kwargs))
+
+        args = kwargs.pop('resource_class_args', [])
+        if isinstance(args, tuple):
+            args = list(args)
+        args.insert(0, self)
+        kwargs['resource_class_args'] = args
 
         super(Api, self).add_resource(resource, *urls, **kwargs)
 
@@ -372,6 +381,12 @@ class Api(restful.Api):
     @property
     def payload(self):
         return request.get_json()
+
+    @property
+    def refresolver(self):
+        if not self._refresolver:
+            self._refresolver = RefResolver.from_schema(self.__schema__)
+        return self._refresolver
 
 
 def unshortcut_params_description(data):

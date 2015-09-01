@@ -107,8 +107,8 @@ class ApiModel(dict, MutableMapping):
         else:
             return schema
 
-    def validate(self, data):
-        validator = Draft4Validator(self.__schema__)
+    def validate(self, data, resolver=None):
+        validator = Draft4Validator(self.__schema__, resolver=resolver)
         try:
             validator.validate(data)
         except ValidationError:

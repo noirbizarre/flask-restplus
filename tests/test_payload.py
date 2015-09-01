@@ -181,3 +181,32 @@ class PayloadTestCase(TestCase):
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(Payload.payload, data)
+
+    def test_validation_with_inheritance(self):
+        '''It should perform validation with inheritance (allOf/$ref)'''
+        api = restplus.Api(self.app, validate=True)
+
+        fields = api.model('Parent', {
+            'name': restplus.fields.String(required=True),
+        })
+
+        child_fields = api.inherit('Child', fields, {
+            'age': restplus.fields.Integer,
+        })
+
+        @api.route('/validation/')
+        class Inheritance(restplus.Resource):
+            @api.expect(child_fields)
+            def post(self):
+                return {}
+
+        response = self.post('/validation/', {
+            'name': 'John Doe',
+            'age': 15,
+        })
+        self.assertEquals(response.status_code, 200)
+
+        response = self.post('/validation/', {
+            'age': '15',
+        })
+        self.assert_errors(response, 'name', 'age')
