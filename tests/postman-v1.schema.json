@@ -1,0 +1,626 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "https://schema.getpostman.com/json/collection/v1.0.0/",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "description": "Every collection is identified by the unique value of this field. The value of this field is usually easiest to generate using a [UID](https://tools.ietf.org/html/rfc4122#section-4.4%29) generator function. If you already have a collection, it is recommended that you maintain the same id since changing the id usually implies that this is a different collection than it was originally."
+        },
+        "name": {
+            "type": "string",
+            "description": "A collection's friendly name is defined by this field. You would want to set this field to a value that would allow you to easily identify this collection among a bunch of other collections, as such outlining its usage or content."
+        },
+        "description": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "Provide a long description of this collection using this field. This field supports markdown syntax to better format the description."
+        },
+        "order": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "uniqueItems": true,
+            "description": "The order array ensures that your requests and folders don't randomly get shuffled up. It holds a sequence of [UUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier) corresponding to folders and requests.\n *Note that if a folder ID or a request ID (if the request is not already part of a folder) is not included in the order array, the request or the folder will not show up in the collection.*"
+        },
+        "folders": {
+            "type": "array",
+            "items": {
+                "title": "Folder",
+                "description": "One of the primary goals of Postman is to organize the development of APIs. To this end, it is necessary to be able to group requests together. This can be achived using 'Folders'. A folder just is an ordered set of requests.",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "In order to be able to uniquely identify different folders within a collection, Postman assigns each folder a unique ID (a [UUID](https://en.wikipedia.org/wiki/Globally_unique_identifier)). This field contains that value."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "A folder's friendly name is defined by this field. You would want to set this field to a value that would allow you to easily identify this folder."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Essays about the folder go into this field!"
+                    },
+                    "order": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "uniqueItems": true,
+                        "description": "Postman preserves the order of your requests within each folder. This field holds a sequence of [UUIDs](https://en.wikipedia.org/wiki/Globally_unique_identifier), where each ID corresponds to a particular Postman request."
+                    },
+                    "collection_id": {
+                        "type": "string",
+                        "description": "Postman folders are always a part of a collection. That collection's unique ID (which is a [UUID](https://en.wikipedia.org/wiki/Globally_unique_identifier)) is stored in this field."
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "description",
+                    "order"
+                ]
+            },
+            "description": "Folders are the way to go if you want to group your requests and to keep things organised. Folders can also be useful in sequentially requesting a part of the entire collection by using [Postman Collection Runner](https://www.getpostman.com/docs/jetpacks_running_collections) or [Newman](https://github.com/postmanlabs/newman) on a particular folder."
+        },
+        "timestamp": {
+            "type": "number",
+            "multipleOf": 1
+        },
+        "requests": {
+            "type": "array",
+            "description": "",
+            "items": {
+                "title": "Request",
+                "description": "A request represents an HTTP request.",
+                "type": "object",
+                "properties": {
+                    "folder": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Postman requests may or may not be a part of a folder. If this request belongs to a folder, that folder's unique ID (which is a [UUID](https://en.wikipedia.org/wiki/Globally_unique_identifier)) is stored in this field."
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Postman can store a number of requests in each collection. In order to preserve the order of each request, we need to be able to identify requests uniquely. This field is a UUID assigned to each request."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Sometimes, you just need to call your request 'Bob'. Postman will let you do that, and store the name you give in this field."
+                    },
+                    "dataMode": {
+                        "type": "string",
+                        "enum": [
+                            "raw",
+                            "urlencoded",
+                            "params"
+                        ],
+                        "description": "A request can have a specific data mode, and Postman supports three."
+                    },
+                    "data": {
+                        "oneOf": [
+                            {
+                                "type": "array",
+                                "description": "Data is an array of key-values that the request goes with. POST data, PUT data, etc goes here.",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "string"
+                                        },
+                                        "enabled": {
+                                            "type": "boolean"
+                                        },
+                                        "type": {
+                                            "enum": [
+                                                "file",
+                                                "text"
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "descriptionFormat": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "html",
+                                    "markdown"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "A request can have an associated description text. Since description is meant to be long, it can be in either ``html`` or ``markdown`` formats. This field specifies that format."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "The description of this request. Can be as long as you want. Postman also supports two formats for your description, ``markdown`` and ``html``."
+                    },
+                    "headers": {
+                        "type": "string",
+                        "description": "No HTTP request is complete without its headers, and the same is true for a Postman request. This field contains all the HTTP Headers in a raw string format."
+                    },
+                    "method": {
+                        "type": "string",
+                        "enum": [
+                            "GET",
+                            "PUT",
+                            "POST",
+                            "PATCH",
+                            "DELETE",
+                            "COPY",
+                            "HEAD",
+                            "OPTIONS",
+                            "LINK",
+                            "UNLINK",
+                            "PURGE",
+                            "LOCK",
+                            "UNLOCK",
+                            "PROPFIND",
+                            "VIEW"
+                        ],
+                        "description": "The HTTP method associated with this request."
+                    },
+                    "currentHelper": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Postman can associate helpers with a request, which help with activities such as OAuth, Basic Authentication, etc. The type of helper associated with this request is stored in this field."
+                    },
+                    "helperAttributes": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "title": "DigestAuth",
+                                "description": "Helper attributes for Digest Authentication",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "enum": [
+                                            "digest"
+                                        ],
+                                        "description": "This field contains the type of the helper. In this case, it is ``digest``"
+                                    },
+                                    "algorithm": {
+                                        "type": "string",
+                                        "description": "The hashing algorithm used in this Digest authenticated request is stored in this field."
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "description": "The username to be used for digest Authentication is stored in this field."
+                                    },
+                                    "realm": {
+                                        "type": "string",
+                                        "description": "The authentication 'realm' is stored in this field. Refer to [RFC 2617](https://tools.ietf.org/html/rfc2617) for details."
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "description": "The password to be used for digest Authentication is stored in this field."
+                                    },
+                                    "nonce": {
+                                        "type": "string",
+                                        "description": "The Digest server challenges clients. A nonce is a part of that challenge, stored in this field."
+                                    },
+                                    "qop": {
+                                        "type": "string",
+                                        "description": "Indicates what \"quality of protection\" the client has applied to the message."
+                                    },
+                                    "nonceCount": {
+                                        "type": "string",
+                                        "description": "The nonceCount is the hexadecimal count of the number of requests (including the current request) that the client has sent with the nonce value in this request."
+                                    },
+                                    "clientNonce": {
+                                        "type": "string",
+                                        "description": "A client nonce enhances the security of HTTP Digest Authentication, and it is stored in this field."
+                                    },
+                                    "opaque": {
+                                        "type": "string",
+                                        "description": "A string of data, specified by the server, which should be returned by the client unchanged."
+                                    }
+                                },
+                                "required": [
+                                    "id"
+                                ]
+                            },
+                            {
+                                "type": "object",
+                                "title": "BasicAuth",
+                                "description": "Helper attributes for Basic Authentication",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "enum": [
+                                            "basic"
+                                        ],
+                                        "description": "This field contains the type of the helper. In this case, it is ``basic``"
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "description": "The username to be used for Basic Authentication is stored in this field."
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "description": "The password to be used for digest Authentication is stored in this field."
+                                    }
+                                },
+                                "required": [
+                                    "id"
+                                ]
+                            },
+                            {
+                                "type": "object",
+                                "title": "OAuth1",
+                                "description": "Helper attributes for OAuth-1 Authentication",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "enum": [
+                                            "oAuth1"
+                                        ],
+                                        "description": "This field contains the type of the helper. In this case, it is ``oAuth1``"
+                                    },
+                                    "consumerKey": {
+                                        "type": "string",
+                                        "description": "The oAuth1 Consumer Secret, along with the Consumer Key authenticates the client. This field holds the oAuth1 Consumer Key"
+                                    },
+                                    "consumerSecret": {
+                                        "type": "string",
+                                        "description": "The oAuth1 Consumer Secret, along with the Consumer Key authenticates the client. The consumer secret is stored in this field."
+                                    },
+                                    "token": {
+                                        "type": "string",
+                                        "description": "The request token is a temporary credential, and is stored by Postman in this field."
+                                    },
+                                    "tokenSecret": {
+                                        "type": "string",
+                                        "description": "The request token secret is a temporary credential."
+                                    },
+                                    "signatureMethod": {
+                                        "type": "string",
+                                        "description": "The name of the signature method used by the client to sign the request."
+                                    },
+                                    "nonce": {
+                                        "type": "string",
+                                        "description": "A nonce is a random string, uniquely generated by the client to allow the server to verify that a request has never been made before and helps prevent replay attacks when requests are made over a non-secure channel."
+                                    },
+                                    "version": {
+                                        "type": "string",
+                                        "description": "The oAuth version, usually, this is ``1.0`` for OAuth-1"
+                                    },
+                                    "realm": {
+                                        "type": "string",
+                                        "description": "The realm directive is required for all authentication schemes that issue a challenge. Refer to [RFC 2617](http://tools.ietf.org/html/rfc2617#section-1.2) for more details."
+                                    },
+                                    "header": {
+                                        "type": "boolean",
+                                        "description": "Set this parameter to 'true' if you want Postman to add the OAuth parameters to the request headers. If false, the query string is used instead."
+                                    },
+                                    "auto": {
+                                        "type": "boolean",
+                                        "description": "This field controls whether OAuth1 parameters are automatically added to the request."
+                                    },
+                                    "includeEmpty": {
+                                        "type": "boolean",
+                                        "description": "If you would like to include empty parameters in the request, set this to 'true', else set it to 'false'"
+                                    }
+                                },
+                                "required": [
+                                    "id"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {}
+                            }
+                        ],
+                        "description": "A helper may require a number of parameters to actually be helpful. The parameters used by the helper can be stored in this field, as an object. E.g when using Basic Authentication, the username and password will be stored here."
+                    },
+                    "pathVariables": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "A Postman request allows you to use Path Variables in a request, e.g: ``/search/:bookId``. This field stores these variables."
+                    },
+                    "url": {
+                        "type": "string",
+                        "description": "Contains the complete URL for this request, along with the path variables, if any."
+                    },
+                    "preRequestScript": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "In some use cases, it's necessary to run a bit of code or perform some tasks before sending a request. Postman implements this feature by the use of this field. Any code written to this field is run before running a request."
+                    },
+                    "tests": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Postman allows you to define a script that is run after executing the request, which may act on the response. Such a script is stored in this field."
+                    },
+                    "time": {
+                        "type": "number",
+                        "multipleOf": 1,
+                        "description": "The timestamp for this request."
+                    },
+                    "responses": {
+                        "type": "array",
+                        "description": "A Postman request can have multiple responses associated with it. These responses are stored in this field.",
+                        "items": {
+                            "title": "Response",
+                            "description": "A response represents an HTTP response.",
+                            "properties": {
+                                "request": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "object"
+                                        },
+                                        {
+                                            "type": "null"
+                                        }
+                                    ],
+                                    "description": "A response is associated with a request. This fields contains the UUID of the request corresponding to this response."
+                                },
+                                "id": {
+                                    "type": "string",
+                                    "description": "In order to unambiguously identify a response, Postman assigns a UUID to it, and stores it in this field."
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "description": "A response can have a friendly name, which goes here."
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "description": ""
+                                },
+                                "responseCode": {
+                                    "type": "object",
+                                    "title": "ResponseCode",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "description": "The numeric HTTP response code."
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "description": "The textual HTTP response code."
+                                        },
+                                        "detail": {
+                                            "type": "string",
+                                            "description": "Detailed explanation of the response code."
+                                        }
+                                    },
+                                    "required": [
+                                        "code",
+                                        "name"
+                                    ]
+                                },
+                                "time": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "number"
+                                        }
+                                    ],
+                                    "description": "The time taken by this particular HTTP transaction to complete is stored in this field."
+                                },
+                                "headers": {
+                                    "type": "array",
+                                    "title": "Header",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "Some headers can have names associated with them, which are stored in this field."
+                                            },
+                                            "key": {
+                                                "type": "string",
+                                                "description": "The left hand side (LHS) or 'key' of the header."
+                                            },
+                                            "value": {
+                                                "type": "string",
+                                                "description": "Value of the header, or the right hand side (RHS)."
+                                            },
+                                            "description": {
+                                                "type": "string",
+                                                "description": "An optional description about the header."
+                                            }
+                                        },
+                                        "required": [
+                                            "name",
+                                            "key",
+                                            "value"
+                                        ]
+                                    }
+                                },
+                                "cookies": {
+                                    "type": "array",
+                                    "title": "Cookie",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "domain": {
+                                                "type": "string",
+                                                "description": "The domain for which this cookie is valid."
+                                            },
+                                            "expirationDate": {
+                                                "type": "number",
+                                                "description": "The timestamp of the time when the cookie expires."
+                                            },
+                                            "hostOnly": {
+                                                "type": "boolean",
+                                                "description": "Indicates if this cookie is Host Only."
+                                            },
+                                            "httpOnly": {
+                                                "type": "boolean",
+                                                "description": "Indicates if this cookie is HTTP Only."
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "description": "This is the name of the Cookie."
+                                            },
+                                            "path": {
+                                                "type": "string",
+                                                "description": "The path associated with the Cookie."
+                                            },
+                                            "secure": {
+                                                "type": "boolean",
+                                                "description": "Indicates if the 'secure' flag is set on the Cookie."
+                                            },
+                                            "session": {
+                                                "type": "boolean",
+                                                "description": "True if the cookie is a session cookie."
+                                            },
+                                            "storeId": {
+                                                "type": "string",
+                                                "description": "The ID of the cookie store containing this cookie."
+                                            },
+                                            "value": {
+                                                "type": "string",
+                                                "description": "The value of the Cookie."
+                                            },
+                                            "expires": {
+                                                "type": "string",
+                                                "description": "Human readable expiration time."
+                                            }
+                                        },
+                                        "required": [
+                                            "domain",
+                                            "expirationDate",
+                                            "hostOnly",
+                                            "httpOnly",
+                                            "name",
+                                            "path",
+                                            "secure",
+                                            "session",
+                                            "storeId",
+                                            "value",
+                                            "expires"
+                                        ]
+                                    }
+                                },
+                                "mime": {
+                                    "type": "string",
+                                    "description": "Mimetype of the response."
+                                },
+                                "text": {
+                                    "type": "string",
+                                    "description": "The raw text of the response."
+                                },
+                                "language": {
+                                    "type": "string",
+                                    "enum": [
+                                        "html",
+                                        "javascript",
+                                        "xml"
+                                    ],
+                                    "description": "The language associated with the response."
+                                },
+                                "rawDataType": {
+                                    "type": "string",
+                                    "description": "The data type of the raw response."
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "responseCode",
+                                "request"
+                            ]
+                        }
+                    },
+                    "rawModeData": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "array"
+                            }
+                        ],
+                        "description": "Contains the raw data (parameters) that Postman sends to the server"
+                    },
+                    "collectionId": {
+                        "type": "string",
+                        "description": "This field contains the unique ID of the collection to which this request belongs."
+                    }
+                },
+                "required": [
+                    "id",
+                    "method",
+                    "url",
+                    "headers",
+                    "name"
+                ]
+            }
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "order",
+        "requests"
+    ]
+}

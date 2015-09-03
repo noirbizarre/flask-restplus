@@ -13,6 +13,7 @@ from werkzeug.exceptions import HTTPException
 from . import apidoc
 from .model import ApiModel
 from .namespace import ApiNamespace
+from .postman import PostmanCollectionV1
 from .resource import Resource
 from .swagger import Swagger
 from .utils import merge, default_id
@@ -359,6 +360,9 @@ class Api(restful.Api):
     def deprecated(self, func):
         '''Mark a resource or a method as deprecated'''
         return self.doc(deprecated=True)(func)
+
+    def as_postman(self):
+        return PostmanCollectionV1(self).as_dict()
 
 
 def unshortcut_params_description(data):
