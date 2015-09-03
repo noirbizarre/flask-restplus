@@ -493,6 +493,36 @@ The following example will produce the same documentation than the two previous 
             return {}
 
 
+
+Marking as deprecated
+---------------------
+
+You can mark as deprecated some resources or methods with the ``@api.deprecated`` decorator:
+
+.. code-block:: python
+
+    # Deprecate the full resource
+    @api.deprecated
+    @api.route('/resource1/')
+    class Resource1(Resource):
+        def get(self):
+            return {}
+
+    # Hide methods
+    @api.route('/resource4/')
+    class Resource4(Resource):
+        def get(self):
+            return {}
+
+        @api.deprecated
+        def post(self):
+            return {}
+
+        def put(self):
+            return {}
+
+
+
 Hiding from documentation
 -------------------------
 
