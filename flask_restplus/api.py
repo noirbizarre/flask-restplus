@@ -353,7 +353,12 @@ class Api(restful.Api):
         return super(Api, self).handle_error(e)
 
     def response(self, code, description, model=None, **kwargs):
+        '''Specify on of the expected response'''
         return self.doc(responses={code: (description, model) if model else description})
+
+    def deprecated(self, func):
+        '''Mark a resource or a method as deprecated'''
+        return self.doc(deprecated=True)(func)
 
 
 def unshortcut_params_description(data):

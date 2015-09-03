@@ -254,6 +254,9 @@ class Swagger(object):
             'parameters': self.parameters_for(doc, method) or None,
             'security': self.security_for(doc, method),
         }
+        # Handle deprecated annotation
+        if doc.get('deprecated') or doc[method].get('deprecated'):
+            operation['deprecated'] = True
         # Handle form exceptions:
         if operation['parameters'] and any(p['in'] == 'formData' for p in operation['parameters']):
             if any(p['type'] == 'file' for p in operation['parameters']):

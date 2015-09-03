@@ -2318,3 +2318,42 @@ class SwaggerTestCase(TestCase):
         self.assertIn('get', path)
         self.assertNotIn('post', path)
         self.assertNotIn('put', path)
+
+    def test_deprecated_resource(self):
+        api = self.build_api()
+
+        @api.deprecated
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+            def post(self):
+                pass
+
+        data = self.get_specs()
+        resource = data['paths']['/test/']
+        for operation in resource.values():
+            self.assertIn('deprecated', operation)
+            self.assertTrue(operation['deprecated'])
+
+    def test_deprecated_method(self):
+        api = self.build_api()
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+            @api.deprecated
+            def post(self):
+                pass
+
+        data = self.get_specs()
+
+        get_operation = data['paths']['/test/']['get']
+        self.assertNotIn('deprecated', get_operation)
+
+        post_operation = data['paths']['/test/']['post']
+        self.assertIn('deprecated', post_operation)
+        self.assertTrue(post_operation['deprecated'])
