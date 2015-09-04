@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from six import iteritems, itervalues
 
 from flask.ext.restful import fields as base_fields
+from werkzeug import cached_property
 
 from .utils import camel_to_dash, not_none
 
@@ -19,7 +20,7 @@ class BaseField(object):
         self.readonly = kwargs.pop('readonly', None)
         super(BaseField, self).__init__(*args, **kwargs)
 
-    @property
+    @cached_property
     def __schema__(self):
         return not_none(self.schema())
 

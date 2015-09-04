@@ -5,6 +5,7 @@ import copy
 
 from collections import MutableMapping
 from six import iteritems, itervalues
+from werkzeug import cached_property
 
 from .utils import not_none
 
@@ -22,7 +23,7 @@ class ApiModel(dict, MutableMapping):
         self.__parent__ = None
         super(ApiModel, self).__init__(*args, **kwargs)
 
-    @property
+    @cached_property
     def resolved(self):
         '''
         Resolve real fields before submitting them to upstream restful marshal
@@ -52,7 +53,7 @@ class ApiModel(dict, MutableMapping):
         '''
         return self.__parent__.tree
 
-    @property
+    @cached_property
     def tree(self):
         '''
         Return the inheritance tree
@@ -72,7 +73,7 @@ class ApiModel(dict, MutableMapping):
         else:
             raise ValueError('Parent ' + name + ' not found')
 
-    @property
+    @cached_property
     def __schema__(self):
         properties = {}
         required = set()

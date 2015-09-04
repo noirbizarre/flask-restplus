@@ -7,6 +7,7 @@ import six
 from flask import url_for
 from flask.ext import restful
 
+from werkzeug import cached_property
 from werkzeug.exceptions import HTTPException
 
 from . import apidoc
@@ -223,7 +224,7 @@ class Api(restful.Api):
     def base_path(self):
         return url_for(self.endpoint('root'))
 
-    @property
+    @cached_property
     def __schema__(self):
         if not self._schema:
             self._schema = Swagger(self).as_dict()
