@@ -40,6 +40,16 @@ class Request(object):
         return self.collection.api.base_url[:-1] + self.path
 
     @property
+    def headers(self):
+        headers = {}
+        consumes = self.collection.api.__schema__.get('consumes', [])
+        consumes = self.operation.get('consumes', consumes)
+        if len(consumes):
+            headers['Content-Type'] = consumes[-1]
+        lines = [':'.join(line) for line in headers.items()]
+        return '\n'.join(lines)
+
+    @property
     def folder(self):
         tag = self.operation['tags'][0]
         for folder in self.collection.folders:
@@ -54,7 +64,7 @@ class Request(object):
             'name': self.operation['operationId'],
             'description': self.operation.get('summary'),
             'url': url,
-            'headers': '',
+            'headers': self.headers,
             'collectionId': self.collection.id,
             'folder': self.folder,
             'pathVariables': variables,

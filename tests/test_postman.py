@@ -6,6 +6,7 @@ import json
 from os.path import join, dirname
 
 from jsonschema import validate
+from werkzeug.datastructures import FileStorage
 
 from flask.ext import restplus
 
@@ -227,3 +228,39 @@ class PostmanTestCase(TestCase):
 
         self.assertIn('str', qs)
         self.assertEqual(qs['str'][0], '')
+
+    def test_content_type_header(self):
+        api = restplus.Api(self.app)
+        form_parser = api.parser()
+        form_parser.add_argument('param', type=int, help='Some param', location='form')
+
+        file_parser = api.parser()
+        file_parser.add_argument('in_files', type=FileStorage, location='files')
+
+        @api.route('/json/')
+        class TestJson(restplus.Resource):
+            @api.doc('json')
+            def post(self):
+                pass
+
+        @api.route('/form/')
+        class TestForm(restplus.Resource):
+            @api.doc('form', parser=form_parser)
+            def post(self):
+                pass
+
+        @api.route('/file/')
+        class Test(restplus.Resource):
+            @api.doc('file', parser=file_parser)
+            def post(self):
+                pass
+
+        data = api.as_postman(urlvars=True)
+
+        validate(data, schema)
+        self.assertEqual(len(data['requests']), 3)
+        requests = dict((r['name'], r['headers']) for r in data['requests'])
+
+        self.assertEqual(requests['json'], 'Content-Type:application/json')
+        self.assertEqual(requests['form'], 'Content-Type:multipart/form-data')
+        self.assertEqual(requests['file'], 'Content-Type:multipart/form-data')
