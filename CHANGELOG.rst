@@ -4,7 +4,8 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Added the ``@api.deprecated`` to mark resources or methods as deprecated
+- Fix compatibility with flask-restful 0.3.4
 
 
 0.7.2
