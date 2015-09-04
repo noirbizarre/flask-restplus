@@ -147,3 +147,28 @@ class PostmanTestCase(TestCase):
         for request_id, expected in zip(folder['order'], expected_order):
             request = filter(lambda r: r['id'] == request_id, data['requests'])[0]
             self.assertEqual(request['name'], expected)
+
+    def test_path_variables(self):
+        api = restplus.Api(self.app)
+
+        @api.route('/test/<id>/<int:integer>/<float:number>/')
+        class Test(restplus.Resource):
+            @api.doc('test_post')
+            def post(self):
+                '''A test post'''
+                pass
+
+        data = api.as_postman()
+
+        validate(data, schema)
+
+        self.assertEqual(len(data['requests']), 1)
+        request = data['requests'][0]
+        self.assertEqual(request['name'], 'test_post')
+        self.assertEqual(request['description'], 'A test post')
+        self.assertEqual(request['url'], 'http://localhost/test/:id/:integer/:number/')
+        self.assertEqual(request['pathVariables'], {
+            'id': '',
+            'integer': 0,
+            'number': 0,
+        })

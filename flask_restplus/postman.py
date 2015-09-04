@@ -10,6 +10,12 @@ def clean(data):
     return dict((k, v) for k, v in data.items() if v is not None)
 
 
+DEFAULT_VARS = {
+    'string': '',
+    'integer': 0,
+    'number': 0,
+}
+
 class Request(object):
     '''Wraps a Swagger operation into a Postman Request'''
     def __init__(self, collection, path, method, operation):
@@ -35,16 +41,31 @@ class Request(object):
                 return folder.id
 
     def as_dict(self):
+        url, variables = self.extract_vars()
         return clean({
             'id': self.id,
             'method': self.method,
             'name': self.operation['operationId'],
             'description': self.operation.get('summary'),
-            'url': self.url,
+            'url': url,
             'headers': '',
             'collectionId': self.collection.id,
             'folder': self.folder,
+            'pathVariables': variables,
         })
+
+    def extract_vars(self):
+        url = self.url
+        variables = {}
+        params = self.operation.get('parameters')
+        if not params:
+            return url, None
+        for param in params:
+            if param['in'] == 'path':
+                name = param['name']
+                url = url.replace('{%s}' % name, ':%s' % name)
+                variables[name] = DEFAULT_VARS.get(param['type'], '')
+        return url, variables
 
 
 class Folder(object):
