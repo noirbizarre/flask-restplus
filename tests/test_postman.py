@@ -11,6 +11,11 @@ from flask.ext import restplus
 
 from . import TestCase
 
+try:
+    from urlparse import parse_qs, urlparse
+except:
+    from urllib.parse import urlparse, parse_qs
+
 
 with open(join(dirname(__file__), 'postman-v1.schema.json')) as f:
     schema = json.load(f)
@@ -155,7 +160,6 @@ class PostmanTestCase(TestCase):
         class Test(restplus.Resource):
             @api.doc('test_post')
             def post(self):
-                '''A test post'''
                 pass
 
         data = api.as_postman()
@@ -164,11 +168,62 @@ class PostmanTestCase(TestCase):
 
         self.assertEqual(len(data['requests']), 1)
         request = data['requests'][0]
-        self.assertEqual(request['name'], 'test_post')
-        self.assertEqual(request['description'], 'A test post')
         self.assertEqual(request['url'], 'http://localhost/test/:id/:integer/:number/')
         self.assertEqual(request['pathVariables'], {
             'id': '',
             'integer': 0,
             'number': 0,
         })
+
+    def test_url_variables_disabled(self):
+        api = restplus.Api(self.app)
+
+        parser = api.parser()
+        parser.add_argument('int', type=int)
+        parser.add_argument('default', type=int, default=5)
+        parser.add_argument('str', type=str)
+
+        @api.route('/test/')
+        class Test(restplus.Resource):
+            @api.doc(parser=parser)
+            def get(self):
+                pass
+
+        data = api.as_postman()
+
+        validate(data, schema)
+
+        self.assertEqual(len(data['requests']), 1)
+        request = data['requests'][0]
+        self.assertEqual(request['url'], 'http://localhost/test/')
+
+    def test_url_variables_enabled(self):
+        api = restplus.Api(self.app)
+
+        parser = api.parser()
+        parser.add_argument('int', type=int)
+        parser.add_argument('default', type=int, default=5)
+        parser.add_argument('str', type=str)
+
+        @api.route('/test/')
+        class Test(restplus.Resource):
+            @api.doc(parser=parser)
+            def get(self):
+                pass
+
+        data = api.as_postman(urlvars=True)
+
+        validate(data, schema)
+
+        self.assertEqual(len(data['requests']), 1)
+        request = data['requests'][0]
+        qs = parse_qs(urlparse(request['url']).query, keep_blank_values=True)
+
+        self.assertIn('int', qs)
+        self.assertEqual(qs['int'][0], '0')
+
+        self.assertIn('default', qs)
+        self.assertEqual(qs['default'][0], '5')
+
+        self.assertIn('str', qs)
+        self.assertEqual(qs['str'][0], '')

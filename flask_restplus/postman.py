@@ -4,6 +4,11 @@ from __future__ import unicode_literals, absolute_import
 from time import time
 from uuid import uuid5, NAMESPACE_URL
 
+try:
+    from urllib import urlencode
+except:
+    from urllib.parse import urlencode
+
 
 def clean(data):
     '''Remove all keys where value is None'''
@@ -15,6 +20,7 @@ DEFAULT_VARS = {
     'integer': 0,
     'number': 0,
 }
+
 
 class Request(object):
     '''Wraps a Swagger operation into a Postman Request'''
@@ -40,8 +46,8 @@ class Request(object):
             if folder.tag == tag:
                 return folder.id
 
-    def as_dict(self):
-        url, variables = self.extract_vars()
+    def as_dict(self, urlvars=False):
+        url, variables = self.process_url(urlvars)
         return clean({
             'id': self.id,
             'method': self.method,
@@ -54,18 +60,24 @@ class Request(object):
             'pathVariables': variables,
         })
 
-    def extract_vars(self):
+    def process_url(self, urlvars=False):
         url = self.url
-        variables = {}
+        path_vars = {}
+        url_vars = {}
         params = self.operation.get('parameters')
         if not params:
             return url, None
         for param in params:
+            name = param['name']
             if param['in'] == 'path':
-                name = param['name']
                 url = url.replace('{%s}' % name, ':%s' % name)
-                variables[name] = DEFAULT_VARS.get(param['type'], '')
-        return url, variables
+                path_vars[name] = DEFAULT_VARS.get(param['type'], '')
+            elif param['in'] == 'query' and urlvars:
+                default = DEFAULT_VARS.get(param['type'], '')
+                url_vars[name] = param.get('default', default)
+        if url_vars:
+            url = '?'.join((url, urlencode(url_vars)))
+        return url, path_vars
 
 
 class Folder(object):
@@ -119,13 +131,13 @@ class PostmanCollectionV1(object):
         for tag in self.api.__schema__['tags']:
             yield Folder(self, tag)
 
-    def as_dict(self):
+    def as_dict(self, urlvars=False):
         return clean({
             'id': self.id,
             'name': ' '.join((self.api.title, self.api.version)),
             'description': self.api.description,
             'order': [r.id for r in self.requests if not r.folder],
-            'requests': [r.as_dict() for r in self.requests],
+            'requests': [r.as_dict(urlvars=urlvars) for r in self.requests],
             'folders': [f.as_dict() for f in self.folders],
             'timestamp': int(time()),
         })

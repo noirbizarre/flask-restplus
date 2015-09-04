@@ -361,8 +361,8 @@ class Api(restful.Api):
         '''Mark a resource or a method as deprecated'''
         return self.doc(deprecated=True)(func)
 
-    def as_postman(self):
-        return PostmanCollectionV1(self).as_dict()
+    def as_postman(self, urlvars=False):
+        return PostmanCollectionV1(self).as_dict(urlvars=urlvars)
 
 
 def unshortcut_params_description(data):
