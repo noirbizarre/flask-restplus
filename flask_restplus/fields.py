@@ -12,12 +12,14 @@ from .utils import camel_to_dash, not_none
 class BaseField(object):
     __schema_type__ = 'string'
     __schema_format__ = None
+    __schema_example__ = None
 
     def __init__(self, *args, **kwargs):
         self.description = kwargs.pop('description', None)
         self.title = kwargs.pop('title', None)
         self.required = kwargs.pop('required', None)
         self.readonly = kwargs.pop('readonly', None)
+        self.example = kwargs.pop('example', self.__schema_example__)
         super(BaseField, self).__init__(*args, **kwargs)
 
     @cached_property
@@ -32,6 +34,7 @@ class BaseField(object):
             'description': self.description,
             'readOnly': self.readonly,
             'default': self.default,
+            'example': self.example,
         }
 
 
@@ -57,6 +60,8 @@ class String(BaseField, base_fields.String):
     def schema(self):
         schema = super(String, self).schema()
         schema.update(enum=self.enum)
+        if self.enum and schema['example'] is None:
+            schema['example'] = self.enum[0]
         return schema
 
 

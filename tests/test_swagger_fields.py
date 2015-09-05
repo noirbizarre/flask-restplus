@@ -73,9 +73,10 @@ class StringFieldTest(FieldTestCase):
         self.assertEqual(field.__schema__, {'type': 'string', 'readOnly': True})
 
     def test_string_field_with_enum(self):
-        field = fields.String(enum=['A', 'B', 'C'])
+        enum = ['A', 'B', 'C']
+        field = fields.String(enum=enum)
         self.assertFalse(field.required)
-        self.assertEqual(field.__schema__, {'type': 'string', 'enum': ['A', 'B', 'C']})
+        self.assertEqual(field.__schema__, {'type': 'string', 'enum': enum, 'example': enum[0]})
 
     def test_string_field_with_default(self):
         field = fields.String(default='aaa')
