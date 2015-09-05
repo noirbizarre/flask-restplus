@@ -12,8 +12,6 @@
                 dom_id: "swagger-ui-container",
                 supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
                 onComplete: function(swaggerApi, swaggerUi){
-                    log("Loaded SwaggerUI");
-
                     if(typeof initOAuth == "function") {
                         /*
                         initOAuth({
