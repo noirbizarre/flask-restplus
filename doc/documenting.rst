@@ -650,3 +650,38 @@ You can hide some resources or methods from documentation using one of the follo
 
         def delete(self):
             return {}
+
+
+Documenting autorizations
+-------------------------
+
+In order to document an authorization you can provide an authorization dictionnary to the API constructor:
+
+.. code-block:: python
+
+    authorizations = {
+        'apikey': {
+            'type': 'apiKey',
+            'passAs': 'header',
+            'keyname': HEADER_API_KEY
+        }
+    }
+    api = Api(app, authorizations=authorizations)
+
+Next, you need to set the authorization documentation on each resource/method requiring it.
+You can use a decorator to make it easier:
+
+.. code-block:: python
+
+    def apikey(func):
+        return api.doc(security='apikey')(func)
+
+    @api.route('/resource/')
+    class Resource1(Resource):
+        @apikey
+        def get(self):
+            pass
+
+        @api.doc(security='apikey')
+        def post(self):
+            pass
