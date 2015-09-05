@@ -151,7 +151,7 @@ class PostmanTestCase(TestCase):
         self.assertEqual(len(folder['order']), len(expected_order))
 
         for request_id, expected in zip(folder['order'], expected_order):
-            request = filter(lambda r: r['id'] == request_id, data['requests'])[0]
+            request = list(filter(lambda r: r['id'] == request_id, data['requests']))[0]
             self.assertEqual(request['name'], expected)
 
     def test_path_variables(self):

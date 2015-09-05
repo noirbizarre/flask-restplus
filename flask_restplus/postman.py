@@ -68,6 +68,7 @@ class Request(object):
             'collectionId': self.collection.id,
             'folder': self.folder,
             'pathVariables': variables,
+            'time': int(time()),
         })
 
     def process_url(self, urlvars=False):
