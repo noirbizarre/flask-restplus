@@ -173,6 +173,7 @@ class ParserToParamsTestCase(unittest.TestCase):
                 'type': 'string',
                 'in': 'query',
                 'enum': ['a', 'b'],
+                'collectionFormat': 'multi',
             }
         })
 
