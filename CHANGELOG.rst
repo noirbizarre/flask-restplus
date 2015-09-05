@@ -8,6 +8,8 @@ Current
 - Added the ``@api.deprecated`` to mark resources or methods as deprecated
 - Added Postman export
 - Fix compatibility with flask-restful 0.3.4
+- Allow to specify an exemple a custom fields with ``__schema_example__``
+- Added support for ``PATCH`` method in Swagger UI
 
 
 0.7.2
