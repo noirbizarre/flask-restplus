@@ -178,8 +178,12 @@ Documenting with the ``@api.expect()`` decorator
 
 The ``@api.expect()`` decorator allows you to specify the expected input fields
 and is a shortcut for ``@api.doc(body=<fields>)``.
+It accepts an optionnal boolean parameter ``validate`` defining wether or not the payload should be validated.
+The validation behavior can be customized globally by either
+setting the ``RESTPLUS_VALIDATE`` configuration to True
+or passing ``validate=True`` to the API constructor.
 
-The following synatxes are equivalents:
+The following syntaxes are equivalents:
 
 .. code-block:: python
 
@@ -207,7 +211,6 @@ The following synatxes are equivalents:
 
 It allows you specify lists as expected input too:
 
-
 .. code-block:: python
 
     resource_fields = api.model('Resource', {
@@ -218,6 +221,75 @@ It allows you specify lists as expected input too:
     class MyResource(Resource):
         @api.expect([resource_fields])
         def get(self):
+            pass
+
+
+An exemple of on-demand validation:
+
+.. code-block:: python
+
+    resource_fields = api.model('Resource', {
+        'name': fields.String,
+    })
+
+    @api.route('/my-resource/<id>')
+    class MyResource(Resource):
+        # Payload validation disabled
+        @api.expect(resource_fields)
+        def post(self):
+            pass
+
+        # Payload validation enabled
+        @api.expect(resource_fields, validate=True)
+        def post(self):
+            pass
+
+
+An exemple of application-wide validation by config:
+
+.. code-block:: python
+
+    app.config['RESTPLUS_VALIDATE'] = True
+
+    api = Api(app)
+
+    resource_fields = api.model('Resource', {
+        'name': fields.String,
+    })
+
+    @api.route('/my-resource/<id>')
+    class MyResource(Resource):
+        # Payload validation enabled
+        @api.expect(resource_fields)
+        def post(self):
+            pass
+
+        # Payload validation disabled
+        @api.expect(resource_fields, validate=False)
+        def post(self):
+            pass
+
+
+An exemple of application-wide validation by constructor:
+
+.. code-block:: python
+
+    api = Api(app, validate=True)
+
+    resource_fields = api.model('Resource', {
+        'name': fields.String,
+    })
+
+    @api.route('/my-resource/<id>')
+    class MyResource(Resource):
+        # Payload validation enabled
+        @api.expect(resource_fields)
+        def post(self):
+            pass
+
+        # Payload validation disabled
+        @api.expect(resource_fields, validate=False)
+        def post(self):
             pass
 
 
@@ -454,6 +526,16 @@ Models can be specified with a RequestParser.
         def get(self):
             return {}
 
+
+.. note:: The decoded payload will be available as a dctionnary in the payload attribute
+          in the request context
+
+          .. code-block:: python
+
+            @api.route('/my-resource/')
+            class MyResource(Resource):
+                def get(self):
+                    data = api.payload
 
 Cascading
 ---------
