@@ -5,6 +5,7 @@ Current
 -------
 
 - Added the ``@api.deprecated`` to mark resources or methods as deprecated
+- Added Postman export
 - Fix compatibility with flask-restful 0.3.4
 
 

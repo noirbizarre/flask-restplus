@@ -40,6 +40,7 @@ Documentation
     syntaxic_sugar
     documenting
     swaggerui
+    export
     example
     api
     changelog
