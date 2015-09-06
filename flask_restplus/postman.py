@@ -49,6 +49,11 @@ class Request(object):
             if len(consumes):
                 headers['Content-Type'] = consumes[-1]
 
+        # Add all parameters headers
+        for param in self.operation.get('parameters', []):
+            if param['in'] == 'header':
+                headers[param['name']] = param.get('default', '')
+
         lines = [':'.join(line) for line in headers.items()]
         return '\n'.join(lines)
 

@@ -231,6 +231,26 @@ class PostmanTestCase(TestCase):
         self.assertIn('str', qs)
         self.assertEqual(qs['str'][0], '')
 
+    def test_headers(self):
+        api = restplus.Api(self.app)
+
+        @api.route('/headers/')
+        class TestHeaders(restplus.Resource):
+            @api.doc('headers')
+            @api.header('X-Header-1', default='xxx')
+            @api.header('X-Header-2', required=True)
+            def get(self):
+                pass
+
+        data = api.as_postman(urlvars=True)
+
+        validate(data, schema)
+        request = data['requests'][0]
+        headers = dict(r.split(':') for r in request['headers'].splitlines())
+
+        self.assertEqual(headers['X-Header-1'], 'xxx')
+        self.assertEqual(headers['X-Header-2'], '')
+
     def test_content_type_header(self):
         api = restplus.Api(self.app)
         form_parser = api.parser()
