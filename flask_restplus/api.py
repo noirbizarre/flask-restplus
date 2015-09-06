@@ -368,8 +368,15 @@ class Api(restful.Api):
         return super(Api, self).handle_error(e)
 
     def response(self, code, description, model=None, **kwargs):
-        '''Specify on of the expected response'''
+        '''Specify one of the expected responses'''
         return self.doc(responses={code: (description, model) if model else description})
+
+    def header(self, name, description=None, **kwargs):
+        '''Specify one of the expected headers'''
+        param = kwargs
+        param['in'] = 'header'
+        param['description'] = description
+        return self.doc(params={name: param})
 
     def deprecated(self, func):
         '''Mark a resource or a method as deprecated'''

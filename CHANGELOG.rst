@@ -5,7 +5,8 @@ Current
 -------
 
 - Added payload validation (initial implementation based on jsonschema)
-- Added the ``@api.deprecated`` to mark resources or methods as deprecated
+- Added ``@api.deprecated`` to mark resources or methods as deprecated
+- Added ``@api.header`` decorator shortcut to document headers
 - Added Postman export
 - Fix compatibility with flask-restful 0.3.4
 - Allow to specify an exemple a custom fields with ``__schema_example__``

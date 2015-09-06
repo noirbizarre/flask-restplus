@@ -780,6 +780,57 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['required'], True)
         self.assertEqual(parameter['description'], 'An age')
 
+    def test_explicit_parameters_native_types(self):
+        api = self.build_api()
+
+        @api.route('/types/', endpoint='native')
+        class NativeTypesResource(restplus.Resource):
+            @api.doc(params={
+                'int': {
+                    'type': int,
+                    'in': 'query',
+                },
+                'bool': {
+                    'type': bool,
+                    'in': 'query',
+                },
+                'str': {
+                    'type': str,
+                    'in': 'query',
+                },
+                'int-array': {
+                    'type': [int],
+                    'in': 'query',
+                },
+                'bool-array': {
+                    'type': [bool],
+                    'in': 'query',
+                },
+                'str-array': {
+                    'type': [str],
+                    'in': 'query',
+                }
+            })
+            def get(self, age):
+                return {}
+
+        data = self.get_specs()
+
+        op = data['paths']['/types/']['get']
+
+        parameters = dict((p['name'], p) for p in op['parameters'])
+
+        self.assertEqual(parameters['int']['type'], 'integer')
+        self.assertEqual(parameters['str']['type'], 'string')
+        self.assertEqual(parameters['bool']['type'], 'boolean')
+
+        self.assertEqual(parameters['int-array']['type'], 'array')
+        self.assertEqual(parameters['int-array']['items']['type'], 'integer')
+        self.assertEqual(parameters['str-array']['type'], 'array')
+        self.assertEqual(parameters['str-array']['items']['type'], 'string')
+        self.assertEqual(parameters['bool-array']['type'], 'array')
+        self.assertEqual(parameters['bool-array']['items']['type'], 'boolean')
+
     def test_response_on_method(self):
         api = self.build_api()
 
@@ -909,6 +960,59 @@ class SwaggerTestCase(TestCase):
                 'description': 'Error',
             }
         })
+
+    def test_api_header(self):
+        api = self.build_api()
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+
+            @api.header('X-HEADER', 'A required header', required=True)
+            def get(self):
+                pass
+
+            @api.header('X-HEADER-2', 'Another header', type=[int], collectionFormat='csv')
+            def post(self):
+                pass
+
+            @api.header('X-HEADER-3', type=int)
+            def put(self):
+                pass
+
+            @api.header('X-HEADER-4', type='boolean')
+            def delete(self):
+                pass
+
+        data = self.get_specs('')
+        paths = data['paths']
+
+        def param_for(method):
+            return paths['/test/'][method]['parameters'][0]
+
+        parameter = param_for('get')
+        self.assertEqual(parameter['name'], 'X-HEADER')
+        self.assertEqual(parameter['type'], 'string')
+        self.assertEqual(parameter['in'], 'header')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['description'], 'A required header')
+
+        parameter = param_for('post')
+        self.assertEqual(parameter['name'], 'X-HEADER-2')
+        self.assertEqual(parameter['type'], 'array')
+        self.assertEqual(parameter['in'], 'header')
+        self.assertEqual(parameter['items']['type'], 'integer')
+        self.assertEqual(parameter['description'], 'Another header')
+        self.assertEqual(parameter['collectionFormat'], 'csv')
+
+        parameter = param_for('put')
+        self.assertEqual(parameter['name'], 'X-HEADER-3')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['in'], 'header')
+
+        parameter = param_for('delete')
+        self.assertEqual(parameter['name'], 'X-HEADER-4')
+        self.assertEqual(parameter['type'], 'boolean')
+        self.assertEqual(parameter['in'], 'header')
 
     def test_description(self):
         api = self.build_api()

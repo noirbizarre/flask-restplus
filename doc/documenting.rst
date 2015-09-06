@@ -537,6 +537,21 @@ Models can be specified with a RequestParser.
                 def get(self):
                     data = api.payload
 
+Headers
+~~~~~~~
+
+You can document headers with the ``@api.header`` decorator shortcut.
+
+.. code-block:: python
+
+    @api.route('/with-headers/')
+    @api.header('X-Header', 'Some expected header', required=True)
+    class WithHeaderResource(restplus.Resource):
+        @api.header('X-Collection', type=[str], collectionType='csv')
+        def get(self):
+            pass
+
+
 Cascading
 ---------
 

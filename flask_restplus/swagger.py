@@ -299,6 +299,17 @@ class Swagger(object):
                 param['type'] = 'string'
             if 'in' not in param:
                 param['in'] = 'query'
+
+            if 'type' in param and 'schema' not in param:
+                ptype = param.get('type', None)
+                if isinstance(ptype, (list, tuple)):
+                    typ = ptype[0]
+                    param['type'] = 'array'
+                    param['items'] = {'type': PY_TYPES.get(typ, typ)}
+
+                elif isinstance(ptype, (type, type(None))) and ptype in PY_TYPES:
+                    param['type'] = PY_TYPES[ptype]
+
             params.append(param)
         return params
 
