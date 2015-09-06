@@ -42,10 +42,13 @@ class Request(object):
     @property
     def headers(self):
         headers = {}
-        consumes = self.collection.api.__schema__.get('consumes', [])
-        consumes = self.operation.get('consumes', consumes)
-        if len(consumes):
-            headers['Content-Type'] = consumes[-1]
+        # Handle content-type
+        if self.method != 'GET':
+            consumes = self.collection.api.__schema__.get('consumes', [])
+            consumes = self.operation.get('consumes', consumes)
+            if len(consumes):
+                headers['Content-Type'] = consumes[-1]
+
         lines = [':'.join(line) for line in headers.items()]
         return '\n'.join(lines)
 

@@ -252,20 +252,28 @@ class PostmanTestCase(TestCase):
                 pass
 
         @api.route('/file/')
-        class Test(restplus.Resource):
+        class TestFile(restplus.Resource):
             @api.doc('file', parser=file_parser)
             def post(self):
+                pass
+
+        @api.route('/get/')
+        class TestGet(restplus.Resource):
+            @api.doc('get')
+            def get(self):
                 pass
 
         data = api.as_postman(urlvars=True)
 
         validate(data, schema)
-        self.assertEqual(len(data['requests']), 3)
         requests = dict((r['name'], r['headers']) for r in data['requests'])
 
         self.assertEqual(requests['json'], 'Content-Type:application/json')
         self.assertEqual(requests['form'], 'Content-Type:multipart/form-data')
         self.assertEqual(requests['file'], 'Content-Type:multipart/form-data')
+
+        # No content-type on get
+        self.assertEqual(requests['get'], '')
 
     def test_export_with_swagger(self):
         api = restplus.Api(self.app)
