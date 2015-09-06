@@ -295,6 +295,57 @@ class PostmanTestCase(TestCase):
         # No content-type on get
         self.assertEqual(requests['get'], '')
 
+    def test_method_security_headers(self):
+        api = restplus.Api(self.app, authorizations={
+            'apikey': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'X-API'
+            }
+        })
+
+        @api.route('/secure/')
+        class Secure(restplus.Resource):
+            @api.doc('secure', security='apikey')
+            def get(self):
+                pass
+
+        @api.route('/unsecure/')
+        class Unsecure(restplus.Resource):
+            @api.doc('unsecure')
+            def get(self):
+                pass
+
+        data = api.as_postman()
+
+        validate(data, schema)
+        requests = dict((r['name'], r['headers']) for r in data['requests'])
+
+        self.assertEqual(requests['unsecure'], '')
+        self.assertEqual(requests['secure'], 'X-API:')
+
+    def test_global_security_headers(self):
+        api = restplus.Api(self.app, security='apikey', authorizations={
+            'apikey': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'X-API'
+            }
+        })
+
+        @api.route('/test/')
+        class Test(restplus.Resource):
+            def get(self):
+                pass
+
+        data = api.as_postman()
+
+        validate(data, schema)
+        request = data['requests'][0]
+        headers = dict(r.split(':') for r in request['headers'].splitlines())
+
+        self.assertEqual(headers['X-API'], '')
+
     def test_export_with_swagger(self):
         api = restplus.Api(self.app)
 

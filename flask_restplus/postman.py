@@ -54,6 +54,16 @@ class Request(object):
             if param['in'] == 'header':
                 headers[param['name']] = param.get('default', '')
 
+        # Add security headers if needed (global then local)
+        for security in self.collection.api.__schema__.get('security', []):
+            for key, header in self.collection.apikeys.items():
+                if key in security:
+                    headers[header] = ''
+        for security in self.operation.get('security', []):
+            for key, header in self.collection.apikeys.items():
+                if key in security:
+                    headers[header] = ''
+
         lines = [':'.join(line) for line in headers.items()]
         return '\n'.join(lines)
 
@@ -159,6 +169,14 @@ class PostmanCollectionV1(object):
     def folders(self):
         for tag in self.api.__schema__['tags']:
             yield Folder(self, tag)
+
+    @property
+    def apikeys(self):
+        return dict(
+            (name, secdef['name'])
+            for name, secdef in self.api.__schema__.get('securityDefinitions').items()
+            if secdef['in'] == 'header' and secdef['type'] == 'apiKey'
+        )
 
     def as_dict(self, urlvars=False):
         return clean({
