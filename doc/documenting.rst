@@ -700,3 +700,65 @@ You can use a decorator to make it easier:
         @api.doc(security='apikey')
         def post(self):
             pass
+
+You can apply this requirement globally with the security constructor parameter:
+
+.. code-block:: python
+
+    authorizations = {
+        'apikey': {
+            'type': 'apiKey',
+            'passAs': 'header',
+            'keyname': HEADER_API_KEY
+        }
+    }
+    api = Api(app, authorizations=authorizations, security='security')
+
+
+You can have multiple security schemes:
+
+.. code-block:: python
+
+    authorizations = {
+        'apikey': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'X-API'
+        },
+        'oauth2': {
+            'type': 'oauth2',
+            'flow': 'accessCode',
+            'tokenUrl': 'https://somewhere.com/token',
+            'scopes': {
+                'read': 'Grant read-only access',
+                'write': 'Grant read-write access',
+            }
+        }
+    }
+    api = Api(self.app, security=['apikey', {'oauth2': 'read'}], authorizations=authorizations)
+
+And compose/override them at method level:
+
+.. code-block:: python
+
+    @api.route('/authorizations/')
+    class Authorized(Resource):
+        @api.doc(security=[{'oauth2': ['read', 'write']}])
+        def get(self):
+            return {}
+
+You can disable security on a given resource/method by passing None or an empty list
+as security parameter:
+
+.. code-block:: python
+
+    @api.route('/without-authorization/')
+    class WithoutAuthorization(Resource):
+        @api.doc(security=[])
+        def get(self):
+            return {}
+
+        @api.doc(security=None)
+        def post(self):
+            return {}
+
