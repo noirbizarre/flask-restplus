@@ -39,6 +39,8 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
+        self.assertEqual(len(data['requests']), 0)
+
     def test_export_infos(self):
         api = restplus.Api(self.app, version='1.0',
             title='My API',
@@ -264,3 +266,16 @@ class PostmanTestCase(TestCase):
         self.assertEqual(requests['json'], 'Content-Type:application/json')
         self.assertEqual(requests['form'], 'Content-Type:multipart/form-data')
         self.assertEqual(requests['file'], 'Content-Type:multipart/form-data')
+
+    def test_export_with_swagger(self):
+        api = restplus.Api(self.app)
+
+        data = api.as_postman(swagger=True)
+
+        validate(data, schema)
+
+        self.assertEqual(len(data['requests']), 1)
+        request = data['requests'][0]
+        self.assertEqual(request['name'], 'Swagger specifications')
+        self.assertEqual(request['description'], 'The API Swagger specifications as JSON')
+        self.assertEqual(request['url'], 'http://localhost/swagger.json')

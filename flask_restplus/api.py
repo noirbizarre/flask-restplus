@@ -382,8 +382,8 @@ class Api(restful.Api):
         '''Mark a resource or a method as deprecated'''
         return self.doc(deprecated=True)(func)
 
-    def as_postman(self, urlvars=False):
-        return PostmanCollectionV1(self).as_dict(urlvars=urlvars)
+    def as_postman(self, urlvars=False, swagger=False):
+        return PostmanCollectionV1(self, swagger=swagger).as_dict(urlvars=urlvars)
 
     @property
     def payload(self):

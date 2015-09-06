@@ -51,6 +51,8 @@ class Request(object):
 
     @property
     def folder(self):
+        if 'tags' not in self.operation or len(self.operation['tags']) == 0:
+            return
         tag = self.operation['tags'][0]
         for folder in self.collection.folders:
             if folder.tag == tag:
@@ -120,8 +122,9 @@ class Folder(object):
 
 class PostmanCollectionV1(object):
     '''Postman Collection (V1 format) serializer'''
-    def __init__(self, api):
+    def __init__(self, api, swagger=False):
         self.api = api
+        self.swagger = swagger
 
     @property
     def uuid(self):
@@ -133,6 +136,13 @@ class PostmanCollectionV1(object):
 
     @property
     def requests(self):
+        if self.swagger:
+            # First request is Swagger specifications
+            yield Request(self, '/swagger.json', 'get', {
+                'operationId': 'Swagger specifications',
+                'summary': 'The API Swagger specifications as JSON',
+            })
+        # Then iter over API paths and methods
         for path, operations in self.api.__schema__['paths'].items():
             for method, operation in operations.items():
                 yield Request(self, path, method, operation)

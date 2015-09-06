@@ -29,7 +29,8 @@ To help you testing, you can export your API as a `Postman`_ collection.
     from myapp import api
 
     urlvars = False  # Build query strings in URLs
-    data = api.as_postman(urlvars=urlvars)
+    swagger = True  # Export Swagger specifications
+    data = api.as_postman(urlvars=urlvars, swagger=swagger)
     print(json.dumps(data))
 
 
