@@ -527,8 +527,8 @@ Models can be specified with a RequestParser.
             return {}
 
 
-.. note:: The decoded payload will be available as a dctionnary in the payload attribute
-          in the request context
+.. note:: The decoded payload will be available as a dictionary in the payload attribute
+          in the request context.
 
           .. code-block:: python
 
