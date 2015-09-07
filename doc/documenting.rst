@@ -670,7 +670,7 @@ You can hide some resources or methods from documentation using one of the follo
 Documenting autorizations
 -------------------------
 
-In order to document an authorization you can provide an authorization dictionnary to the API constructor:
+In order to document an authorization you can provide an authorization dictionary to the API constructor:
 
 .. code-block:: python
 
