@@ -712,7 +712,7 @@ You can apply this requirement globally with the security constructor parameter:
             'keyname': HEADER_API_KEY
         }
     }
-    api = Api(app, authorizations=authorizations, security='security')
+    api = Api(app, authorizations=authorizations, security='apikey')
 
 
 You can have multiple security schemes:
