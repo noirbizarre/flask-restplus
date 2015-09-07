@@ -677,8 +677,8 @@ In order to document an authorization you can provide an authorization dictionar
     authorizations = {
         'apikey': {
             'type': 'apiKey',
-            'passAs': 'header',
-            'keyname': HEADER_API_KEY
+            'in': 'header',
+            'name': 'X-API-KEY'
         }
     }
     api = Api(app, authorizations=authorizations)
@@ -708,8 +708,8 @@ You can apply this requirement globally with the security constructor parameter:
     authorizations = {
         'apikey': {
             'type': 'apiKey',
-            'passAs': 'header',
-            'keyname': HEADER_API_KEY
+            'in': 'header',
+            'name': 'X-API-KEY'
         }
     }
     api = Api(app, authorizations=authorizations, security='apikey')
