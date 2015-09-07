@@ -265,6 +265,46 @@ class ModelTestCase(TestCase):
         self.assertIn('Parent', self.api.models)
         self.assertIn('Child', self.api.models)
 
+    def test_extend_with_multiple_parents(self):
+        grand_parent = self.api.model('GrandParent', {
+            'grand_parent': fields.String,
+        })
+
+        parent = self.api.model('Parent', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'birthdate': fields.DateTime,
+        })
+
+        child = self.api.extend('Child', [grand_parent, parent], {
+            'extra': fields.String,
+        })
+
+        self.assertEqual(child.__schema__, {
+            'properties': {
+                'grand_parent': {
+                    'type': 'string'
+                },
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                },
+                'extra': {
+                    'type': 'string'
+                }
+            }
+        })
+
+        self.assertIn('GrandParent', self.api.models)
+        self.assertIn('Parent', self.api.models)
+        self.assertIn('Child', self.api.models)
+
     def test_inherit(self):
         parent = self.api.model('Parent', {
             'name': fields.String,
