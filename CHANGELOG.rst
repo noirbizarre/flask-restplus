@@ -12,6 +12,7 @@ Current
 - Allow to specify an exemple a custom fields with ``__schema_example__``
 - Added support for ``PATCH`` method in Swagger UI
 - Upgraded to Swagger UI 2.1.2
+- Handle enum as callable
 
 
 0.7.2

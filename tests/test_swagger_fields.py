@@ -78,6 +78,12 @@ class StringFieldTest(FieldTestCase):
         self.assertFalse(field.required)
         self.assertEqual(field.__schema__, {'type': 'string', 'enum': enum, 'example': enum[0]})
 
+    def test_string_field_with_callable_enum(self):
+        enum = lambda: ['A', 'B', 'C']  # noqa
+        field = fields.String(enum=enum)
+        self.assertFalse(field.required)
+        self.assertEqual(field.__schema__, {'type': 'string', 'enum': ['A', 'B', 'C'], 'example': 'A'})
+
     def test_string_field_with_default(self):
         field = fields.String(default='aaa')
         self.assertFalse(field.required)

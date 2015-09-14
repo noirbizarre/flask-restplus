@@ -58,10 +58,11 @@ class String(BaseField, base_fields.String):
         self.required = self.discriminator or self.required
 
     def schema(self):
+        enum = self.enum() if callable(self.enum) else self.enum
         schema = super(String, self).schema()
-        schema.update(enum=self.enum)
-        if self.enum and schema['example'] is None:
-            schema['example'] = self.enum[0]
+        schema.update(enum=enum)
+        if enum and schema['example'] is None:
+            schema['example'] = enum[0]
         return schema
 
 
