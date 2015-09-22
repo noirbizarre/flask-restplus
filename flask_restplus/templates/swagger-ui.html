@@ -28,7 +28,7 @@
                 onFailure: function(data) {
                     log("Unable to Load SwaggerUI");
                 },
-                docExpansion: "none"
+                docExpansion: "{{ config.SWAGGER_UI_DOC_EXPANSION | default('none') }}"
             });
             window.swaggerUi.load();
         });

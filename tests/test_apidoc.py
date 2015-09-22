@@ -50,6 +50,26 @@ class APIDocTestCase(TestCase):
                 self.assertEquals(response.content_type, 'text/html; charset=utf-8')
                 self.assertIn('validatorUrl: "http://somewhere.com/validator" || null,', str(response.data))
 
+    def test_apidoc_doc_expansion_parameter(self):
+        restplus.Api(self.app)
+
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('root'))
+                self.assertIn('docExpansion: "none"', str(response.data))
+
+        self.app.config['SWAGGER_UI_DOC_EXPANSION'] = 'list'
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('root'))
+                self.assertIn('docExpansion: "list"', str(response.data))
+
+        self.app.config['SWAGGER_UI_DOC_EXPANSION'] = 'full'
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('root'))
+                self.assertIn('docExpansion: "full"', str(response.data))
+
     def test_custom_apidoc_url(self):
         blueprint = Blueprint('api', __name__, url_prefix='/api')
         api = restplus.Api(blueprint, version='1.0', ui=False)

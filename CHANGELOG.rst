@@ -13,6 +13,7 @@ Current
 - Added support for ``PATCH`` method in Swagger UI
 - Upgraded to Swagger UI 2.1.2
 - Handle enum as callable
+- Allow to configure ``docExpansion`` with the ``SWAGGER_UI_DOC_EXPANSION`` parameter
 
 
 0.7.2
