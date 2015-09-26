@@ -178,7 +178,7 @@ Documenting with the ``@api.expect()`` decorator
 
 The ``@api.expect()`` decorator allows you to specify the expected input fields
 and is a shortcut for ``@api.doc(body=<fields>)``.
-It accepts an optionnal boolean parameter ``validate`` defining wether or not the payload should be validated.
+It accepts an optional boolean parameter ``validate`` defining wether or not the payload should be validated.
 The validation behavior can be customized globally by either
 setting the ``RESTPLUS_VALIDATE`` configuration to True
 or passing ``validate=True`` to the API constructor.
