@@ -52,7 +52,7 @@ You can specify a custom validator url by setting ``config.SWAGGER_VALIDATOR_URL
         app.run(debug=True)
 
 
-You ca also specify the initial expansion state with the ``config.SWAGGER_UI_DOC_EXPANSION``
+You can also specify the initial expansion state with the ``config.SWAGGER_UI_DOC_EXPANSION``
 setting (``none``, ``list`` or ``full``):
 
 .. code-block:: python
