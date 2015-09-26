@@ -1,7 +1,9 @@
 from flask import Flask
 from flask.ext.restplus import Api, Resource, fields
+from werkzeug.contrib.fixers import ProxyFix
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 api = Api(app, version='1.0', title='Todo API',
     description='A simple TODO API extracted from the original flask-restful example',
 )
