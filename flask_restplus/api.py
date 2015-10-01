@@ -115,7 +115,7 @@ class Api(restful.Api):
         self.security = security
         self.ui = ui
         self.default_id = default_id
-        self.validate = validate
+        self._validate = validate
 
         self._error_handlers = {}
         self._schema = None
@@ -152,7 +152,7 @@ class Api(restful.Api):
         if not self.blueprint:
             app.add_url_rule('/', 'root', self.render_root)
         self.register_apidoc(app)
-        self.validate = self.validate if self.validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
+        self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
 
     def register_apidoc(self, app):
         conf = app.extensions.setdefault('restplus', {})
@@ -320,7 +320,7 @@ class Api(restful.Api):
 
     def expect(self, body, validate=None):
         '''Specify the expected input model'''
-        return self.doc(body=body, validate=validate or self.validate)
+        return self.doc(body=body, validate=validate or self._validate)
 
     def parser(self):
         '''Instanciate a RequestParser'''
