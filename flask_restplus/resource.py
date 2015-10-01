@@ -16,13 +16,12 @@ class Resource(restful.Resource):
     def validate_payload(self, func):
         '''Perform a payload validation on expected model'''
         def wrapper(*args, **kwargs):
-            # TODO: proper content negociation
-            data = request.get_json()
             if hasattr(func, '__apidoc__'):
                 model = func.__apidoc__.get('body')
                 validate = func.__apidoc__.get('validate', False)
                 if model and validate and hasattr(model, 'validate'):
+                    # TODO: proper content negociation
+                    data = request.get_json()
                     model.validate(data, self.api.refresolver)
-
             return func(*args, **kwargs)
         return wrapper
