@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.8.0
+-----
 
 - Added payload validation (initial implementation based on jsonschema)
 - Added ``@api.deprecated`` to mark resources or methods as deprecated
