@@ -276,6 +276,7 @@ class ParserToParamsTestCase(unittest.TestCase):
                 'in': 'query',
                 'items': True,
                 'type': 'array',
+                'collectionFormat': 'multi',
                 'items': {'type': 'integer'}
             }
         })

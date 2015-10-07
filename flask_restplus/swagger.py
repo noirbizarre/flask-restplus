@@ -109,6 +109,7 @@ def parser_to_params(parser):
         if arg.action == 'append':
             param['items'] = {'type': param['type']}
             param['type'] = 'array'
+            param['collectionFormat'] = 'multi'
         if arg.choices:
             param['enum'] = arg.choices
             param['collectionFormat'] = 'multi'
