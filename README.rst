@@ -135,10 +135,13 @@ Documentation
 
 The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs.org/en/latest/>`_
 
-
 .. _Swagger: http://swagger.io/
 .. _Flask-Restful: http://flask-restful.readthedocs.org/en/latest/
 
+Discussion
+==========
+
+Join us in Gitter to discuss the project.
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/noirbizarre/flask-restplus
