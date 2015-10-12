@@ -396,6 +396,19 @@ class Api(restful.Api):
     def as_postman(self, urlvars=False, swagger=False):
         return PostmanCollectionV1(self, swagger=swagger).as_dict(urlvars=urlvars)
 
+    def validate_payload(self, func):
+        '''Perform a payload validation on expected model'''
+        def wrapper(*args, **kwargs):
+            if hasattr(func, '__apidoc__'):
+                model = func.__apidoc__.get('body')
+                validate = func.__apidoc__.get('validate', False)
+                if model and validate and hasattr(model, 'validate'):
+                    # TODO: proper content negotiation
+                    data = request.get_json()
+                    model.validate(data, self.refresolver)
+            return func(*args, **kwargs)
+        return wrapper
+
     @property
     def payload(self):
         return request.get_json()
