@@ -77,6 +77,10 @@ class Api(restful.Api):
     :param validate: Whether or not the API should perform input payload validation.
     :type validate: bool
 
+    :param doc: The documentation path. If set to a falsy value, dcoumentation is disabled.
+                (Default to '/')
+    :type doc: str
+
     :param decorators: Decorators to attach to every resource
     :type decorators: list
 
@@ -100,7 +104,7 @@ class Api(restful.Api):
     def __init__(self, app=None, version='1.0', title=None, description=None,
             terms_url=None, license=None, license_url=None,
             contact=None, contact_url=None, contact_email=None,
-            authorizations=None, security=None, ui=True, default_id=default_id,
+            authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None, **kwargs):
         self.version = version
         self.title = title or 'API'
@@ -113,9 +117,10 @@ class Api(restful.Api):
         self.license_url = license_url
         self.authorizations = authorizations
         self.security = security
-        self.ui = ui
         self.default_id = default_id
         self._validate = validate
+        self._doc = doc
+        self._doc_view = None
 
         self._error_handlers = {}
         self._schema = None
@@ -144,21 +149,27 @@ class Api(restful.Api):
 
         super(Api, self).init_app(app)
 
-        if self.blueprint:
-            self.blueprint.add_url_rule('/', 'root', self.render_root)
-
     def _init_app(self, app):
+        self._register_doc(self.blueprint or app)
         super(Api, self)._init_app(app)
-        if not self.blueprint:
-            app.add_url_rule('/', 'root', self.render_root)
-        self.register_apidoc(app)
+        self._register_apidoc(app)
         self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
 
-    def register_apidoc(self, app):
+    def _register_apidoc(self, app):
         conf = app.extensions.setdefault('restplus', {})
         if not conf.get('apidoc_registered', False):
             app.register_blueprint(apidoc.apidoc)
         conf['apidoc_registered'] = True
+
+    def _register_doc(self, app_or_blueprint):
+        if self._doc:
+            # Register documentation before root if enabled
+            app_or_blueprint.add_url_rule(self._doc, 'doc', self.render_doc)
+        app_or_blueprint.add_url_rule('/', 'root', self.render_root)
+
+    def documentation(self, func):
+        self._doc_view = func
+        return func
 
     def swagger_view(self):
         class SwaggerView(Resource):
@@ -172,8 +183,13 @@ class Api(restful.Api):
         return SwaggerView
 
     def render_root(self):
+        self.abort(404)
+
+    def render_doc(self):
         '''Override this method to customize the documentation page'''
-        if not self.ui:
+        if self._doc_view:
+            return self._doc_view()
+        elif not self._doc:
             self.abort(404)
         return apidoc.ui_for(self)
 

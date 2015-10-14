@@ -4,7 +4,10 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Refactor Swagger UI handling:
+    - allow to register a custom view with``@api.documentation``
+    - allow to register a custom URL with the ``doc`` parameter
+    - allow to disable documentation with ``doc=False``
 
 
 0.8.0

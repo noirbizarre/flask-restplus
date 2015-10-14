@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 
 from flask import url_for, Blueprint
+from werkzeug.routing import BuildError
+
 from flask.ext import restplus
 
 from . import TestCase
@@ -13,8 +15,9 @@ class APIDocTestCase(TestCase):
         restplus.Api(self.app, version='1.0')
 
         with self.context():
+            self.assertEqual(url_for('doc'), url_for('root'))
             with self.app.test_client() as client:
-                response = client.get(url_for('root'))
+                response = client.get(url_for('doc'))
                 self.assertEquals(response.status_code, 200)
                 self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
@@ -23,8 +26,9 @@ class APIDocTestCase(TestCase):
         api.init_app(self.app)
 
         with self.context():
+            self.assertEqual(url_for('doc'), url_for('root'))
             with self.app.test_client() as client:
-                response = client.get(url_for('root'))
+                response = client.get(url_for('doc'))
                 self.assertEquals(response.status_code, 200)
                 self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
@@ -34,8 +38,9 @@ class APIDocTestCase(TestCase):
         self.app.register_blueprint(blueprint)
 
         with self.context():
+            self.assertEqual(url_for('api.doc'), url_for('api.root'))
             with self.app.test_client() as client:
-                response = client.get(url_for('api.root'))
+                response = client.get(url_for('api.doc'))
                 self.assertEquals(response.status_code, 200)
                 self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
@@ -45,7 +50,7 @@ class APIDocTestCase(TestCase):
 
         with self.context():
             with self.app.test_client() as client:
-                response = client.get(url_for('root'))
+                response = client.get(url_for('doc'))
                 self.assertEquals(response.status_code, 200)
                 self.assertEquals(response.content_type, 'text/html; charset=utf-8')
                 self.assertIn('validatorUrl: "http://somewhere.com/validator" || null,', str(response.data))
@@ -55,36 +60,77 @@ class APIDocTestCase(TestCase):
 
         with self.context():
             with self.app.test_client() as client:
-                response = client.get(url_for('root'))
+                response = client.get(url_for('doc'))
                 self.assertIn('docExpansion: "none"', str(response.data))
 
         self.app.config['SWAGGER_UI_DOC_EXPANSION'] = 'list'
         with self.context():
             with self.app.test_client() as client:
-                response = client.get(url_for('root'))
+                response = client.get(url_for('doc'))
                 self.assertIn('docExpansion: "list"', str(response.data))
 
         self.app.config['SWAGGER_UI_DOC_EXPANSION'] = 'full'
         with self.context():
             with self.app.test_client() as client:
-                response = client.get(url_for('root'))
+                response = client.get(url_for('doc'))
                 self.assertIn('docExpansion: "full"', str(response.data))
 
     def test_custom_apidoc_url(self):
-        blueprint = Blueprint('api', __name__, url_prefix='/api')
-        api = restplus.Api(blueprint, version='1.0', ui=False)
+        restplus.Api(self.app, version='1.0', doc='/doc/')
 
-        @blueprint.route('/doc/', endpoint='doc')
-        def swagger_ui():
-            return restplus.apidoc.ui_for(api)
+        with self.context():
+            with self.app.test_client() as client:
+                doc_url = url_for('doc')
+                root_url = url_for('root')
+
+                self.assertNotEqual(doc_url, root_url)
+
+                response = client.get(root_url)
+                self.assertEquals(response.status_code, 404)
+
+                self.assertEqual(doc_url, '/doc/')
+                response = client.get(doc_url)
+                self.assertEquals(response.status_code, 200)
+                self.assertEquals(response.content_type, 'text/html; charset=utf-8')
+
+    def test_custom_apidoc_page(self):
+        api = restplus.Api(self.app, version='1.0')
+        content = 'My Custom API Doc'
+
+        @api.documentation
+        def api_doc():
+            return content
+
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('doc'))
+                self.assertEquals(response.status_code, 200)
+                self.assertEquals(response.data, content)
+
+    def test_custom_apidoc_page_lazy(self):
+        blueprint = Blueprint('api', __name__, url_prefix='/api')
+        api = restplus.Api(blueprint, version='1.0')
+        content = 'My Custom API Doc'
+
+        @api.documentation
+        def api_doc():
+            return content
 
         self.app.register_blueprint(blueprint)
 
         with self.context():
             with self.app.test_client() as client:
-                response = client.get(url_for('api.root'))
-                self.assertEquals(response.status_code, 404)
-
                 response = client.get(url_for('api.doc'))
                 self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.content_type, 'text/html; charset=utf-8')
+                self.assertEquals(response.data, content)
+
+    def test_disabled_apidoc(self):
+        restplus.Api(self.app, version='1.0', doc=False)
+
+        with self.context():
+            with self.app.test_client() as client:
+                with self.assertRaises(BuildError):
+                    url_for('doc')
+
+                response = client.get(url_for('root'))
+                self.assertEquals(response.status_code, 404)

@@ -73,7 +73,7 @@ setting (``none``, ``list`` or ``full``):
         app.run(debug=True)
 
 
-You can totaly disable the generated Swagger UI by setting ``ui=False``:
+You can totaly disable the generated Swagger UI by setting ``doc=False``:
 
 .. code-block:: python
 
@@ -81,7 +81,7 @@ You can totaly disable the generated Swagger UI by setting ``ui=False``:
     from flask.ext.restplus import Api, Resource, fields
 
     app = Flask(__name__)
-    api = Api(app, ui=False)
+    api = Api(app, doc=False)
 
     '...'
 
@@ -98,15 +98,14 @@ You can also provide a custom UI by reusing the apidoc blueprint or rolling your
 
     app = Flask(__name__)
     blueprint = Blueprint('api', __name__, url_prefix='/api')
-    api = Api(blueprint, ui=False)
+    api = Api(blueprint, doc='/doc/')
 
     '...'
 
-    @blueprint.route('/doc/', endpoint='doc')
+    @api.documentation
     def swagger_ui():
         return apidoc.ui_for(api)
 
 
     app.register_blueprint(blueprint)
-    app.register_blueprint(apidoc)  # only needed for assets and templates
 

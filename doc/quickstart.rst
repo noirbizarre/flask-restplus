@@ -43,20 +43,26 @@ With Flask-Restplus, you only import the api instance to route and document your
             api.abort(403)
 
 
-Swagger ui
+Swagger UI
 ----------
 
-You can turn off swaggger ui by ui argument:
+You can control the Swagger UI path with the ``doc`` parameter (default to the API root):
 
 .. code-block:: python
 
-    from flask import Flask
+    from flask import Flask, Blueprint
     from flask.ext.restplus import Api
 
     app = Flask(__name__)
-    api = Api(app, ui=False)
+    blueprint = Blueprint('api', __name__, url_prefix='/api')
+    api = Api(blueprint, doc='/doc/')
 
-If you need ui on custom url (default is "/"), you can disable default ui and register it manually:
+    app.register_blueprint(blueprint)
+
+    assert url_for('api.doc') == '/api/doc/'
+
+If you need a custom UI, you can register a custom view function
+with the ``@api.documentation`` decorator:
 
 .. code-block:: python
 
@@ -64,10 +70,8 @@ If you need ui on custom url (default is "/"), you can disable default ui and re
     from flask.ext.restplus import Api, apidoc
 
     app = Flask(__name__)
-    api = Api(app, ui=False)
+    api = Api(app)
 
-    @api.route('/doc/', endpoint='doc')
-    def swagger_ui():
+    @api.documentation
+    def custom_ui():
         return apidoc.ui_for(api)
-
-    app.register_blueprint(apidoc.apidoc)  # only needed for assets and templates
