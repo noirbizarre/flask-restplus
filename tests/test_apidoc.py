@@ -105,7 +105,7 @@ class APIDocTestCase(TestCase):
             with self.app.test_client() as client:
                 response = client.get(url_for('doc'))
                 self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.data, content)
+                self.assertEquals(response.data.decode('utf8'), content)
 
     def test_custom_apidoc_page_lazy(self):
         blueprint = Blueprint('api', __name__, url_prefix='/api')
@@ -122,7 +122,7 @@ class APIDocTestCase(TestCase):
             with self.app.test_client() as client:
                 response = client.get(url_for('api.doc'))
                 self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.data, content)
+                self.assertEquals(response.data.decode('utf8'), content)
 
     def test_disabled_apidoc(self):
         restplus.Api(self.app, version='1.0', doc=False)
