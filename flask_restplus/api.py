@@ -143,6 +143,7 @@ class Api(restful.Api):
         self.contact_email = kwargs.get('contact_email', self.contact_email)
         self.license = kwargs.get('license', self.license)
         self.license_url = kwargs.get('license_url', self.license_url)
+        self.errors = kwargs.get('errors', {})
 
         if kwargs.get('add_specs', True):
             self.add_resource(self.swagger_view(), '/swagger.json', endpoint='specs', doc=False)
