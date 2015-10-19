@@ -77,7 +77,7 @@ class Api(restful.Api):
     :param validate: Whether or not the API should perform input payload validation.
     :type validate: bool
 
-    :param doc: The documentation path. If set to a falsy value, dcoumentation is disabled.
+    :param doc: The documentation path. If set to a false value, documentation is disabled.
                 (Default to '/')
     :type doc: str
 

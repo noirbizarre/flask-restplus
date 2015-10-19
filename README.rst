@@ -18,7 +18,7 @@ Flask RestPlus
    :alt: Join the chat at https://gitter.im/noirbizarre/flask-restplus
    :target: https://gitter.im/noirbizarre/flask-restplus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-Flask-RestPlus provide syntaxic suger, helpers and automatically generated `Swagger`_ documentation on top of `Flask-Restful`_.
+Flask-RestPlus provides syntaxic sugar, helpers and automatically generated `Swagger`_ documentation on top of `Flask-Restful`_.
 
 Compatibility
 =============
