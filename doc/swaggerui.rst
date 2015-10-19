@@ -73,7 +73,7 @@ setting (``none``, ``list`` or ``full``):
         app.run(debug=True)
 
 
-You can totaly disable the generated Swagger UI by setting ``doc=False``:
+You can totally disable the generated Swagger UI by setting ``doc=False``:
 
 .. code-block:: python
 
