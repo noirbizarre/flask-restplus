@@ -49,6 +49,11 @@ if sys.version_info[0:2] < (2, 7):
     install_requires += ['ordereddict']
     tests_require += ['unittest2']
 
+try:
+    from unittest.mock import Mock
+except:
+    tests_require += ['mock']
+
 setup(
     name='flask-restplus',
     version=__version__,

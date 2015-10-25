@@ -57,9 +57,9 @@ class TestCase(unittest.TestCase):
             self.assertEquals(response.content_type, 'application/json')
             return json.loads(response.data.decode('utf8'))
 
-    def get_json(self, url, status=200):
+    def get_json(self, url, status=200, headers=None):
         with self.app.test_client() as client:
-            response = client.get(url)
+            response = client.get(url, headers=headers or {})
 
         self.assertEquals(response.status_code, status)
         self.assertEquals(response.content_type, 'application/json')

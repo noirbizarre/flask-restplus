@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from flask.ext.restplus import mask
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+
+from flask.ext.restplus import mask, Api, Resource, fields
 
 from . import TestCase
 
@@ -112,6 +117,15 @@ class ApplyMaskTest(TestCase):
         result = mask.apply(data, '{integer, string}')
         self.assertEqual(result, {'integer': 42, 'string': 'a string'})
 
+    def test_with_ordered_dict(self):
+        data = OrderedDict({
+            'integer': 42,
+            'string': 'a string',
+            'boolean': True,
+        })
+        result = mask.apply(data, '{integer, string}')
+        self.assertEqual(result, {'integer': 42, 'string': 'a string'})
+
     def test_nested_field(self):
         data = {
             'integer': 42,
@@ -194,3 +208,115 @@ class ApplyMaskTest(TestCase):
         }
         result = mask.apply(data, '{list{integer}}')
         self.assertEqual(result, {'list': [{'integer': 42}, {'integer': 404}]})
+
+
+class MaskAPI(TestCase):
+    def test_marshal_with_honour_field_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': '{name,age}'
+        })
+        self.assertEqual(data, {
+            'name': 'John Doe',
+            'age': 42,
+        })
+
+    def test_marshal_honour_field_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            def get(self):
+                return api.marshal({
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }, model)
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': '{name,age}'
+        })
+        self.assertEqual(data, {
+            'name': 'John Doe',
+            'age': 42,
+        })
+
+    def test_marshal_with_honour_custom_field_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        with self.settings(RESTPLUS_MASK_HEADER='X-Mask'):
+            data = self.get_json('/test/', headers={
+                'X-Mask': '{name,age}'
+            })
+
+        self.assertEqual(data, {
+            'name': 'John Doe',
+            'age': 42,
+        })
+
+    def test_marshal_honour_custom_field_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            def get(self):
+                return api.marshal({
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }, model)
+
+        with self.settings(RESTPLUS_MASK_HEADER='X-Mask'):
+            data = self.get_json('/test/', headers={
+                'X-Mask': '{name,age}'
+            })
+
+        self.assertEqual(data, {
+            'name': 'John Doe',
+            'age': 42,
+        })

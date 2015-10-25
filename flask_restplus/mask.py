@@ -6,6 +6,10 @@ import re
 import six
 
 from collections import namedtuple
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 log = logging.getLogger(__name__)
 
@@ -78,7 +82,8 @@ def apply(data, mask):
     if isinstance(data, (list, tuple, set)):
         return [apply(d, fields) for d in data]
     # Should handle objects
-    elif hasattr(data, '__dict__'):
+    elif (not isinstance(data, (dict, OrderedDict))
+            and hasattr(data, '__dict__')):
         data = data.__dict__
 
     out = {}
