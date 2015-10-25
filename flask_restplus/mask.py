@@ -1,0 +1,94 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import
+
+import logging
+import re
+import six
+
+from collections import namedtuple
+
+log = logging.getLogger(__name__)
+
+LEXER = re.compile(r'\{|\}|\,|[\w_]+')
+
+
+class ParseError(ValueError):
+    '''Raise when the mask parsing failed'''
+    pass
+
+
+Nested = namedtuple('Nested', ['name', 'fields'])
+
+
+def parse(mask):
+    '''Parse a fields mask'''
+    if not mask:
+        return []
+
+    # External brackets are optional in syntax but required for parsing
+    mask = mask.strip()
+    if mask[0] != '{':
+        mask = '{%s}' % mask
+
+    root = None
+    fields = None
+    stack = []
+    previous = None
+
+    for token in LEXER.findall(mask):
+        if token == '{':
+            new_fields = []
+            if stack:
+                if not fields or previous != fields[-1]:
+                    raise ParseError('Unexpected opening bracket')
+                fields.append(Nested(fields.pop(), new_fields))
+
+            stack.append(new_fields)
+            fields = new_fields
+
+            if not root:
+                root = fields
+
+        elif token == '}':
+            if not stack:
+                raise ParseError('Unexpected closing bracket')
+            stack.pop()
+            fields = stack[-1] if stack else None
+
+        elif token == ',':
+            if not previous or previous in ', {'.split():
+                raise ParseError('Unexpected coma')
+
+        else:
+            fields.append(token)
+
+        previous = token
+
+    if stack:
+        raise ParseError('Missing closing bracket')
+
+    return root
+
+
+def apply(data, mask):
+    '''Apply a fields mask to the data'''
+    fields = parse(mask) if isinstance(mask, six.text_type) else mask
+
+    # Should it on list
+    if isinstance(data, (list, tuple, set)):
+        return [apply(d, fields) for d in data]
+    # Should handle objects
+    elif hasattr(data, '__dict__'):
+        data = data.__dict__
+
+    out = {}
+    for field in fields:
+        if isinstance(field, Nested):
+            nested = data.get(field.name, None)
+            if nested is None:
+                out[field.name] = None
+            else:
+                out[field.name] = apply(nested, field.fields)
+        else:
+            out[field] = data.get(field, None)
+    return out
