@@ -119,5 +119,5 @@ class ApiModel(dict, MutableMapping):
         path = list(error.path)
         if error.validator == 'required':
             path.append(error.validator_value[0])
-        key = '.'.join(path)
+        key = '.'.join(map(lambda v: str(v), path))
         return key, error.message
