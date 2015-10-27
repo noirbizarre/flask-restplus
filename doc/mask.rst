@@ -39,3 +39,17 @@ Nesting specification works with nested object or list of objects:
     # Will apply the mask {name} to each pet
     # in the pets list.
     mask = '{name, age, pets{name}}'
+
+
+Usage
+-----
+
+By default, each time you use ``api.marshal`` or ``@api.marshal_with``,
+the mask will be automatically applied if the header is present.
+
+The header will be exposed as a Swagger parameter each time you use the
+``@api.marshal_with`` decorator.
+
+As Swagger does not permet to expose a global header once
+so it can make your Swagger specifications a lot more verbose.
+You can disable this behavior by setting ``RESTPLUS_MASK_SWAGGER`` to ``False``.

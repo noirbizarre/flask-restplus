@@ -25,7 +25,17 @@ Nested = namedtuple('Nested', ['name', 'fields'])
 
 
 def parse(mask):
-    '''Parse a fields mask'''
+    '''Parse a fields mask.
+    Expect something in the form::
+
+        {field,nested{nested_field,another},last}
+
+    External brackets are optionals so it can also be written::
+
+        field,nested{nested_field,another},last
+
+    All extras characters will be ignored.
+    '''
     if not mask:
         return []
 

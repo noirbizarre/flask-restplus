@@ -320,3 +320,116 @@ class MaskAPI(TestCase):
             'name': 'John Doe',
             'age': 42,
         })
+
+
+class SwaggerMaskHeaderTest(TestCase):
+    def test_marshal_with_expose_mask_header(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        specs = self.get_specs()
+        op = specs['paths']['/test/']['get']
+
+        self.assertIn('parameters', op)
+        self.assertEqual(len(op['parameters']), 1)
+
+        param = op['parameters'][0]
+
+        self.assertEqual(param['name'], 'X-Fields')
+        self.assertEqual(param['type'], 'string')
+        self.assertEqual(param['format'], 'mask')
+        self.assertEqual(param['in'], 'header')
+        self.assertNotIn('required', param)
+
+    def test_marshal_with_expose_custom_mask_header(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        with self.settings(RESTPLUS_MASK_HEADER='X-Mask'):
+            specs = self.get_specs()
+
+        op = specs['paths']['/test/']['get']
+        self.assertIn('parameters', op)
+        self.assertEqual(len(op['parameters']), 1)
+
+        param = op['parameters'][0]
+        self.assertEqual(param['name'], 'X-Mask')
+
+    def test_marshal_with_disabling_mask_header(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        with self.settings(RESTPLUS_MASK_SWAGGER=False):
+            specs = self.get_specs()
+
+        op = specs['paths']['/test/']['get']
+
+        self.assertNotIn('parameters', op)
+
+    def test_is_only_exposed_on_marshal_with(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            def get(self):
+                return api.marshal({
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }, model)
+
+        specs = self.get_specs()
+        op = specs['paths']['/test/']['get']
+
+        self.assertNotIn('parameters', op)
