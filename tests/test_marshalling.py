@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-try:
-    from mock import Mock
-except:
-    # python3
-    from unittest.mock import Mock
-
 from flask.ext.restplus import (
     marshal, marshal_with, marshal_with_field, fields, Api, Resource
 )
@@ -293,6 +287,7 @@ class MarshallingTestCase(TestCase):
 
         class FooResource(Resource):
             fields = {'foo': fields.Float}
+
             def get(self):
                 return marshal({"foo": 3.0}, self.fields)
 

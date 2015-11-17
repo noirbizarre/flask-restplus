@@ -80,6 +80,18 @@ class DObject(object):
         self.__dict__.update(data)
 
 
+person_fields = {
+    'name': fields.String,
+    'age': fields.Integer
+}
+
+family_fields = {
+    'father': fields.Nested(person_fields),
+    'mother': fields.Nested(person_fields),
+    'children': fields.List(fields.Nested(person_fields))
+}
+
+
 class ApplyMaskTest(TestCase):
     def test_empty(self):
         data = {
@@ -160,6 +172,15 @@ class ApplyMaskTest(TestCase):
         result = mask.apply(data, '{nested{integer}}')
         self.assertEqual(result, {'nested': None})
 
+    def test_nested_api_fields(self):
+        result = mask.apply(family_fields, 'father{name},children{age}')
+        self.assertEqual(list(result.keys()), ['father', 'children'])
+        self.assertIsInstance(result['father'], fields.Nested)
+        self.assertEqual(list(result['father'].nested.keys()), ['name'])
+        self.assertIsInstance(result['children'], fields.List)
+        self.assertIsInstance(result['children'].container, fields.Nested)
+        self.assertEqual(list(result['children'].container.nested.keys()), ['age'])
+
     def test_list(self):
         data = [{
             'integer': 42,
@@ -237,6 +258,40 @@ class MaskAPI(TestCase):
             'name': 'John Doe',
             'age': 42,
         })
+
+    def test_marshal_with_honour_field_mask_list(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return [{
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }, {
+                    'name': 'Jane Doe',
+                    'age': 33,
+                    'boolean': False
+                }]
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': '{name,age}'
+        })
+        self.assertEqual(data, [{
+            'name': 'John Doe',
+            'age': 42,
+        }, {
+            'name': 'Jane Doe',
+            'age': 33,
+        }])
 
     def test_marshal_honour_field_mask(self):
         api = Api(self.app)
@@ -316,6 +371,38 @@ class MaskAPI(TestCase):
                 'X-Mask': '{name,age}'
             })
 
+        self.assertEqual(data, {
+            'name': 'John Doe',
+            'age': 42,
+        })
+
+    def test_marshal_does_not_hit_unrequired_attributes(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        class Person(object):
+            def __init__(self, name, age):
+                self.name = name
+                self.age = age
+
+            @property
+            def boolean(self):
+                raise Exception()
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return Person('John Doe', 42)
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': '{name,age}'
+        })
         self.assertEqual(data, {
             'name': 'John Doe',
             'age': 42,

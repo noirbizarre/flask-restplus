@@ -11,6 +11,8 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
+from . import fields
+
 log = logging.getLogger(__name__)
 
 LEXER = re.compile(r'\{|\}|\,|[\w_]+')
@@ -86,18 +88,26 @@ def parse(mask):
 
 def apply(data, mask):
     '''Apply a fields mask to the data'''
-    fields = parse(mask) if isinstance(mask, six.text_type) else mask
+    parsed_fields = parse(mask) if isinstance(mask, six.text_type) else mask
 
-    # Should it on list
+    # Should handle lists
     if isinstance(data, (list, tuple, set)):
-        return [apply(d, fields) for d in data]
+        return [apply(d, parsed_fields) for d in data]
+    # Should handle fields.Nested
+    elif isinstance(data, fields.Nested):
+        data.nested = apply(data.nested, parsed_fields)
+        return data
+    # Should handle fields.List
+    elif isinstance(data, fields.List):
+        data.container = apply(data.container, parsed_fields)
+        return data
     # Should handle objects
     elif (not isinstance(data, (dict, OrderedDict))
             and hasattr(data, '__dict__')):
         data = data.__dict__
 
     out = {}
-    for field in fields:
+    for field in parsed_fields:
         if isinstance(field, Nested):
             nested = data.get(field.name, None)
             if nested is None:
