@@ -9,7 +9,7 @@ python:
   - pypy3
 install:
   - pip install -e .[test]
-  - pip install nose rednose coverage coveralls
+  - pip install coverage coveralls
 script:
   - nosetests --with-coverage
 after_success:
