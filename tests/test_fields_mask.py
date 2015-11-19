@@ -174,12 +174,12 @@ class ApplyMaskTest(TestCase):
 
     def test_nested_api_fields(self):
         result = mask.apply(family_fields, 'father{name},children{age}')
-        self.assertEqual(list(result.keys()), ['father', 'children'])
+        self.assertEqual(set(result.keys()), set(['father', 'children']))
         self.assertIsInstance(result['father'], fields.Nested)
-        self.assertEqual(list(result['father'].nested.keys()), ['name'])
+        self.assertEqual(set(result['father'].nested.keys()), set(['name']))
         self.assertIsInstance(result['children'], fields.List)
         self.assertIsInstance(result['children'].container, fields.Nested)
-        self.assertEqual(list(result['children'].container.nested.keys()), ['age'])
+        self.assertEqual(set(result['children'].container.nested.keys()), set(['age']))
 
     def test_list(self):
         data = [{
