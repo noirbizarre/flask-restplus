@@ -43,6 +43,7 @@ exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about
 
 tests_require = ['nose', 'rednose']
 install_requires = ['flask-restful >= 0.3.2', 'jsonschema']
+dev_requires = ['flake8', 'sphinx', 'minibench', 'tox']
 
 
 if sys.version_info[0:2] < (2, 7):
@@ -68,6 +69,7 @@ setup(
     tests_require=tests_require,
     extras_require={
         'test': tests_require,
+        'dev': dev_requires,
     },
     license='MIT',
     use_2to3=True,
