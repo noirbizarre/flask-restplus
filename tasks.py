@@ -38,7 +38,7 @@ def cover():
 
 @task
 def tox():
-    '''Run test in all Python versions'''
+    '''Run tests against Python versions'''
     run('tox', pty=True)
 
 
@@ -62,4 +62,5 @@ def dist():
 
 @task(tox, doc, qa, dist, default=True)
 def all():
+    '''Run tests, reports and packaging'''
     pass

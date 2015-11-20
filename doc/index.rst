@@ -45,6 +45,7 @@ Documentation
     example
     api
     changelog
+    contributing
 
 
 
@@ -54,4 +55,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

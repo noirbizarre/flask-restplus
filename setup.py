@@ -43,7 +43,7 @@ exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about
 
 tests_require = ['nose', 'rednose']
 install_requires = ['flask-restful >= 0.3.2', 'jsonschema']
-dev_requires = ['flake8', 'sphinx', 'minibench', 'tox']
+dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke']
 
 
 if sys.version_info[0:2] < (2, 7):
