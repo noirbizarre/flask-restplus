@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from flask.ext.restful import abort  # noqa
+from flask.ext.restful import abort, inputs  # noqa
 
 from . import fields, reqparse, apidoc
 from .api import Api  # noqa
