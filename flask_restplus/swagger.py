@@ -165,7 +165,7 @@ class Swagger(object):
         for ns in self.api.namespaces:
             for resource, urls, kwargs in ns.resources:
                 for url in urls:
-                    paths[extract_path(url)] = self.serialize_resource(ns, resource, url)
+                    paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
 
         specs = {
             'swagger': '2.0',
@@ -293,7 +293,7 @@ class Swagger(object):
             responses[exception.__name__] = not_none(response)
         return responses
 
-    def serialize_resource(self, ns, resource, url):
+    def serialize_resource(self, ns, resource, url, kwargs):
         doc = self.extract_resource_doc(resource, url)
         if doc is False:
             return
@@ -301,7 +301,8 @@ class Swagger(object):
             'parameters': self.parameters_for(doc) or None
         }
         for method in [m.lower() for m in resource.methods or []]:
-            if doc[method] is False:
+            methods = [m.lower() for m in kwargs.get('methods', [])]
+            if doc[method] is False or methods and method not in methods:
                 continue
             path[method] = self.serialize_operation(doc, method)
             path[method]['tags'] = [ns.name]

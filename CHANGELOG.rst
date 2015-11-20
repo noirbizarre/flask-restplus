@@ -9,6 +9,7 @@ Current
 - Make :class:`Namespace` behave like :class:`~flask.Blueprint` for :class:`~flask.Flask`.
 - Deprecated ``parser`` and ``body`` parameters for ``expect`` in :meth:`~Namespace.doc` decorator.
 - Added the :meth:`~Namespace.param` decorator
+- Honour method restrictions in Swagger documentation (:issue:`93`)
 
 0.8.6 (2015-12-26)
 ------------------
