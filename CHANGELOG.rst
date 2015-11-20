@@ -9,6 +9,7 @@ Current
     - allow to register a custom URL with the ``doc`` parameter
     - allow to disable documentation with ``doc=False``
 - Added fields mask support through header (see: `Fields Masks Documentation`_)
+- Expose ``flask_restful.inputs`` module on ``flask_restplus.inputs``
 
 
 0.8.0
