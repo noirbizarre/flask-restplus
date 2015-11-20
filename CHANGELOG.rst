@@ -8,6 +8,7 @@ Current
     - allow to register a custom view with``@api.documentation``
     - allow to register a custom URL with the ``doc`` parameter
     - allow to disable documentation with ``doc=False``
+- Added fields mask support through header (see: `Fields Masks Documentation`_)
 
 
 0.8.0
@@ -162,3 +163,7 @@ Current
 ---
 
 - Initial release
+
+
+
+.. _Fields Masks Documentation: http://flask-restplus.readthedocs.org/en/stable/mask.html

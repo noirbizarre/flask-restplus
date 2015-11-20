@@ -13,6 +13,7 @@ from werkzeug import cached_property
 from werkzeug.exceptions import HTTPException
 
 from . import apidoc
+from .marshalling import marshal, marshal_with
 from .model import ApiModel
 from .namespace import ApiNamespace
 from .postman import PostmanCollectionV1
@@ -154,6 +155,8 @@ class Api(restful.Api):
         super(Api, self)._init_app(app)
         self._register_apidoc(app)
         self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
+        app.config.setdefault('RESTPLUS_MASK_HEADER', 'X-Fields')
+        app.config.setdefault('RESTPLUS_MASK_SWAGGER', True)
 
     def _register_apidoc(self, app):
         conf = app.extensions.setdefault('restplus', {})
@@ -360,14 +363,12 @@ class Api(restful.Api):
             doc = {
                 'responses': {
                     code: (description, [fields]) if as_list else (description, fields)
-                }
+                },
+                '__mask__': True,  # Mask values can't be determined outside app context
             }
-            # doc = {'model': [fields]} if as_list else {'model': fields}
-            # doc['default_code'] = code
-            # doc['description'] = description
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
             resolved = getattr(fields, 'resolved', fields)
-            return restful.marshal_with(resolved, **kwargs)(func)
+            return marshal_with(resolved, **kwargs)(func)
         return wrapper
 
     def marshal_list_with(self, fields, **kwargs):
@@ -377,7 +378,7 @@ class Api(restful.Api):
     def marshal(self, data, fields):
         '''A shortcut to the ``marshal`` helper'''
         resolved = getattr(fields, 'resolved', fields)
-        return restful.marshal(data, resolved)
+        return marshal(data, resolved)
 
     def errorhandler(self, exception):
         '''Register an error handler for a given exception'''

@@ -312,6 +312,18 @@ class Swagger(object):
                     param['type'] = PY_TYPES[ptype]
 
             params.append(param)
+
+        # Handle fields mask
+        if (doc.get('__mask__') or doc[method].get('__mask__')
+                and current_app.config['RESTPLUS_MASK_SWAGGER']):
+            params.append({
+                'name': current_app.config['RESTPLUS_MASK_HEADER'],
+                'in': 'header',
+                'type': 'string',
+                'format': 'mask',
+                'description': 'An optionnal fields mask',
+            })
+
         return params
 
     def responses_for(self, doc, method):

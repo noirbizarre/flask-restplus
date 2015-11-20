@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json
-
 from textwrap import dedent
 
 from flask import url_for, Blueprint
@@ -21,14 +19,6 @@ class SwaggerTestCase(TestCase):
         api = restplus.Api(blueprint, **kwargs)
         self.app.register_blueprint(blueprint)
         return api
-
-    def get_specs(self, prefix='', app=None, status=200):
-        '''Get a Swagger specification for a RestPlus API'''
-        with self.app.test_client() as client:
-            response = client.get('{0}/swagger.json'.format(prefix))
-            self.assertEquals(response.status_code, status)
-            self.assertEquals(response.content_type, 'application/json')
-            return json.loads(response.data.decode('utf8'))
 
     def test_specs_endpoint(self):
         api = restplus.Api()

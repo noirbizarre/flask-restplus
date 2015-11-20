@@ -8,9 +8,8 @@ python:
   - pypy
   - pypy3
 install:
-  - pip install -e .
-  - pip install nose rednose coverage coveralls
-  - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install unittest2; fi
+  - pip install -e .[test]
+  - pip install coverage coveralls
 script:
   - nosetests --with-coverage
 after_success:

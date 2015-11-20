@@ -22,3 +22,11 @@ All fields accept a ``required`` boolean and a ``description`` string in ``kwarg
 
 .. automodule:: flask_restplus.reqparse
     :members:
+
+
+
+:mod:`flask.ext.restplus.mask`
+------------------------------
+
+.. automodule:: flask_restplus.mask
+    :members:

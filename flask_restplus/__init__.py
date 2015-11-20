@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from flask.ext.restful import marshal, marshal_with, abort  # noqa
+from __future__ import absolute_import
+from flask.ext.restful import abort  # noqa
 
 from . import fields, reqparse, apidoc
 from .api import Api  # noqa
+from .marshalling import marshal, marshal_with, marshal_with_field  # noqa
 from .resource import Resource  # noqa
 from .exceptions import RestException, SpecsError, ValidationError
 from .swagger import Swagger
@@ -16,6 +18,7 @@ __all__ = (
     'apidoc',
     'marshal',
     'marshal_with',
+    'marshal_with_field',
     'abort',
     'fields',
     'reqparse',
