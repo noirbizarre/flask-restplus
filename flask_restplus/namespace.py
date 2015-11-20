@@ -18,7 +18,7 @@ class ApiNamespace(object):
     def route(self, *urls, **kwargs):
         def wrapper(cls):
             doc = kwargs.pop('doc', None)
-            if doc:
+            if doc is not None:
                 self.api._handle_api_doc(cls, doc)
             self.add_resource(cls, *[self.path + url for url in urls], **kwargs)
             return cls
