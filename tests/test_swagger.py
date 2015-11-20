@@ -33,8 +33,7 @@ class SwaggerTestCase(TestCase):
         self.assertIn('info', data)
 
     def test_specs_endpoint_with_prefix(self):
-        api = self.build_api(prefix='/api')
-        # api = restplus.Api(self.app, prefix='/api')
+        self.build_api(prefix='/api')
 
         data = self.get_specs('/api')
         self.assertEqual(data['swagger'], '2.0')
@@ -125,6 +124,19 @@ class SwaggerTestCase(TestCase):
             'name': 'Apache 2.0',
             'url': 'http://www.apache.org/licenses/LICENSE-2.0.html',
         })
+
+    def test_specs_endpoint_no_host(self):
+        restplus.Api(self.app)
+
+        data = self.get_specs('')
+        self.assertNotIn('host', data)
+
+    def test_specs_endpoint_host(self):
+        self.app.config['SERVER_NAME'] = 'api.restplus.org'
+        restplus.Api(self.app)
+
+        data = self.get_specs('')
+        self.assertEqual(data['host'], 'api.restplus.org')
 
     def test_specs_authorizations(self):
         authorizations = {
@@ -1282,7 +1294,6 @@ class SwaggerTestCase(TestCase):
         self.assertIn('definitions', data)
         self.assertIn('Person', data['definitions'])
 
-
         responses = data['paths']['/model-as-dict/']['get']['responses']
         self.assertEqual(responses, {
             '200': {
@@ -1628,7 +1639,7 @@ class SwaggerTestCase(TestCase):
             def get(self):
                 return {}
 
-        data = self.get_specs(status=500)
+        self.get_specs(status=500)
 
     def test_extend(self):
         api = self.build_api()
@@ -1702,13 +1713,12 @@ class SwaggerTestCase(TestCase):
         })
         self.assertEqual(data['definitions']['Child'], {
             'allOf': [{
-                    '$ref': '#/definitions/Person'
-                }, {
-                    'properties': {
-                        'extra': {'type': 'string'}
-                    }
+                '$ref': '#/definitions/Person'
+            }, {
+                'properties': {
+                    'extra': {'type': 'string'}
                 }
-            ]
+            }]
         })
 
         path = data['paths']['/inherit/']
@@ -1879,7 +1889,6 @@ class SwaggerTestCase(TestCase):
         self.assertIn('Child1', data['definitions'])
         self.assertIn('Child2', data['definitions'])
         self.assertIn('Output', data['definitions'])
-
 
         path = data['paths']['/polymorph/']
         self.assertEqual(path['get']['responses']['200']['schema']['$ref'], '#/definitions/Output')
@@ -2118,7 +2127,7 @@ class SwaggerTestCase(TestCase):
         })
 
     def test_authorizations(self):
-        api = restplus.Api(self.app, authorizations={
+        restplus.Api(self.app, authorizations={
             'apikey': {
                 'type': 'apiKey',
                 'in': 'header',
