@@ -138,6 +138,65 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs('')
         self.assertEqual(data['host'], 'api.restplus.org')
 
+    def test_specs_endpoint_tags_short(self):
+        restplus.Api(self.app, tags=['tag-1', 'tag-2', 'tag-3'])
+
+        data = self.get_specs('')
+        self.assertEqual(data['tags'], [
+            {'name': 'tag-1'},
+            {'name': 'tag-2'},
+            {'name': 'tag-3'},
+            {'name': 'default', 'description': 'Default namespace'},
+        ])
+
+    def test_specs_endpoint_tags_tuple(self):
+        restplus.Api(self.app, tags=[
+            ('tag-1', 'Tag 1'),
+            ('tag-2', 'Tag 2'),
+            ('tag-3', 'Tag 3'),
+        ])
+
+        data = self.get_specs('')
+        self.assertEqual(data['tags'], [
+            {'name': 'tag-1', 'description': 'Tag 1'},
+            {'name': 'tag-2', 'description': 'Tag 2'},
+            {'name': 'tag-3', 'description': 'Tag 3'},
+            {'name': 'default', 'description': 'Default namespace'},
+        ])
+
+    def test_specs_endpoint_tags_dict(self):
+        restplus.Api(self.app, tags=[
+            {'name': 'tag-1', 'description': 'Tag 1'},
+            {'name': 'tag-2', 'description': 'Tag 2'},
+            {'name': 'tag-3', 'description': 'Tag 3'},
+        ])
+
+        data = self.get_specs('')
+        self.assertEqual(data['tags'], [
+            {'name': 'tag-1', 'description': 'Tag 1'},
+            {'name': 'tag-2', 'description': 'Tag 2'},
+            {'name': 'tag-3', 'description': 'Tag 3'},
+            {'name': 'default', 'description': 'Default namespace'},
+        ])
+
+    def test_specs_endpoint_tags_namespaces(self):
+        api = restplus.Api(self.app, tags=['ns', 'tag'])
+        ns = api.namespace('ns', 'Description')
+
+        data = self.get_specs('')
+        self.assertEqual(data['tags'], [
+            {'name': 'ns', 'description': 'Description'},
+            {'name': 'tag'},
+            {'name': 'default', 'description': 'Default namespace'},
+        ])
+
+    def test_specs_endpoint_invalid_tags(self):
+        restplus.Api(self.app, tags=[
+            {'description': 'Tag 1'}
+        ])
+
+        self.get_specs('', status=500)
+
     def test_specs_authorizations(self):
         authorizations = {
             'apikey': {

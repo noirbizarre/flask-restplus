@@ -106,7 +106,8 @@ class Api(restful.Api):
             terms_url=None, license=None, license_url=None,
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', default_id=default_id,
-            default='default', default_label='Default namespace', validate=None, **kwargs):
+            default='default', default_label='Default namespace', validate=None,
+            tags=None, **kwargs):
         self.version = version
         self.title = title or 'API'
         self.description = description
@@ -122,6 +123,7 @@ class Api(restful.Api):
         self._validate = validate
         self._doc = doc
         self._doc_view = None
+        self.tags = tags or []
 
         self._error_handlers = {}
         self._schema = None

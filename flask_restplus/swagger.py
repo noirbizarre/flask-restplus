@@ -164,12 +164,9 @@ class Swagger(object):
                 infos['license']['url'] = self.api.license_url
 
         paths = {}
-        tags = []
+        tags = self.extract_tags(self.api)
+
         for ns in self.api.namespaces:
-            tags.append({
-                'name': ns.name,
-                'description': ns.description
-            })
             for resource, urls, kwargs in ns.resources:
                 for url in urls:
                     paths[extract_path(url)] = self.serialize_resource(ns, resource, url)
@@ -188,6 +185,30 @@ class Swagger(object):
             'host': current_app.config.get('SERVER_NAME', None) or None,
         }
         return not_none(specs)
+
+    def extract_tags(self, api):
+        tags = []
+        by_name = {}
+        for tag in api.tags:
+            if isinstance(tag, string_types):
+                tag = {'name': tag}
+            elif isinstance(tag, (list, tuple)):
+                tag = {'name': tag[0], 'description': tag[1]}
+            elif isinstance(tag, dict) and 'name' in tag:
+                pass
+            else:
+                raise ValueError('Unsupported tag format for {0}'.format(tag))
+            tags.append(tag)
+            by_name[tag['name']] = tag
+        for ns in api.namespaces:
+            if ns.name not in by_name:
+                tags.append({
+                    'name': ns.name,
+                    'description': ns.description
+                })
+            elif ns.description:
+                by_name[ns.name]['description'] = ns.description
+        return tags
 
     def extract_resource_doc(self, resource, url):
         doc = getattr(resource, '__apidoc__', {})
