@@ -35,7 +35,7 @@ def family():
 
 
 class MarshalBenchmark(Benchmark):
-    times = 100
+    times = 1000
 
     def before_class(self):
         self.app = Flask(__name__)
