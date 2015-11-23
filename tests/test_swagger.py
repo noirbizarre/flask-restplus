@@ -2446,6 +2446,21 @@ class SwaggerTestCase(TestCase):
         for path in '/test/', '/test2/', '/test3/':
             self.assertNotIn(path, data['paths'])
 
+    def test_hidden_resource_from_namespace(self):
+        api = self.build_api()
+        ns = api.namespace('ns')
+
+        @ns.route('/test/', endpoint='test', doc=False)
+        class TestResource(restplus.Resource):
+            def get(self):
+                '''
+                GET operation
+                '''
+                return {}
+
+        data = self.get_specs()
+        self.assertNotIn('/ns/test/', data['paths'])
+
     def test_hidden_methods(self):
         api = self.build_api()
 
