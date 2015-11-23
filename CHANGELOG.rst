@@ -10,6 +10,15 @@ Current
     - allow to disable documentation with ``doc=False``
 - Added fields mask support through header (see: `Fields Masks Documentation`_)
 - Expose ``flask_restful.inputs`` module on ``flask_restplus.inputs``
+- Added support for some missing fields and attributes:
+    - ``host`` root field
+    - custom ``tags`` root field
+    - ``exclusiveMinimum`` and ``exclusiveMaximum`` number field attributes
+    - ``multipleOf`` number field attribute
+    - ``minLength`` and ``maxLength`` string field attributes
+    - ``pattern`` string field attribute
+    - ``minItems`` and ``maxItems`` list field attributes
+    - ``uniqueItems`` list field attribute
 
 
 0.8.0

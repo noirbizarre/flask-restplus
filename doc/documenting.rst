@@ -398,10 +398,23 @@ Every Flask-Restplus fields accepts additional but optional arguments used to do
 
 There is also field specific attributes.
 
-The ``String`` field accept an optional ``enum`` argument to restrict the authorized values.
+The ``String`` field accept the following optionnal arguments:
 
-The ``Integer``, ``Float`` and ``Arbitrary`` fields accept
-both ``min`` and ``max`` arguments to restrict the possible values.
+- ``enum``: an array restricting the authorized values.
+- ``min_length``: the minimum length expected
+- ``max_length``: the maximum length expected
+- ``pattern``: a RegExp pattern the string need to validate
+
+The ``Integer``, ``Float`` and ``Arbitrary`` fields accept the following optionnal arguments:
+
+- ``min``: restrict the minimum accepted value.
+- ``max``: restrict the maximum accepted value.
+- ``exclusiveMin``: if ``True``, minimum value is not in allowed interval.
+- ``exclusiveMax``: if ``True``, maximum value is not in allowed interval.
+- ``multiple``: specify that the number must be a multiple of this value.
+
+The ``DateTime`` field also accept the ``min``, ``max`, ``exclusiveMin`` and ``exclusiveMax``
+optionnal arguments but they should be date or datetime (either as ISO strings or native objects).
 
 .. code-block:: python
 
@@ -761,4 +774,3 @@ as security parameter:
         @api.doc(security=None)
         def post(self):
             return {}
-
