@@ -25,7 +25,7 @@ def marshal(data, fields, envelope=None):
                      response
 
 
-    >>> from flask_restful import fields, marshal
+    >>> from flask_restplus import fields, marshal
     >>> data = { 'a': 100, 'b': 'foo' }
     >>> mfields = { 'a': fields.Raw }
 
@@ -69,7 +69,7 @@ def marshal(data, fields, envelope=None):
 class marshal_with(object):
     """A decorator that apply marshalling to the return values of your methods.
 
-    >>> from flask_restful import fields, marshal_with
+    >>> from flask_restplus import fields, marshal_with
     >>> mfields = { 'a': fields.Raw }
     >>> @marshal_with(mfields)
     ... def get():
@@ -115,7 +115,7 @@ class marshal_with_field(object):
     """
     A decorator that formats the return values of your methods with a single field.
 
-    >>> from flask_restful import marshal_with_field, fields
+    >>> from flask_restplus import marshal_with_field, fields
     >>> @marshal_with_field(fields.List(fields.Integer))
     ... def get():
     ...     return ['1', 2, 3.0]

@@ -11,7 +11,7 @@ Current
 - Added fields mask support through header (see: `Fields Masks Documentation`_)
 - Expose ``flask_restful.inputs`` module on ``flask_restplus.inputs``
 - Added support for some missing fields and attributes:
-    - ``host`` root field
+    - ``host`` root field (filed only if ``SERVER_NAME`` config is set)
     - custom ``tags`` root field
     - ``exclusiveMinimum`` and ``exclusiveMaximum`` number field attributes
     - ``multipleOf`` number field attribute

@@ -24,6 +24,12 @@ All fields accept a ``required`` boolean and a ``description`` string in ``kwarg
     :members:
 
 
+:mod:`flask.ext.restplus.inputs`
+--------------------------------
+
+.. automodule:: flask_restplus.inputs
+    :members:
+
 
 :mod:`flask.ext.restplus.mask`
 ------------------------------
