@@ -153,8 +153,15 @@ class Nested(BaseField, base_fields.Nested):
 
 
 class List(BaseField, base_fields.List):
+    def __init__(self, *args, **kwargs):
+        self.min_items = kwargs.pop('min_items', None)
+        self.max_items = kwargs.pop('max_items', None)
+        self.unique = kwargs.pop('unique', None)
+        super(List, self).__init__(*args, **kwargs)
+
     def schema(self):
         schema = super(List, self).schema()
+        schema.update(minItems=self.min_items, maxItems=self.max_items, uniqueItems=self.unique)
         schema['type'] = 'array'
         schema['items'] = self.container.__schema__
         return schema

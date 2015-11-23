@@ -374,6 +374,21 @@ class ListFieldTest(BaseFieldTestMixin, FieldTestCase):
         field = fields.List(fields.Nested(nested_fields))
         self.assertEqual(field.__schema__, {'type': 'array', 'items': {'$ref': '#/definitions/NestedModel'}})
 
+    def test_min_items(self):
+        field = fields.List(fields.String, min_items=5)
+        self.assertIn('minItems', field.__schema__)
+        self.assertEqual(field.__schema__['minItems'], 5)
+
+    def test_max_items(self):
+        field = fields.List(fields.String, max_items=42)
+        self.assertIn('maxItems', field.__schema__)
+        self.assertEqual(field.__schema__['maxItems'], 42)
+
+    def test_unique(self):
+        field = fields.List(fields.String, unique=True)
+        self.assertIn('uniqueItems', field.__schema__)
+        self.assertEqual(field.__schema__['uniqueItems'], True)
+
 
 class ClassNameFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
     field_class = fields.ClassName
