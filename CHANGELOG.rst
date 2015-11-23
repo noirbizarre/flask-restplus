@@ -5,7 +5,7 @@ Current
 -------
 
 - Refactor Swagger UI handling:
-    - allow to register a custom view with``@api.documentation``
+    - allow to register a custom view with ``@api.documentation``
     - allow to register a custom URL with the ``doc`` parameter
     - allow to disable documentation with ``doc=False``
 - Added fields mask support through header (see: `Fields Masks Documentation`_)
@@ -19,6 +19,7 @@ Current
     - ``pattern`` string field attribute
     - ``minItems`` and ``maxItems`` list field attributes
     - ``uniqueItems`` list field attribute
+- Fixes
 
 
 0.8.0

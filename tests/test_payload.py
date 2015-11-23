@@ -210,3 +210,30 @@ class PayloadTestCase(TestCase):
             'age': '15',
         })
         self.assert_errors(response, 'name', 'age')
+
+    def test_validation_on_list(self):
+        '''It should perform validation on lists'''
+        api = restplus.Api(self.app, validate=True)
+
+        person = api.model('Person', {
+            'name': restplus.fields.String(required=True),
+            'age': restplus.fields.Integer(required=True),
+        })
+
+        family = api.model('Family', {
+            'name': restplus.fields.String(required=True),
+            'members': restplus.fields.List(restplus.fields.Nested(person))
+        })
+
+        @api.route('/validation/')
+        class List(restplus.Resource):
+            @api.expect(family)
+            def post(self):
+                return {}
+
+        response = self.post('/validation/', {
+            'name': 'Doe',
+            'members': [{'name': 'Jonn'}, {'age': 42}]
+        })
+
+        self.assert_errors(response, 'members.0.age', 'members.1.name')

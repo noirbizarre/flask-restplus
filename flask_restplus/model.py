@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import copy
+import re
 
 from collections import MutableMapping
 from six import iteritems, itervalues
@@ -13,6 +14,9 @@ from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
 
 from .utils import not_none
+
+
+RE_REQUIRED = re.compile(r'u?\'(?P<name>.*)\' is a required property', re.I | re.U)
 
 
 def instance(cls):
@@ -118,6 +122,7 @@ class ApiModel(dict, MutableMapping):
     def format_error(self, error):
         path = list(error.path)
         if error.validator == 'required':
-            path.append(error.validator_value[0])
-        key = '.'.join(path)
+            name = RE_REQUIRED.match(error.message).group('name')
+            path.append(name)
+        key = '.'.join(str(p) for p in path)
         return key, error.message
