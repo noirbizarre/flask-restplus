@@ -85,6 +85,11 @@ class StringTestMixin(object):
         self.assertIn('maxLength', field.__schema__)
         self.assertEqual(field.__schema__['maxLength'], 42)
 
+    def test_pattern(self):
+        field = self.field_class(pattern='[a-z]')
+        self.assertIn('pattern', field.__schema__)
+        self.assertEqual(field.__schema__['pattern'], '[a-z]')
+
 
 class RawFieldTest(BaseFieldTestMixin, FieldTestCase):
     field_class = fields.Raw

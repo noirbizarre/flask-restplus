@@ -44,11 +44,12 @@ class StringMixin(object):
     def __init__(self, *args, **kwargs):
         self.min_length = kwargs.pop('min_length', None)
         self.max_length = kwargs.pop('max_length', None)
+        self.pattern = kwargs.pop('pattern', None)
         super(StringMixin, self).__init__(*args, **kwargs)
 
     def schema(self):
         schema = super(StringMixin, self).schema()
-        schema.update(minLength=self.min_length, maxLength=self.max_length)
+        schema.update(minLength=self.min_length, maxLength=self.max_length, pattern=self.pattern)
         return schema
 
 
