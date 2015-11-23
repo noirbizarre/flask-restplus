@@ -41,7 +41,7 @@ class BaseFieldTestMixin(object):
         self.assertTrue(field.__schema__['readOnly'])
 
 
-class MinMaxTestMixin(object):
+class NumberTestMixin(object):
     def test_min(self):
         field = self.field_class(min=0)
         self.assertIn('minimum', field.__schema__)
@@ -67,6 +67,11 @@ class MinMaxTestMixin(object):
         self.assertEqual(field.__schema__['maximum'], 42)
         self.assertIn('exclusiveMaximum', field.__schema__)
         self.assertEqual(field.__schema__['exclusiveMaximum'], True)
+
+    def test_mulitple_of(self):
+        field = self.field_class(multiple=5)
+        self.assertIn('multipleOf', field.__schema__)
+        self.assertEqual(field.__schema__['multipleOf'], 5)
 
 
 class RawFieldTest(BaseFieldTestMixin, FieldTestCase):
@@ -136,7 +141,7 @@ class StringFieldTest(BaseFieldTestMixin, FieldTestCase):
             self.api.marshal(object(), model)
 
 
-class IntegerFieldTest(BaseFieldTestMixin, MinMaxTestMixin, FieldTestCase):
+class IntegerFieldTest(BaseFieldTestMixin, NumberTestMixin, FieldTestCase):
     field_class = fields.Integer
 
     def test_defaults(self):
@@ -164,7 +169,7 @@ class BooleanFieldTest(BaseFieldTestMixin, FieldTestCase):
         self.assertEqual(field.__schema__, {'type': 'boolean', 'default': True})
 
 
-class FloatFieldTest(BaseFieldTestMixin, MinMaxTestMixin, FieldTestCase):
+class FloatFieldTest(BaseFieldTestMixin, NumberTestMixin, FieldTestCase):
     field_class = fields.Float
 
     def test_defaults(self):
@@ -178,7 +183,7 @@ class FloatFieldTest(BaseFieldTestMixin, MinMaxTestMixin, FieldTestCase):
         self.assertEqual(field.__schema__, {'type': 'number', 'default': 0.5})
 
 
-class FixedFieldTest(BaseFieldTestMixin, MinMaxTestMixin, FieldTestCase):
+class FixedFieldTest(BaseFieldTestMixin, NumberTestMixin, FieldTestCase):
     field_class = fields.Fixed
 
     def test_defaults(self):
@@ -192,7 +197,7 @@ class FixedFieldTest(BaseFieldTestMixin, MinMaxTestMixin, FieldTestCase):
         self.assertEqual(field.__schema__, {'type': 'number', 'default': 0.5})
 
 
-class ArbitraryFieldTest(BaseFieldTestMixin, MinMaxTestMixin, FieldTestCase):
+class ArbitraryFieldTest(BaseFieldTestMixin, NumberTestMixin, FieldTestCase):
     field_class = fields.Arbitrary
 
     def test_defaults(self):

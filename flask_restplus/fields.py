@@ -55,6 +55,17 @@ class MinMaxMixin(object):
         return schema
 
 
+class NumberMixin(MinMaxMixin):
+    def __init__(self, *args, **kwargs):
+        self.multiple = kwargs.pop('multiple', None)
+        super(NumberMixin, self).__init__(*args, **kwargs)
+
+    def schema(self):
+        schema = super(NumberMixin, self).schema()
+        schema.update(multipleOf=self.multiple)
+        return schema
+
+
 class String(BaseField, base_fields.String):
     def __init__(self, *args, **kwargs):
         self.enum = kwargs.pop('enum', None)
@@ -71,18 +82,18 @@ class String(BaseField, base_fields.String):
         return schema
 
 
-class Integer(MinMaxMixin, BaseField, base_fields.Integer):
+class Integer(NumberMixin, BaseField, base_fields.Integer):
     __schema_type__ = 'integer'
 
     def __init__(self, default=None, **kwargs):
         super(Integer, self).__init__(default=default, **kwargs)
 
 
-class Float(MinMaxMixin, BaseField, base_fields.Float):
+class Float(NumberMixin, BaseField, base_fields.Float):
     __schema_type__ = 'number'
 
 
-class Arbitrary(MinMaxMixin, BaseField, base_fields.Arbitrary):
+class Arbitrary(NumberMixin, BaseField, base_fields.Arbitrary):
     __schema_type__ = 'number'
 
 
@@ -140,7 +151,7 @@ class Url(BaseField, base_fields.Url):
     pass
 
 
-class Fixed(MinMaxMixin, BaseField, base_fields.Fixed):
+class Fixed(NumberMixin, BaseField, base_fields.Fixed):
     __schema_type__ = 'number'
 
 
