@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from datetime import date, datetime
+
 from six import iteritems, itervalues
 
 from flask.ext.restful import fields as base_fields
@@ -41,12 +43,15 @@ class BaseField(object):
 class MinMaxMixin(object):
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.pop('min', None)
+        self.excluisveMinimum = kwargs.pop('exclusiveMin', None)
         self.maximum = kwargs.pop('max', None)
+        self.exclusiveMaximum = kwargs.pop('exclusiveMax', None)
         super(MinMaxMixin, self).__init__(*args, **kwargs)
 
     def schema(self):
         schema = super(MinMaxMixin, self).schema()
-        schema.update(minimum=self.minimum, maximum=self.maximum)
+        schema.update(minimum=self.minimum, exclusiveMinimum=self.excluisveMinimum,
+                      maximum=self.maximum, exclusiveMaximum=self.exclusiveMaximum)
         return schema
 
 
@@ -85,8 +90,15 @@ class Boolean(BaseField, base_fields.Boolean):
     __schema_type__ = 'boolean'
 
 
-class DateTime(BaseField, base_fields.DateTime):
+class DateTime(MinMaxMixin, BaseField, base_fields.DateTime):
     __schema_format__ = 'date-time'
+
+    def __init__(self, *args, **kwargs):
+        super(DateTime, self).__init__(*args, **kwargs)
+        if self.minimum and isinstance(self.minimum, (date, datetime)):
+            self.minimum = self.minimum.isoformat()
+        if self.maximum and isinstance(self.maximum, (date, datetime)):
+            self.maximum = self.maximum.isoformat()
 
 
 class Raw(BaseField, base_fields.Raw):
