@@ -40,6 +40,18 @@ class BaseField(object):
         }
 
 
+class StringMixin(object):
+    def __init__(self, *args, **kwargs):
+        self.min_length = kwargs.pop('min_length', None)
+        self.max_length = kwargs.pop('max_length', None)
+        super(StringMixin, self).__init__(*args, **kwargs)
+
+    def schema(self):
+        schema = super(StringMixin, self).schema()
+        schema.update(minLength=self.min_length, maxLength=self.max_length)
+        return schema
+
+
 class MinMaxMixin(object):
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.pop('min', None)
@@ -66,7 +78,7 @@ class NumberMixin(MinMaxMixin):
         return schema
 
 
-class String(BaseField, base_fields.String):
+class String(StringMixin, BaseField, base_fields.String):
     def __init__(self, *args, **kwargs):
         self.enum = kwargs.pop('enum', None)
         self.discriminator = kwargs.pop('discriminator', None)
@@ -147,7 +159,7 @@ class List(BaseField, base_fields.List):
         return schema
 
 
-class Url(BaseField, base_fields.Url):
+class Url(StringMixin, BaseField, base_fields.Url):
     pass
 
 
@@ -155,7 +167,7 @@ class Fixed(NumberMixin, BaseField, base_fields.Fixed):
     __schema_type__ = 'number'
 
 
-class FormattedString(BaseField, base_fields.FormattedString):
+class FormattedString(StringMixin, BaseField, base_fields.FormattedString):
     pass
 
 

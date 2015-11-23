@@ -74,6 +74,18 @@ class NumberTestMixin(object):
         self.assertEqual(field.__schema__['multipleOf'], 5)
 
 
+class StringTestMixin(object):
+    def test_min_length(self):
+        field = self.field_class(min_length=1)
+        self.assertIn('minLength', field.__schema__)
+        self.assertEqual(field.__schema__['minLength'], 1)
+
+    def test_max_length(self):
+        field = self.field_class(max_length=42)
+        self.assertIn('maxLength', field.__schema__)
+        self.assertEqual(field.__schema__['maxLength'], 42)
+
+
 class RawFieldTest(BaseFieldTestMixin, FieldTestCase):
     field_class = fields.Raw
 
@@ -86,7 +98,7 @@ class RawFieldTest(BaseFieldTestMixin, FieldTestCase):
         self.assertEqual(field.__schema__['default'], 'aaa')
 
 
-class StringFieldTest(BaseFieldTestMixin, FieldTestCase):
+class StringFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
     field_class = fields.String
 
     def test_defaults(self):
@@ -273,7 +285,7 @@ class DatetimeFieldTest(BaseFieldTestMixin, FieldTestCase):
         self.assertEqual(field.__schema__['exclusiveMaximum'], True)
 
 
-class FormatedStringFieldTest(BaseFieldTestMixin, FieldTestCase):
+class FormatedStringFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
     field_class = partial(fields.FormattedString, 'Hello {name}')
 
     def test_defaults(self):
@@ -282,7 +294,7 @@ class FormatedStringFieldTest(BaseFieldTestMixin, FieldTestCase):
         self.assertEqual(field.__schema__, {'type': 'string'})
 
 
-class UrlFieldTest(BaseFieldTestMixin, FieldTestCase):
+class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
     field_class = partial(fields.Url, 'endpoint')
 
     def test_defaults(self):
@@ -358,7 +370,9 @@ class ListFieldTest(BaseFieldTestMixin, FieldTestCase):
         self.assertEqual(field.__schema__, {'type': 'array', 'items': {'$ref': '#/definitions/NestedModel'}})
 
 
-class ClassNameFieldTest(FieldTestCase):
+class ClassNameFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
+    field_class = fields.ClassName
+
     def test_simple_string_field(self):
         field = fields.ClassName()
         self.assertFalse(field.required)
