@@ -246,13 +246,13 @@ class DatetimeFieldTest(BaseFieldTestMixin, FieldTestCase):
         self.assertNotIn('exclusiveMinimum', field.__schema__)
 
     def test_min_as_date(self):
-        field = fields.DateTime(min=date(1984, 06, 07))
+        field = fields.DateTime(min=date(1984, 6, 7))
         self.assertIn('minimum', field.__schema__)
         self.assertEqual(field.__schema__['minimum'], '1984-06-07')
         self.assertNotIn('exclusiveMinimum', field.__schema__)
 
     def test_min_as_datetime(self):
-        field = fields.DateTime(min=datetime(1984, 06, 07, 1, 2, 0))
+        field = fields.DateTime(min=datetime(1984, 6, 7, 1, 2, 0))
         self.assertIn('minimum', field.__schema__)
         self.assertEqual(field.__schema__['minimum'], '1984-06-07T01:02:00')
         self.assertNotIn('exclusiveMinimum', field.__schema__)
@@ -271,13 +271,13 @@ class DatetimeFieldTest(BaseFieldTestMixin, FieldTestCase):
         self.assertNotIn('exclusiveMaximum', field.__schema__)
 
     def test_max_as_date(self):
-        field = fields.DateTime(max=date(1984, 06, 07))
+        field = fields.DateTime(max=date(1984, 6, 7))
         self.assertIn('maximum', field.__schema__)
         self.assertEqual(field.__schema__['maximum'], '1984-06-07')
         self.assertNotIn('exclusiveMaximum', field.__schema__)
 
     def test_max_as_datetime(self):
-        field = fields.DateTime(max=datetime(1984, 06, 07, 1, 2, 0))
+        field = fields.DateTime(max=datetime(1984, 6, 7, 1, 2, 0))
         self.assertIn('maximum', field.__schema__)
         self.assertEqual(field.__schema__['maximum'], '1984-06-07T01:02:00')
         self.assertNotIn('exclusiveMaximum', field.__schema__)
