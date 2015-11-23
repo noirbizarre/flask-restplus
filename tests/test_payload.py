@@ -210,3 +210,8 @@ class PayloadTestCase(TestCase):
             'age': '15',
         })
         self.assert_errors(response, 'name', 'age')
+
+    def test_format_error_int(self):
+        path = [1, 1.2, 'a', u'a']
+        joined = '.'.join(map(lambda v: str(v), path))
+        joined == '1.1.2.a.a'
