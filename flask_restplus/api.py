@@ -39,8 +39,8 @@ class Api(restful.Api):
         - The API root/documentation will be ``{endpoint}.root``
         - A resource registered as 'resource' will be available as ``{endpoint}.resource``
 
-    :param app: the Flask application object
-    :type app: flask.Flask
+    :param app: the Flask application object or a Blueprint
+    :type app: flask.Flask|flask.Blueprint
 
     :param version: The API version (used in Swagger documentation)
     :type version: str
@@ -138,6 +138,35 @@ class Api(restful.Api):
         super(Api, self).__init__(app, **kwargs)
 
     def init_app(self, app, **kwargs):
+        '''
+        Allow to lazy register the API on a Flask application::
+
+        >>> app = Flask(__name__)
+        >>> api = Api()
+        >>> api.init_app(app)
+
+        :param app: the Flask application object
+        :type app: flask.Flask
+
+        :param title: The API title (used in Swagger documentation)
+        :type title: str
+
+        :param description: The API description (used in Swagger documentation)
+        :type description: str
+
+        :param terms_url: The API terms page URL (used in Swagger documentation)
+        :type terms_url: str
+
+        :param contact: A contact email for the API (used in Swagger documentation)
+        :type contact: str
+
+        :param license: The license associated to the API (used in Swagger documentation)
+        :type license: str
+
+        :param license_url: The license page URL (used in Swagger documentation)
+        :type license_url: str
+    
+        '''
         self.title = kwargs.get('title', self.title)
         self.description = kwargs.get('description', self.description)
         self.terms_url = kwargs.get('terms_url', self.terms_url)
