@@ -175,13 +175,12 @@ class Api(restful.Api):
         self.contact_email = kwargs.get('contact_email', self.contact_email)
         self.license = kwargs.get('license', self.license)
         self.license_url = kwargs.get('license_url', self.license_url)
-
-        if kwargs.get('add_specs', True):
-            self.add_resource(self.swagger_view(), '/swagger.json', endpoint='specs', doc=False)
+        self._add_specs = kwargs.get('add_specs', True)
 
         super(Api, self).init_app(app)
 
     def _init_app(self, app):
+        self._register_specs(self.blueprint or app)
         self._register_doc(self.blueprint or app)
         super(Api, self)._init_app(app)
         self._register_apidoc(app)
@@ -195,8 +194,18 @@ class Api(restful.Api):
             app.register_blueprint(apidoc.apidoc)
         conf['apidoc_registered'] = True
 
+    def _register_specs(self, app_or_blueprint):
+        if self._add_specs:
+            self._register_view(
+                app_or_blueprint,
+                self.swagger_view(),
+                '/swagger.json',
+                endpoint='specs',
+                resource_class_args=(self, )
+            )
+
     def _register_doc(self, app_or_blueprint):
-        if self._doc:
+        if self._add_specs and self._doc:
             # Register documentation before root if enabled
             app_or_blueprint.add_url_rule(self._doc, 'doc', self.render_doc)
         app_or_blueprint.add_url_rule('/', 'root', self.render_root)
@@ -207,8 +216,6 @@ class Api(restful.Api):
 
     def swagger_view(self):
         class SwaggerView(Resource):
-            api = self
-
             def get(self):
                 return self.api.__schema__
 
