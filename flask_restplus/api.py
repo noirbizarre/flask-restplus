@@ -200,7 +200,7 @@ class Api(restful.Api):
                 app_or_blueprint,
                 self.swagger_view(),
                 '/swagger.json',
-                endpoint='specs',
+                endpoint=str('specs'),
                 resource_class_args=(self, )
             )
 
