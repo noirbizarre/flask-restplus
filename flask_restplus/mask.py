@@ -86,20 +86,24 @@ def parse(mask):
     return root
 
 
-def apply(data, mask):
-    '''Apply a fields mask to the data'''
+def apply(data, mask, skip=False):
+    '''
+    Apply a fields mask to the data.
+
+    If skip is True, missing field won't appear in result
+    '''
     parsed_fields = parse(mask) if isinstance(mask, six.text_type) else mask
 
     # Should handle lists
     if isinstance(data, (list, tuple, set)):
-        return [apply(d, parsed_fields) for d in data]
+        return [apply(d, parsed_fields, skip=skip) for d in data]
     # Should handle fields.Nested
     elif isinstance(data, fields.Nested):
-        data.nested = apply(data.nested, parsed_fields)
+        data.nested = apply(data.nested, parsed_fields, skip=skip)
         return data
     # Should handle fields.List
     elif isinstance(data, fields.List):
-        data.container = apply(data.container, parsed_fields)
+        data.container = apply(data.container, parsed_fields, skip=skip)
         return data
     # Should handle objects
     elif (not isinstance(data, (dict, OrderedDict))
@@ -108,12 +112,14 @@ def apply(data, mask):
 
     out = {}
     for field in parsed_fields:
-        if isinstance(field, Nested):
+        if skip and field not in data:
+            continue
+        elif isinstance(field, Nested):
             nested = data.get(field.name, None)
             if nested is None:
                 out[field.name] = None
             else:
-                out[field.name] = apply(nested, field.fields)
+                out[field.name] = apply(nested, field.fields, skip=skip)
         else:
             out[field] = data.get(field, None)
     return out

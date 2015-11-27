@@ -46,7 +46,7 @@ def marshal(data, fields, envelope=None):
         mask_header = current_app.config['RESTPLUS_MASK_HEADER']
         mask = request.headers.get(mask_header)
         if mask:
-            fields = apply_mask(fields, mask)
+            fields = apply_mask(fields, mask, skip=True)
 
     if isinstance(data, (list, tuple)):
         out = [marshal(d, fields) for d in data]

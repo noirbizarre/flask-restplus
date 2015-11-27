@@ -230,6 +230,14 @@ class ApplyMaskTest(TestCase):
         result = mask.apply(data, '{list{integer}}')
         self.assertEqual(result, {'list': [{'integer': 42}, {'integer': 404}]})
 
+    def test_missing_field_none_by_default(self):
+        result = mask.apply({}, '{integer}')
+        self.assertEqual(result, {'integer': None})
+
+    def test_missing_field_skipped(self):
+        result = mask.apply({}, '{integer}', skip=True)
+        self.assertEqual(result, {})
+
 
 class MaskAPI(TestCase):
     def test_marshal_with_honour_field_mask(self):
@@ -406,6 +414,30 @@ class MaskAPI(TestCase):
         self.assertEqual(data, {
             'name': 'John Doe',
             'age': 42,
+        })
+
+    def test_marshal_with_skip_missing_fields(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                }
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': '{name,missing}'
+        })
+        self.assertEqual(data, {
+            'name': 'John Doe',
         })
 
 
