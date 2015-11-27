@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import copy
+import inspect
 import six
 
 from flask import url_for, request
@@ -123,6 +124,7 @@ class Api(restful.Api):
         self._validate = validate
         self._doc = doc
         self._doc_view = None
+        self._default_error_handler = None
         self.tags = tags or []
 
         self._error_handlers = {}
@@ -165,7 +167,7 @@ class Api(restful.Api):
 
         :param license_url: The license page URL (used in Swagger documentation)
         :type license_url: str
-    
+
         '''
         self.title = kwargs.get('title', self.title)
         self.description = kwargs.get('description', self.description)
@@ -413,15 +415,25 @@ class Api(restful.Api):
 
     def errorhandler(self, exception):
         '''Register an error handler for a given exception'''
-        def wrapper(func):
-            self._error_handlers[exception] = func
-            return func
-        return wrapper
+        if inspect.isclass(exception) and issubclass(exception, Exception):
+            # Register an error handler for a given exception
+            def wrapper(func):
+                self._error_handlers[exception] = func
+                return func
+            return wrapper
+        else:
+            # Register the default error handler
+            self._default_error_handler = exception
+            return exception
 
     def handle_error(self, e):
         if e.__class__ in self._error_handlers:
             handler = self._error_handlers[e.__class__]
             result = handler(e)
+            e = HTTPException(str(e))
+            e.data, e.code = result if len(result) == 2 else (result, 500)
+        elif self._default_error_handler:
+            result = self._default_error_handler(e)
             e = HTTPException(str(e))
             e.data, e.code = result if len(result) == 2 else (result, 500)
         return super(Api, self).handle_error(e)

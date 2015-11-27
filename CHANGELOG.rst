@@ -19,6 +19,7 @@ Current
     - ``pattern`` string field attribute
     - ``minItems`` and ``maxItems`` list field attributes
     - ``uniqueItems`` list field attribute
+- Allow to override the default error handler
 - Fixes
 
 

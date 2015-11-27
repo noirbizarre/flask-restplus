@@ -118,3 +118,12 @@ than you can do with Flask/Blueprint ``@errorhandler`` decorator.
     def handle_another_exception(error):
         '''Return a custom message and 500 status code'''
         return {'message': error.specific}
+
+It also allow to override the default error handler when used wihtout parameter:
+
+.. code-block:: python
+
+    @api.errorhandler
+    def default_error_handler(error):
+        '''Default error handler'''
+        return {'message': str(error)}, getattr(error, 'code', 500)

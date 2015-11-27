@@ -148,6 +148,29 @@ class APITestCase(TestCase):
                 'test': 'value',
             })
 
+    def test_default_errorhandler(self):
+        api = restplus.Api(self.app)
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise Exception('error')
+
+        @api.errorhandler
+        def default_error_handler(error):
+            return {'message': str(error), 'test': 'value'}, 500
+
+        with self.app.test_client() as client:
+            response = client.get('/test/')
+            self.assertEquals(response.status_code, 500)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertEqual(data, {
+                'message': 'error',
+                'test': 'value',
+            })
+
     def test_errorhandler_lazy(self):
         api = restplus.Api()
 
