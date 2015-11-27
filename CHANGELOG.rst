@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.8.1 (2015-11-27)
+------------------
 
 - Refactor Swagger UI handling:
     - allow to register a custom view with ``@api.documentation``
