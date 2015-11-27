@@ -39,6 +39,11 @@ class ParseMaskMixin(object):
         ]
         self.assertEqual(parsed, expected)
 
+    def test_star(self):
+        parsed = mask.parse('nested{field1,field2},*')
+        expected = [mask.Nested('nested', ['field1', 'field2']), '*']
+        self.assertEqual(parsed, expected)
+
     def test_missing_closing_bracket(self):
         with self.assertRaises(mask.ParseError):
             mask.parse('nested{')
@@ -120,6 +125,15 @@ class ApplyMaskTest(TestCase):
         result = mask.apply(data, '{integer, string}')
         self.assertEqual(result, {'integer': 42, 'string': 'a string'})
 
+    def test_star_only(self):
+        data = {
+            'integer': 42,
+            'string': 'a string',
+            'boolean': True,
+        }
+        result = mask.apply(data, '*')
+        self.assertEqual(result, data)
+
     def test_with_objects(self):
         data = DObject({
             'integer': 42,
@@ -166,6 +180,18 @@ class ApplyMaskTest(TestCase):
         }
         result = mask.apply(data, '{nested{integer}}')
         self.assertEqual(result, {'nested': {'integer': 42}})
+
+    def test_nested_with_start(self):
+        data = {
+            'nested': {
+                'integer': 42,
+                'string': 'a string',
+                'boolean': True,
+            },
+            'other': 'value',
+        }
+        result = mask.apply(data, '{nested{integer},*}')
+        self.assertEqual(result, {'nested': {'integer': 42}, 'other': 'value'})
 
     def test_nested_fields_when_none(self):
         data = {'nested': None}

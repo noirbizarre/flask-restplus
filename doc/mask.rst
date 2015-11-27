@@ -40,6 +40,19 @@ Nesting specification works with nested object or list of objects:
     # in the pets list.
     mask = '{name, age, pets{name}}'
 
+There is a special star token meaning "all remaining fields".
+It allows to only specify nested filtering:
+
+.. code-block:: python
+
+    # Will apply the mask {name} to each pet
+    # in the pets list and take all other root fields
+    # without filtering.
+    mask = '{pets{name},*}'
+
+    # Will not filter anything
+    mask = '*'
+
 
 Usage
 -----

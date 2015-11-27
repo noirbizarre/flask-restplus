@@ -15,7 +15,7 @@ from . import fields
 
 log = logging.getLogger(__name__)
 
-LEXER = re.compile(r'\{|\}|\,|[\w_]+')
+LEXER = re.compile(r'\{|\}|\,|[\w_\*]+')
 
 
 class ParseError(ValueError):
@@ -111,7 +111,11 @@ def apply(data, mask, skip=False):
         data = data.__dict__
 
     out = {}
+    star = False
     for field in parsed_fields:
+        if field == '*':
+            star = True
+            continue
         if skip and field not in data:
             continue
         elif isinstance(field, Nested):
@@ -122,4 +126,9 @@ def apply(data, mask, skip=False):
                 out[field.name] = apply(nested, field.fields, skip=skip)
         else:
             out[field] = data.get(field, None)
+
+    if star:
+        for key, value in data.items():
+            if key not in out:
+                out[key] = value
     return out
