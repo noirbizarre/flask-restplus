@@ -72,7 +72,7 @@ def extract_path_params(path):
     '''
     Extract Flask-style parameters from an URL pattern as Swagger ones.
     '''
-    params = {}
+    params = OrderedDict()
     for match in RE_PARAMS.findall(path):
         descriptor, name = match.split(':') if ':' in match else (None, match)
         param = {
@@ -93,7 +93,7 @@ def extract_path_params(path):
 
 def parser_to_params(parser):
     '''Extract Swagger parameters from a RequestParser'''
-    params = {}
+    params = OrderedDict()
     locations = set()
     for arg in parser.args:
         if arg.location == 'cookie':
@@ -217,16 +217,16 @@ class Swagger(object):
         doc['name'] = resource.__name__
         doc['params'] = self.merge_params(extract_path_params(url), doc)
         for method in [m.lower() for m in resource.methods or []]:
-            method_doc = doc.get(method, {})
+            method_doc = doc.get(method, OrderedDict())
             method_impl = getattr(resource, method)
             if hasattr(method_impl, 'im_func'):
                 method_impl = method_impl.im_func
             elif hasattr(method_impl, '__func__'):
                 method_impl = method_impl.__func__
-            method_doc = merge(method_doc, getattr(method_impl, '__apidoc__', {}))
+            method_doc = merge(method_doc, getattr(method_impl, '__apidoc__', OrderedDict()))
             if method_doc is not False:
                 method_doc['docstring'] = getattr(method_impl, '__doc__')
-                method_doc['params'] = self.merge_params({}, method_doc)
+                method_doc['params'] = self.merge_params(OrderedDict(), method_doc)
             doc[method] = method_doc
         return doc
 
