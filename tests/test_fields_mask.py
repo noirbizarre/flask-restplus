@@ -470,6 +470,25 @@ class MaskAPI(TestCase):
             'name': 'John Doe',
         })
 
+    def test_raise_400_on_invalid_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                pass
+
+        with self.app.test_client() as client:
+            response = client.get('/test/', headers={'X-Fields': 'name{,missing}'})
+            self.assertEqual(response.status_code, 400)
+            self.assertEquals(response.content_type, 'application/json')
+
 
 class SwaggerMaskHeaderTest(TestCase):
     def test_marshal_with_expose_mask_header(self):

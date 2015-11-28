@@ -16,6 +16,7 @@ from werkzeug.exceptions import HTTPException
 from . import apidoc
 from .marshalling import marshal, marshal_with
 from .model import ApiModel
+from .mask import ParseError
 from .namespace import ApiNamespace
 from .postman import PostmanCollectionV1
 from .resource import Resource
@@ -127,7 +128,9 @@ class Api(restful.Api):
         self._default_error_handler = None
         self.tags = tags or []
 
-        self._error_handlers = {}
+        self._error_handlers = {
+            ParseError: mask_error_handler
+        }
         self._schema = None
         self.models = {}
         self._refresolver = None
@@ -484,6 +487,10 @@ class SwaggerView(Resource):
 
     def mediatypes(self):
         return ['application/json']
+
+
+def mask_error_handler(error):
+    return {'message': 'Mask parse error: {0}'.format(error)}, 400
 
 
 def unshortcut_params_description(data):
