@@ -200,7 +200,7 @@ class Api(restful.Api):
         if self._add_specs:
             self._register_view(
                 app_or_blueprint,
-                self.swagger_view(),
+                SwaggerView,
                 '/swagger.json',
                 endpoint=str('specs'),
                 resource_class_args=(self, )
@@ -215,15 +215,6 @@ class Api(restful.Api):
     def documentation(self, func):
         self._doc_view = func
         return func
-
-    def swagger_view(self):
-        class SwaggerView(Resource):
-            def get(self):
-                return self.api.__schema__
-
-            def mediatypes(self):
-                return ['application/json']
-        return SwaggerView
 
     def render_root(self):
         self.abort(404)
@@ -485,6 +476,14 @@ class Api(restful.Api):
         if not self._refresolver:
             self._refresolver = RefResolver.from_schema(self.__schema__)
         return self._refresolver
+
+
+class SwaggerView(Resource):
+    def get(self):
+        return self.api.__schema__
+
+    def mediatypes(self):
+        return ['application/json']
 
 
 def unshortcut_params_description(data):
