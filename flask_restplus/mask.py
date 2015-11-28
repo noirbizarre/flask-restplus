@@ -116,14 +116,16 @@ def apply(data, mask, skip=False):
         if field == '*':
             star = True
             continue
-        if skip and field not in data:
-            continue
         elif isinstance(field, Nested):
             nested = data.get(field.name, None)
-            if nested is None:
+            if skip and nested is None:
+                continue
+            elif nested is None:
                 out[field.name] = None
             else:
                 out[field.name] = apply(nested, field.fields, skip=skip)
+        elif skip and field not in data:
+            continue
         else:
             out[field] = data.get(field, None)
 

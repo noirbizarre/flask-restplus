@@ -264,6 +264,10 @@ class ApplyMaskTest(TestCase):
         result = mask.apply({}, '{integer}', skip=True)
         self.assertEqual(result, {})
 
+    def test_missing_nested_field_skipped(self):
+        result = mask.apply({}, 'nested{integer}', skip=True)
+        self.assertEqual(result, {})
+
 
 class MaskAPI(TestCase):
     def test_marshal_with_honour_field_mask(self):
