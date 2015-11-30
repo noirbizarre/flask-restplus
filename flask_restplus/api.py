@@ -21,7 +21,7 @@ from .namespace import ApiNamespace
 from .postman import PostmanCollectionV1
 from .resource import Resource
 from .swagger import Swagger
-from .utils import merge, default_id
+from .utils import merge, default_id, camel_to_dash
 from .reqparse import RequestParser
 
 
@@ -230,11 +230,35 @@ class Api(restful.Api):
             self.abort(404)
         return apidoc.ui_for(self)
 
+    def default_endpoint(self, resource, namespace=None):
+        '''
+        Provide a default endpoint for a resource on a given namespace.
+
+        Endpoints are ensured not to collide.
+        '''
+        endpoint = camel_to_dash(resource.__name__)
+        namespace = namespace or self.default_namespace
+        if namespace is not self.default_namespace:
+            endpoint = '{ns.name}_{endpoint}'.format(ns=namespace, endpoint=endpoint)
+        if endpoint in namespace.resources:
+            suffix = 2
+            while True:
+                new_endpoint = '{base}_{suffix}'.format(base=endpoint, suffix=suffix)
+                if new_endpoint not in namespace.resources:
+                    endpoint = new_endpoint
+                    break
+                suffix += 1
+        return endpoint
+
     def add_resource(self, resource, *urls, **kwargs):
         '''Register a Swagger API declaration for a given API Namespace'''
-        kwargs['endpoint'] = str(kwargs.pop('endpoint', None) or resource.__name__.lower())
-        if kwargs.pop('doc', True) and not kwargs.pop('namespace', None):
-            self.default_namespace.resources.append((resource, urls, kwargs))
+        namespace = kwargs.pop('namespace', None)
+        if kwargs.pop('doc', True) and not namespace:
+            return self.default_namespace.add_resource(resource, *urls, **kwargs)
+
+        endpoint = kwargs.pop('endpoint', None)
+        endpoint = str(endpoint or self.default_endpoint(resource, namespace))
+        kwargs['endpoint'] = endpoint
 
         args = kwargs.pop('resource_class_args', [])
         if isinstance(args, tuple):
@@ -243,6 +267,7 @@ class Api(restful.Api):
         kwargs['resource_class_args'] = args
 
         super(Api, self).add_resource(resource, *urls, **kwargs)
+        return endpoint
 
     def add_namespace(self, ns):
         if ns not in self.namespaces:

@@ -8,12 +8,13 @@ class ApiNamespace(object):
         self.name = name
         self.path = path or ('/' + name)
         self.description = description
-        self.resources = []
+        self.resources = {}
         self.models = []
 
     def add_resource(self, resource, *urls, **kwargs):
-        self.resources.append((resource, urls, kwargs))
-        self.api.add_resource(resource, *urls, namespace=self, **kwargs)
+        endpoint = self.api.add_resource(resource, *urls, namespace=self, **kwargs)
+        self.resources[endpoint] = (resource, urls, kwargs)
+        return endpoint
 
     def route(self, *urls, **kwargs):
         def wrapper(cls):
