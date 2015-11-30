@@ -259,3 +259,18 @@ class PayloadTestCase(TestCase):
         response = self.post('/validation/', data)
 
         self.assert_errors(response, 'name')
+
+    def test_empty_payload(self):
+        api = restplus.Api(self.app, validate=True)
+
+        @api.route('/empty/')
+        class Payload(restplus.Resource):
+            def post(self):
+
+                return {}
+
+        with self.app.test_client() as client:
+            response = client.post('/empty/', data='',
+                                  headers={'content-type': 'application/json'})
+
+            self.assertEquals(response.status_code, 200)
