@@ -462,6 +462,9 @@ class Api(restful.Api):
             result = self._default_error_handler(e)
             e = HTTPException(str(e))
             e.data, e.code = result if len(result) == 2 else (result, 500)
+        elif not isinstance(e, HTTPException):
+            e = HTTPException(str(e))
+            e.code = 500
         return super(Api, self).handle_error(e)
 
     def response(self, code, description, model=None, **kwargs):

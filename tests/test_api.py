@@ -122,7 +122,7 @@ class APITestCase(TestCase):
             data = json.loads(response.data.decode('utf8'))
             self.assertIn('message', data)
 
-    def test_errorhandler(self):
+    def test_errorhandler_for_custom_exception(self):
         api = restplus.Api(self.app)
 
         class CustomException(RuntimeError):
@@ -149,6 +149,42 @@ class APITestCase(TestCase):
             })
 
     def test_default_errorhandler(self):
+        api = restplus.Api(self.app)
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise Exception('error')
+
+        with self.app.test_client() as client:
+            response = client.get('/test/')
+            self.assertEquals(response.status_code, 500)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertIn('message', data)
+
+    def test_default_errorhandler_with_propagate_true(self):
+        blueprint = Blueprint('api', __name__, url_prefix='/api')
+        api = restplus.Api(blueprint)
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise Exception('error')
+
+        self.app.register_blueprint(blueprint)
+
+        self.app.config['PROPAGATE_EXCEPTIONS'] = True
+        with self.app.test_client() as client:
+            response = client.get('/api/test/')
+            self.assertEquals(response.status_code, 500)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertIn('message', data)
+
+    def test_custom_default_errorhandler(self):
         api = restplus.Api(self.app)
 
         @api.route('/test/', endpoint='test')

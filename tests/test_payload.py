@@ -237,3 +237,25 @@ class PayloadTestCase(TestCase):
         })
 
         self.assert_errors(response, 'members.0.age', 'members.1.name')
+
+    def test_validation_with_propagate(self):
+        self.app.config['PROPAGATE_EXCEPTIONS'] = True
+        api = restplus.Api(self.app, validate=True)
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String(required=True),
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/validation/')
+        class ValidationOff(restplus.Resource):
+            @api.expect(fields)
+            def post(self):
+                return {}
+
+        data = {}
+
+        response = self.post('/validation/', data)
+
+        self.assert_errors(response, 'name')
