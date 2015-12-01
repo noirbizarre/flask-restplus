@@ -11,7 +11,7 @@ RE_REQUIREMENT = re.compile(r'^\s*-r\s*(?P<filename>.*)$')
 
 PYPI_RST_FILTERS = (
     # Replace code-blocks
-    (r'\.\.\s? code-block::\s*(\w|\+)+',  '::'),
+    (r'\.\.\s? code-block::\s*(\w|\+)+', '::'),
     # Remove all badges
     (r'\.\. image:: .*', ''),
     (r'    :target: .*', ''),
@@ -41,7 +41,7 @@ long_description = '\n'.join((
 
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
-tests_require = ['nose', 'rednose']
+tests_require = ['nose', 'rednose', 'blinker']
 install_requires = ['flask-restful >= 0.3.2', 'jsonschema']
 dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke']
 
