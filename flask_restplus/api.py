@@ -2,16 +2,23 @@
 from __future__ import unicode_literals
 
 import copy
+import difflib
 import inspect
+import re
 import six
+import sys
 
-from flask import url_for, request
+from flask import url_for, request, current_app
+from flask.signals import got_request_exception
+
 from flask.ext import restful
 
 from jsonschema import RefResolver
 
 from werkzeug import cached_property
+from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException
+from werkzeug.http import HTTP_STATUS_CODES
 
 from . import apidoc
 from .marshalling import marshal, marshal_with
@@ -23,6 +30,8 @@ from .resource import Resource
 from .swagger import Swagger
 from .utils import merge, default_id, camel_to_dash
 from .reqparse import RequestParser
+
+RE_RULES = re.compile('(<.*>)')
 
 
 class Api(restful.Api):
@@ -453,19 +462,81 @@ class Api(restful.Api):
             return exception
 
     def handle_error(self, e):
-        if e.__class__ in self._error_handlers:
+        '''
+        Error handler for the API transforms a raised exception into a Flask response,
+        with the appropriate HTTP status code and body.
+
+        :param e: the raised Exception object
+        :type e: Exception
+
+        '''
+        got_request_exception.send(current_app._get_current_object(), exception=e)
+
+        headers = Headers()
+        if isinstance(e, HTTPException):
+            code = e.code
+            default_data = {
+                'message': getattr(e, 'description', HTTP_STATUS_CODES.get(code, ''))
+            }
+            headers = e.get_response().headers
+        elif e.__class__ in self._error_handlers:
             handler = self._error_handlers[e.__class__]
             result = handler(e)
-            e = HTTPException(str(e))
-            e.data, e.code = result if len(result) == 2 else (result, 500)
+            default_data, code = result if len(result) == 2 else (result, 500)
         elif self._default_error_handler:
             result = self._default_error_handler(e)
-            e = HTTPException(str(e))
-            e.data, e.code = result if len(result) == 2 else (result, 500)
-        elif not isinstance(e, HTTPException):
-            e = HTTPException(str(e))
-            e.code = 500
-        return super(Api, self).handle_error(e)
+            default_data, code = result if len(result) == 2 else (result, 500)
+        else:
+            code = 500
+            default_data = {
+                'message': HTTP_STATUS_CODES.get(code, str(e)),
+            }
+
+        default_data['message'] = default_data.get('message', str(e))
+        data = getattr(e, 'data', default_data)
+        fallback_mediatype = None
+
+        if code >= 500:
+            exc_info = sys.exc_info()
+            if exc_info[1] is None:
+                exc_info = None
+            current_app.log_exception(exc_info)
+
+        elif code == 404 and current_app.config.get("ERROR_404_HELP", True):
+            data['message'] = self._help_on_404(data.get('message', None))
+
+        elif code == 405:
+            headers['Allow'] = ', '.join(e.valid_methods)
+
+        elif code == 406 and self.default_mediatype is None:
+            # if we are handling NotAcceptable (406), make sure that
+            # make_response uses a representation we support as the
+            # default mediatype (so that make_response doesn't throw
+            # another NotAcceptable error).
+            supported_mediatypes = list(self.representations.keys())
+            fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else "text/plain"
+
+        resp = self.make_response(data, code, headers, fallback_mediatype=fallback_mediatype)
+
+        if code == 401:
+            resp = self.unauthorized(resp)
+        return resp
+
+    def _help_on_404(self, message=None):
+        rules = dict([(RE_RULES.sub('', rule.rule), rule.rule)
+                      for rule in current_app.url_map.iter_rules()])
+        close_matches = difflib.get_close_matches(request.path, rules.keys())
+        if close_matches:
+            # If we already have a message, add punctuation and continue it.
+            message = ''.join((
+                (message.rstrip('.') + '. ') if message else '',
+                'You have requested this URI [',
+                request.path,
+                '] but did you mean ',
+                ' or '.join((rules[match] for match in close_matches)),
+                ' ?',
+            ))
+        return message
 
     def response(self, code, description, model=None, **kwargs):
         '''Specify one of the expected responses'''

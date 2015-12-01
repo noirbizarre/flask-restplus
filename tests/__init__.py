@@ -7,9 +7,18 @@ try:
 except ImportError:
     import unittest
 
+try:
+    from mock import Mock
+except:
+    # python3
+    from unittest.mock import Mock
+
 from contextlib import contextmanager
 
 from flask import Flask
+
+
+skipIf = unittest.skipIf
 
 
 class TestCase(unittest.TestCase):
