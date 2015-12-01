@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.8.2 (2015-12-01)
+------------------
 
 - Skip unknown fields in mask when applied on a model
 - Added `*` token to fields mask (all remaining fields)
