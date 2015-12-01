@@ -14,8 +14,8 @@ PYPI_RST_FILTERS = (
     (r'\.\.\s? code-block::\s*(\w|\+)+', '::'),
     # Remove all badges
     (r'\.\. image:: .*', ''),
-    (r'    :target: .*', ''),
-    (r'    :alt: .*', ''),
+    (r'\s+:target: .*', ''),
+    (r'\s+:alt: .*', ''),
 )
 
 
