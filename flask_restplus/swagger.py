@@ -182,9 +182,10 @@ class Swagger(object):
             'security': self.security_requirements(self.api.security) or None,
             'tags': tags,
             'definitions': self.serialize_definitions() or None,
-            'host': current_app.config.get('SERVER_NAME', None) or None,
+            'host': self.api.host_url,
         }
         return not_none(specs)
+
 
     def extract_tags(self, api):
         tags = []

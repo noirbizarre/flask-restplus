@@ -118,7 +118,7 @@ class Api(restful.Api):
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
-            tags=None, **kwargs):
+            tags=None, host_url=None, **kwargs):
         self.version = version
         self.title = title or 'API'
         self.description = description
@@ -136,6 +136,7 @@ class Api(restful.Api):
         self._doc_view = None
         self._default_error_handler = None
         self.tags = tags or []
+        self._host_url = host_url
 
         self._error_handlers = {
             ParseError: mask_error_handler
@@ -321,6 +322,12 @@ class Api(restful.Api):
     @property
     def base_url(self):
         return url_for(self.endpoint('root'), _external=True)
+
+    @property
+    def host_url(self):
+        if self._host_url:
+            return self._host_url
+        return current_app.config.get('SERVER_NAME', None) or None
 
     @property
     def base_path(self):

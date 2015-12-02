@@ -138,6 +138,13 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs('')
         self.assertEqual(data['host'], 'api.restplus.org')
 
+    def test_specs_endpoint_with_provided_host_url(self):
+        self.app.config['SERVER_NAME'] = 'api.restplus.org'
+        restplus.Api(self.app, host_url='test.restplus.org')
+
+        data = self.get_specs('')
+        self.assertEqual(data['host'], 'test.restplus.org')
+
     def test_specs_endpoint_tags_short(self):
         restplus.Api(self.app, tags=['tag-1', 'tag-2', 'tag-3'])
 
