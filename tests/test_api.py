@@ -229,3 +229,24 @@ class APITestCase(TestCase):
         with self.context():
             self.assertEqual(url_for('api.ns_test_resource'), '/api/ns/test/')
             self.assertEqual(url_for('api.ns_test_resource_2'), '/api/ns/test2/')
+
+    def test_host_url_returns_configured_value_when_set(self):
+        blueprint = Blueprint('api', __name__, subdomain="api")
+        self.app.config["SERVER_NAME"] = "example.com:5000"
+        api = restplus.Api(blueprint, host_url="test.example.com:5000")
+        self.assertEqual(api.host_url, "test.example.com:5000")
+
+    def test_host_url_returns_server_name_when_no_host_url_is_set(self):
+        blueprint = Blueprint('api', __name__, subdomain="api")
+        self.app.config["SERVER_NAME"] = "example.com:5000"
+        self.app.register_blueprint(blueprint)
+        api = restplus.Api(blueprint)
+        with self.context():
+            self.assertEqual(api.host_url, "example.com:5000")
+
+    def test_host_url_returns_None_when_no_host_url_is_set_server_name_is_not_set(self):
+        blueprint = Blueprint('api', __name__, subdomain="api")
+        self.app.register_blueprint(blueprint)
+        api = restplus.Api(blueprint)
+        with self.context():
+            self.assertIsNone(api.host_url)
