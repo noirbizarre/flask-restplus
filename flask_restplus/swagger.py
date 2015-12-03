@@ -5,14 +5,11 @@ import re
 
 from inspect import isclass
 from collections import Hashable
-try:
-    from collections import OrderedDict  # noqa
-except ImportError:
-    from ordereddict import OrderedDict  # noqa
 from six import string_types, itervalues, iteritems, iterkeys
 
 from flask import current_app
 
+from ._compat import OrderedDict
 
 from . import fields
 from .exceptions import SpecsError

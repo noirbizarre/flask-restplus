@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 from functools import wraps
 
 from flask import request, current_app, has_app_context
 
 from flask_restful import unpack  # Not imported yet
+
+from ._compat import OrderedDict
 
 from .mask import apply as apply_mask
 

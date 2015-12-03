@@ -6,11 +6,8 @@ import re
 import six
 
 from collections import namedtuple
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 
+from ._compat import OrderedDict
 from . import fields
 
 log = logging.getLogger(__name__)
