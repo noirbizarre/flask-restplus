@@ -97,7 +97,7 @@ def apply(data, mask, skip=False):
     # Should handle fields.Nested
     elif isinstance(data, fields.Nested):
         data = data.clone()
-        data.nested = apply(data.nested, parsed_fields, skip=skip)
+        data.model = apply(data.model, parsed_fields, skip=skip)
         return data
     # Should handle fields.List
     elif isinstance(data, fields.List):

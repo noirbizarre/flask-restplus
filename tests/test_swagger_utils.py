@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
 from flask import Flask
 from werkzeug.datastructures import FileStorage
 
@@ -15,7 +10,7 @@ from flask_restplus.swagger import extract_path, extract_path_params, parser_to_
 from . import TestCase
 
 
-class ExtractPathTestCase(unittest.TestCase):
+class ExtractPathTestCase(TestCase):
     def test_extract_static_path(self):
         path = '/test'
         self.assertEqual(extract_path(path), '/test')
@@ -110,7 +105,7 @@ class ExtractPathParamsTestCase(TestCase):
 
 
 
-class ParserToParamsTestCase(unittest.TestCase):
+class ParserToParamsTestCase(TestCase):
     def test_empty_parser(self):
         parser = reqparse.RequestParser()
         self.assertEqual(parser_to_params(parser), {})

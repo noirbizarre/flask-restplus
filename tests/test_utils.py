@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
 from flask.ext.restplus import utils
 
+from . import TestCase
 
-class MergeTestCase(unittest.TestCase):
+
+class MergeTestCase(TestCase):
     def test_merge_simple_dicts_without_precedence(self):
         a = {'a': 'value'}
         b = {'b': 'other value'}
@@ -76,7 +73,7 @@ class MergeTestCase(unittest.TestCase):
         self.assertEqual(utils.merge(a, b), b)
 
 
-class CamelToDashTestCase(unittest.TestCase):
+class CamelToDashTestCase(TestCase):
     def test_no_transform(self):
         self.assertEqual(utils.camel_to_dash('test'), 'test')
 

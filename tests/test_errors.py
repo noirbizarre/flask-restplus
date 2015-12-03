@@ -4,14 +4,14 @@ from __future__ import unicode_literals
 import json
 
 from flask import Blueprint, abort
-from flask.signals import got_request_exception, signals_available
+from flask.signals import got_request_exception
 
 from werkzeug.exceptions import HTTPException, BadRequest, NotFound
 from werkzeug.http import quote_etag, unquote_etag
 
 from flask.ext import restplus
 
-from . import TestCase, Mock, skipIf
+from . import TestCase, Mock
 
 
 class APITestCase(TestCase):
@@ -242,7 +242,6 @@ class APITestCase(TestCase):
             response = client.get("/foo")
             self.assertEquals(response.headers['Content-Type'], api.default_mediatype)
 
-    @skipIf(not signals_available, "Can't test signals without signal support")
     def test_handle_error_signal(self):
         api = restplus.Api(self.app)
 

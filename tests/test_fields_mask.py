@@ -212,7 +212,6 @@ class ApplyMaskTest(TestCase):
         }
         expected = {'father': {'name': 'John'}, 'mother': {'age': 42}}
 
-        print result
         self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
         # Should leave th original mask untouched
         self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)

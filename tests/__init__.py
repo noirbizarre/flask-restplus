@@ -18,9 +18,6 @@ from contextlib import contextmanager
 from flask import Flask
 
 
-skipIf = unittest.skipIf
-
-
 class TestCase(unittest.TestCase):
     '''An helper mixin for common operations'''
     def setUp(self):
@@ -54,8 +51,8 @@ class TestCase(unittest.TestCase):
         with self.app.test_client() as client:
             response = client.get(url, headers=headers or {})
 
-        self.assertEquals(response.status_code, status)
-        self.assertEquals(response.content_type, 'application/json')
+        self.assertEqual(response.status_code, status)
+        self.assertEqual(response.content_type, 'application/json')
         return json.loads(response.data.decode('utf8'))
 
     def get_specs(self, prefix='', status=200):

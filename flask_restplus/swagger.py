@@ -392,10 +392,10 @@ class Swagger(object):
             self.register_model(model)
             return ref(model)
 
-        elif isclass(model) and issubclass(model, fields.BaseField):
+        elif isclass(model) and issubclass(model, fields.Raw):
             return self.serialize_schema(model())
 
-        elif isinstance(model, fields.BaseField):
+        elif isinstance(model, fields.Raw):
             return model.__schema__
 
         elif isinstance(model, (type, type(None))) and model in PY_TYPES:

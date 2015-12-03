@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# flake8: noqa
 from __future__ import unicode_literals
 
 import re
@@ -41,7 +42,7 @@ long_description = '\n'.join((
 
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
-tests_require = ['nose', 'rednose', 'blinker']
+tests_require = ['nose', 'rednose', 'blinker', 'pytz']
 install_requires = ['flask-restful >= 0.3.2', 'jsonschema']
 dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke']
 

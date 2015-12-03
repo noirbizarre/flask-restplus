@@ -6,4 +6,8 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
-    
+
+try:
+    from urlparse import urlparse, urlunparse
+except ImportError:
+    from urllib.parse import urlparse, urlunparse
