@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
 
-from flask.ext.restplus import mask, Api, Resource, fields
+from flask_restplus import mask, Api, Resource, fields, marshal
 
 from . import TestCase
 
@@ -90,11 +92,9 @@ person_fields = {
     'age': fields.Integer
 }
 
-family_fields = {
-    'father': fields.Nested(person_fields),
-    'mother': fields.Nested(person_fields),
-    'children': fields.List(fields.Nested(person_fields))
-}
+
+def ordered_to_dict(o):
+    return json.loads(json.dumps(o))
 
 
 class ApplyMaskTest(TestCase):
@@ -198,14 +198,132 @@ class ApplyMaskTest(TestCase):
         result = mask.apply(data, '{nested{integer}}')
         self.assertEqual(result, {'nested': None})
 
+    def test_raw_api_fields(self):
+        family_fields = {
+            'father': fields.Raw,
+            'mother': fields.Raw,
+        }
+
+        result = mask.apply(family_fields, 'father{name},mother{age}')
+
+        data = {
+            'father': {'name': 'John', 'age': 42},
+            'mother': {'name': 'Jane', 'age': 42},
+        }
+        expected = {'father': {'name': 'John'}, 'mother': {'age': 42}}
+
+        print result
+        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        # Should leave th original mask untouched
+        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+
     def test_nested_api_fields(self):
-        result = mask.apply(family_fields, 'father{name},children{age}')
-        self.assertEqual(set(result.keys()), set(['father', 'children']))
+        family_fields = {
+            'father': fields.Nested(person_fields),
+            'mother': fields.Nested(person_fields),
+        }
+
+        result = mask.apply(family_fields, 'father{name},mother{age}')
+        self.assertEqual(set(result.keys()), set(['father', 'mother']))
         self.assertIsInstance(result['father'], fields.Nested)
         self.assertEqual(set(result['father'].nested.keys()), set(['name']))
-        self.assertIsInstance(result['children'], fields.List)
-        self.assertIsInstance(result['children'].container, fields.Nested)
-        self.assertEqual(set(result['children'].container.nested.keys()), set(['age']))
+        self.assertIsInstance(result['mother'], fields.Nested)
+        self.assertEqual(set(result['mother'].nested.keys()), set(['age']))
+
+        data = {
+            'father': {'name': 'John', 'age': 42},
+            'mother': {'name': 'Jane', 'age': 42},
+        }
+        expected = {'father': {'name': 'John'}, 'mother': {'age': 42}}
+
+        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        # Should leave th original mask untouched
+        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+
+    def test_multiple_nested_api_fields(self):
+        level_2 = {'nested_2': fields.Nested(person_fields)}
+        level_1 = {'nested_1': fields.Nested(level_2)}
+        root = {'nested': fields.Nested(level_1)}
+
+        result = mask.apply(root, 'nested{nested_1{nested_2{name}}}')
+        self.assertEqual(set(result.keys()), set(['nested']))
+        self.assertIsInstance(result['nested'], fields.Nested)
+        self.assertEqual(set(result['nested'].nested.keys()), set(['nested_1']))
+
+        data = {
+            'nested': {
+                'nested_1': {
+                    'nested_2': {'name': 'John', 'age': 42}
+                }
+            }
+        }
+        expected = {
+            'nested': {
+                'nested_1': {
+                    'nested_2': {'name': 'John'}
+                }
+            }
+        }
+
+        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        # Should leave th original mask untouched
+        self.assertEqual(ordered_to_dict(marshal(data, root)), data)
+
+    def test_list_fields_with_simple_field(self):
+        family_fields = {
+            'name': fields.String,
+            'members': fields.List(fields.String)
+        }
+
+        result = mask.apply(family_fields, 'members')
+        self.assertEqual(set(result.keys()), set(['members']))
+        self.assertIsInstance(result['members'], fields.List)
+        self.assertIsInstance(result['members'].container, fields.String)
+
+        data = {'name': 'Doe', 'members': ['John', 'Jane']}
+        expected = {'members': ['John', 'Jane']}
+
+        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        # Should leave th original mask untouched
+        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+
+    def test_list_fields_with_nested(self):
+        family_fields = {
+            'members': fields.List(fields.Nested(person_fields))
+        }
+
+        result = mask.apply(family_fields, 'members{name}')
+        self.assertEqual(set(result.keys()), set(['members']))
+        self.assertIsInstance(result['members'], fields.List)
+        self.assertIsInstance(result['members'].container, fields.Nested)
+        self.assertEqual(set(result['members'].container.nested.keys()), set(['name']))
+
+        data = {'members': [
+            {'name': 'John', 'age': 42},
+            {'name': 'Jane', 'age': 42},
+        ]}
+        expected = {'members': [{'name': 'John'}, {'name': 'Jane'}]}
+
+        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        # Should leave th original mask untouched
+        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+
+    def test_list_fields_with_raw(self):
+        family_fields = {
+            'members': fields.List(fields.Raw)
+        }
+
+        result = mask.apply(family_fields, 'members{name}')
+
+        data = {'members': [
+            {'name': 'John', 'age': 42},
+            {'name': 'Jane', 'age': 42},
+        ]}
+        expected = {'members': [{'name': 'John'}, {'name': 'Jane'}]}
+
+        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        # Should leave th original mask untouched
+        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
 
     def test_list(self):
         data = [{

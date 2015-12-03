@@ -128,6 +128,14 @@ class DateTime(MinMaxMixin, BaseField, base_fields.DateTime):
 class Raw(BaseField, base_fields.Raw):
     __schema_type__ = 'object'
 
+    def __init__(self, *args, **kwargs):
+        self.mask = kwargs.pop('mask', None)
+        super(Raw, self).__init__(*args, **kwargs)
+
+    def output(self, key, obj):
+        data = super(Raw, self).output(key, obj)
+        return self.mask(data) if self.mask else data
+
 
 class Nested(BaseField, base_fields.Nested):
     __schema_type__ = None
@@ -151,6 +159,12 @@ class Nested(BaseField, base_fields.Nested):
 
         return schema
 
+    def clone(self):
+        kwargs = self.__dict__.copy()
+        kwargs.pop('nested')
+        args = [kwargs.pop('model').copy()]
+        return Nested(*args, **kwargs)
+
 
 class List(BaseField, base_fields.List):
     def __init__(self, *args, **kwargs):
@@ -165,6 +179,12 @@ class List(BaseField, base_fields.List):
         schema['type'] = 'array'
         schema['items'] = self.container.__schema__
         return schema
+
+    def clone(self):
+        kwargs = self.__dict__.copy()
+        cls = kwargs.pop('container')
+        # args = [kwargs.pop('model').copy()]
+        return List(cls, **kwargs)
 
 
 class Url(StringMixin, BaseField, base_fields.Url):

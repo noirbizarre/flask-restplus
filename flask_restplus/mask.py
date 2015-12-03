@@ -96,12 +96,18 @@ def apply(data, mask, skip=False):
         return [apply(d, parsed_fields, skip=skip) for d in data]
     # Should handle fields.Nested
     elif isinstance(data, fields.Nested):
+        data = data.clone()
         data.nested = apply(data.nested, parsed_fields, skip=skip)
         return data
     # Should handle fields.List
     elif isinstance(data, fields.List):
+        data = data.clone()
         data.container = apply(data.container, parsed_fields, skip=skip)
         return data
+    elif type(data) == fields.Raw:
+        return fields.Raw(default=data.default, attribute=data.attribute, mask=lambda d: apply(d, parsed_fields, skip))
+    elif data == fields.Raw:
+        return fields.Raw(mask=lambda d: apply(d, parsed_fields, skip))
     # Should handle objects
     elif (not isinstance(data, (dict, OrderedDict))
             and hasattr(data, '__dict__')):
