@@ -12,9 +12,7 @@ from flask_restplus import fields, Api
 
 from flask_restplus._compat import OrderedDict
 
-from nose.tools import assert_equal, assert_raises, assert_in, assert_not_in, assert_is_none
-
-from . import Mock
+from . import Mock, assert_equal, assert_raises, assert_in, assert_not_in, assert_is_none
 
 
 class FieldTestCase(object):

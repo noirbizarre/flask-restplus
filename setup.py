@@ -42,8 +42,8 @@ long_description = '\n'.join((
 
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
-tests_require = ['nose', 'rednose', 'blinker', 'pytz']
-install_requires = ['flask-restful >= 0.3.2', 'jsonschema']
+tests_require = ['nose', 'rednose', 'blinker']
+install_requires = ['flask-restful >= 0.3.2', 'jsonschema', 'pytz', 'aniso8601>=0.82']
 dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke']
 
 
@@ -90,6 +90,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: MIT License',
