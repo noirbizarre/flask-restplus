@@ -6,6 +6,7 @@ Current
 
 - Drop/merge flask-restful fields
 - Drop/merge flask-restplus inputs
+- Update Swagger-UI to version 2.1.3
 
 0.8.2 (2015-12-01)
 ------------------
