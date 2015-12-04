@@ -1,38 +1,78 @@
 API
 ===
 
-:mod:`flask.ext.restplus`
--------------------------
+.. currentmodule:: flask_restplus
 
-.. automodule:: flask_restplus
+Core
+----
+
+.. autoclass:: Api
     :members:
+    :inherited-members:
 
 
-:mod:`flask.ext.restplus.fields`
---------------------------------
+.. autoclass:: Resource
+    :members:
+    :inherited-members:
+
+
+
+Models
+------
 
 All fields accept a ``required`` boolean and a ``description`` string in ``kwargs``.
+
 
 .. automodule:: flask_restplus.fields
     :members:
 
 
-:mod:`flask.ext.restplus.reqparse`
-----------------------------------
+Serialization
+-------------
+.. currentmodule:: flask_restplus
+
+.. autofunction:: marshal
+
+.. autofunction:: marshal_with
+
+.. autofunction:: marshal_with_field
+
+.. autofunction:: flask_restplus.mask.parse
+
+.. autofunction:: flask_restplus.mask.apply
+
+
+Inputs
+------
 
 .. automodule:: flask_restplus.reqparse
     :members:
-
-
-:mod:`flask.ext.restplus.inputs`
---------------------------------
 
 .. automodule:: flask_restplus.inputs
     :members:
 
 
-:mod:`flask.ext.restplus.mask`
-------------------------------
+Errors
+------
 
-.. automodule:: flask_restplus.mask
+.. automodule:: flask_restplus.exceptions
     :members:
+
+.. autoexception:: flask_restplus.fields.MarshallingException
+
+.. autoexception:: flask_restplus.mask.ParseError
+
+
+Internals
+---------
+
+These are internal classes or helpers.
+Most of the time you shouldn't have to deal directly with them.
+
+.. autoclass:: flask_restplus.namespace.ApiNamespace
+
+.. autoclass:: flask_restplus.model.ApiModel
+
+.. autoclass:: flask_restplus.swagger.Swagger
+
+.. autoclass:: flask_restplus.postman.PostmanCollectionV1

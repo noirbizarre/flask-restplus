@@ -133,11 +133,20 @@ def _handle_arg_type(arg, param):
 
 
 class Swagger(object):
+    '''
+    A Swagger documentation wrapper for an API instance.
+    '''
     def __init__(self, api):
         self.api = api
         self._registered_models = {}
 
     def as_dict(self):
+        '''
+        Output the specification as a serializable ``dict``.
+
+        :returns: the full Swagger specification in a serializable format
+        :rtype: dict
+        '''
         basepath = self.api.base_path
         if len(basepath) > 1 and basepath.endswith('/'):
             basepath = basepath[:-1]

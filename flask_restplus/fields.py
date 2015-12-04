@@ -17,9 +17,9 @@ from .marshalling import marshal
 from .utils import camel_to_dash, not_none
 
 
-__all__ = ('String', 'FormattedString', 'Url', 'DateTime', 'Float',
-           'Integer', 'Arbitrary', 'Nested', 'List', 'Raw', 'Boolean',
-           'Fixed', 'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingException')
+__all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime', 'Boolean',
+           'Integer', 'Float', 'Arbitrary', 'Fixed', 'Nested', 'List',
+           'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingException')
 
 
 class MarshallingException(Exception):
@@ -94,14 +94,14 @@ class Raw(object):
         than the publicly named value.
     :param title: The field title (for documentation purpose)
     :type title: str
-    :param: description: The field description (for documentation purpose)
+    :param description: The field description (for documentation purpose)
     :type description: str
-    :param: required: Is the field required ?
+    :param required: Is the field required ?
     :type required: bool
-    :param: readonly: Is the field read only ? (for documentation purpose)
+    :param readonly: Is the field read only ? (for documentation purpose)
     :type readonly: bool
-    :param: example: An optionnal data example (for documentation purpose)
-    :param: mask: An optionnal mask function to be applied to output
+    :param example: An optionnal data example (for documentation purpose)
+    :param mask: An optionnal mask function to be applied to output
     :type mask: callable
     '''
     #: The JSON/Swagger schema type
@@ -129,7 +129,7 @@ class Raw(object):
         override this and apply the appropriate formatting.
 
         :param value: The value to format
-        :exception MarshallingException: In case of formatting problem
+        :raises MarshallingException: In case of formatting problem
 
         Ex::
 
@@ -147,7 +147,7 @@ class Raw(object):
         values which do not require the existence of the key in the object
         should override this and return the desired value.
 
-        :exception MarshallingException: In case of formatting problem
+        :raises MarshallingException: In case of formatting problem
         '''
 
         value = get_value(key if self.attribute is None else self.attribute, obj)
@@ -179,7 +179,7 @@ class Nested(Raw):
     Allows you to nest one set of fields inside another.
     See :ref:`nested-field` for more information
 
-    :param dict nested: The dictionary to nest
+    :param dict model: The model dictionary to nest
     :param bool allow_null: Whether to return None instead of a dictionary
         with null keys, if a nested dictionary has all-null keys
     :param kwargs: If ``default`` keyword argument is present, a nested

@@ -410,7 +410,7 @@ class Api(restful.Api):
         return self.doc(body=body, validate=validate or self._validate)
 
     def parser(self):
-        '''Instanciate a RequestParser'''
+        '''Instanciate a :class:`~RequestParser`'''
         return RequestParser()
 
     def as_list(self, field):
@@ -440,11 +440,11 @@ class Api(restful.Api):
         return wrapper
 
     def marshal_list_with(self, fields, **kwargs):
-        '''A shortcut decorator for ``marshal_with(as_list=True, code=code)``'''
+        '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
         return self.marshal_with(fields, True, **kwargs)
 
     def marshal(self, data, fields):
-        '''A shortcut to the ``marshal`` helper'''
+        '''A shortcut to the :func:`marshal` helper'''
         resolved = getattr(fields, 'resolved', fields)
         return marshal(data, resolved)
 

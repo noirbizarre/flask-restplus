@@ -84,7 +84,7 @@ class marshal_with(object):
     >>> get()
     OrderedDict([('data', OrderedDict([('a', 100)]))])
 
-    see :meth:`flask_restful.marshal`
+    see :meth:`flask_restplus.marshal`
     """
     def __init__(self, fields, envelope=None):
         """
@@ -120,7 +120,7 @@ class marshal_with_field(object):
     >>> get()
     [1, 2, 3]
 
-    see :meth:`flask_restful.marshal_with`
+    see :meth:`flask_restplus.marshal_with`
     """
     def __init__(self, field):
         """

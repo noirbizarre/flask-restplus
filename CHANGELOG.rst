@@ -4,7 +4,8 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Drop/merge flask-restful fields
+- Drop/merge flask-restplus inputs
 
 0.8.2 (2015-12-01)
 ------------------
@@ -12,6 +13,7 @@ Current
 - Skip unknown fields in mask when applied on a model
 - Added `*` token to fields mask (all remaining fields)
 - Ensure generated endpoints does not collide
+- Drop/merge flask-restful `Api.handler_error()`
 
 0.8.1 (2015-11-27)
 ------------------
