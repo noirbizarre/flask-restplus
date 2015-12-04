@@ -9,7 +9,7 @@ from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException, BadRequest, NotFound
 from werkzeug.http import quote_etag, unquote_etag
 
-from flask.ext import restplus
+import flask_restplus as restplus
 
 from . import TestCase, Mock
 
@@ -270,6 +270,13 @@ class APITestCase(TestCase):
             self.assertEquals(json.loads(response.data.decode()), {
                 'message': BadRequest.description,
             })
+
+    def test_handle_error_does_not_duplicate_content_length(self):
+        api = restplus.Api(self.app)
+
+        with self.app.test_request_context("/foo"):
+            response = api.handle_error(BadRequest())
+            self.assertEqual(len(response.headers.getlist('Content-Length')), 1)
 
     def test_handle_smart_errors(self):
         api = restplus.Api(self.app)

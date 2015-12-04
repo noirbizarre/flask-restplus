@@ -33,6 +33,9 @@ from .reqparse import RequestParser
 
 RE_RULES = re.compile('(<.*>)')
 
+# List headers that should never be handled by Flask-RESTPlus
+HEADERS_BLACKLIST = ('Content-Length',)
+
 
 class Api(restful.Api):
     '''
@@ -515,6 +518,10 @@ class Api(restful.Api):
             # another NotAcceptable error).
             supported_mediatypes = list(self.representations.keys())
             fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else "text/plain"
+
+        # Remove blacklisted headers
+        for header in HEADERS_BLACKLIST:
+            headers.pop(header, None)
 
         resp = self.make_response(data, code, headers, fallback_mediatype=fallback_mediatype)
 
