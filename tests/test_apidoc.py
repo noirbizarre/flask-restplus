@@ -75,6 +75,21 @@ class APIDocTestCase(TestCase):
                 response = client.get(url_for('doc'))
                 self.assertIn('docExpansion: "full"', str(response.data))
 
+    def test_apidoc_doc_minified(self):
+        restplus.Api(self.app)
+
+        self.app.config['DEBUG'] = True
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('doc'))
+                self.assertIn('swagger-ui.js', str(response.data))
+
+        self.app.config['DEBUG'] = False
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('doc'))
+                self.assertIn('swagger-ui.min.js', str(response.data))
+
     def test_custom_apidoc_url(self):
         restplus.Api(self.app, version='1.0', doc='/doc/')
 
