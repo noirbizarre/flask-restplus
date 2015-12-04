@@ -12,10 +12,12 @@ from . import TestCase
 
 class SwaggerTestCase(TestCase):
     def build_api(self, **kwargs):
+        bpkwargs = {}
         if 'prefix' in kwargs:
-            blueprint = Blueprint('api', __name__, url_prefix=kwargs.pop('prefix'))
-        else:
-            blueprint = Blueprint('api', __name__)
+            bpkwargs['url_prefix'] = kwargs.pop('prefix')
+        if 'subdomain' in kwargs:
+            bpkwargs['subdomain'] = kwargs.pop('subdomain')
+        blueprint = Blueprint('api', __name__, **bpkwargs)
         api = restplus.Api(blueprint, **kwargs)
         self.app.register_blueprint(blueprint)
         return api
@@ -136,6 +138,15 @@ class SwaggerTestCase(TestCase):
         restplus.Api(self.app)
 
         data = self.get_specs('')
+        self.assertEqual(data['host'], 'api.restplus.org')
+
+    def test_specs_endpoint_host_and_subdomain(self):
+        self.app.config['SERVER_NAME'] = 'restplus.org'
+        blueprint = Blueprint('api', __name__, subdomain='api')
+        restplus.Api(blueprint)
+        self.app.register_blueprint(blueprint)
+
+        data = self.get_specs(base_url='http://api.restplus.org')
         self.assertEqual(data['host'], 'api.restplus.org')
 
     def test_specs_endpoint_tags_short(self):

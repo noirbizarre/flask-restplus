@@ -8,6 +8,7 @@ Current
 - Drop/merge flask-restplus inputs
 - Update Swagger-UI to version 2.1.3
 - Use minified version of Swagger-UI if ``DEBUG=False``
+- Blueprint subdomain support (static only)
 
 0.8.2 (2015-12-01)
 ------------------

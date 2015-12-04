@@ -51,8 +51,8 @@ class TestCase(unittest.TestCase):
         self.app = Flask(__name__)
 
     @contextmanager
-    def context(self):
-        with self.app.test_request_context('/'):
+    def context(self, **kwargs):
+        with self.app.test_request_context('/', **kwargs):
             yield
 
     @contextmanager
@@ -73,14 +73,14 @@ class TestCase(unittest.TestCase):
         for key, value in original.items():
             self.app.config[key] = value
 
-    def get_json(self, url, status=200, headers=None):
+    def get_json(self, url, status=200, **kwargs):
         with self.app.test_client() as client:
-            response = client.get(url, headers=headers or {})
+            response = client.get(url, **kwargs)
 
         self.assertEqual(response.status_code, status)
         self.assertEqual(response.content_type, 'application/json')
         return json.loads(response.data.decode('utf8'))
 
-    def get_specs(self, prefix='', status=200):
+    def get_specs(self, prefix='', status=200, **kwargs):
         '''Get a Swagger specification for a RestPlus API'''
-        return self.get_json('{0}/swagger.json'.format(prefix), status=status)
+        return self.get_json('{0}/swagger.json'.format(prefix), status=status, **kwargs)

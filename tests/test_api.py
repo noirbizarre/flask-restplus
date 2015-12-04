@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json
-
 from flask import url_for, Blueprint
 from flask.ext import restplus
 
@@ -30,13 +28,22 @@ class APITestCase(TestCase):
     def test_root_endpoint_with_blueprint(self):
         blueprint = Blueprint('api', __name__, url_prefix='/api')
         api = restplus.Api(blueprint, version='1.0')
-        # api.init_app(self.app)
         self.app.register_blueprint(blueprint)
 
         with self.context():
             url = url_for('api.root')
             self.assertEqual(url, '/api/')
             self.assertEqual(api.base_url, 'http://localhost/api/')
+
+    def test_root_endpoint_with_blueprint_with_subdomain(self):
+        blueprint = Blueprint('api', __name__, subdomain='api', url_prefix='/api')
+        api = restplus.Api(blueprint, version='1.0')
+        self.app.register_blueprint(blueprint)
+
+        with self.context():
+            url = url_for('api.root')
+            self.assertEqual(url, 'http://api.localhost/api/')
+            self.assertEqual(api.base_url, 'http://api.localhost/api/')
 
     def test_parser(self):
         api = restplus.Api()
@@ -121,6 +128,18 @@ class APITestCase(TestCase):
 
         with self.context():
             self.assertEqual(url_for('api.test_resource'), '/api/test/')
+
+    def test_default_endpoint_with_blueprint_with_subdomain(self):
+        blueprint = Blueprint('api', __name__, subdomain='api', url_prefix='/api')
+        api = restplus.Api(blueprint)
+        self.app.register_blueprint(blueprint)
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+            pass
+
+        with self.context():
+            self.assertEqual(url_for('api.test_resource'), 'http://api.localhost/api/test/')
 
     def test_default_endpoint_for_namespace(self):
         api = restplus.Api(self.app)
