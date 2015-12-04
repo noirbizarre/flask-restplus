@@ -8,32 +8,36 @@ from os.path import join, abspath, dirname
 ROOT = abspath(join(dirname(__file__)))
 
 
+def lrun(cmd, *args, **kwargs):
+    '''Run a command ensuring cwd is project root'''
+    return run('cd {0} && {1}'.format(ROOT, cmd), *args, **kwargs)
+
+
 @task
 def clean(docs=False, bytecode=False, extra=''):
     '''Cleanup all build artifacts'''
     patterns = ['build', 'dist', 'cover', 'docs/_build', '**/*.pyc', '*.egg-info', '.tox']
     for pattern in patterns:
         print('Removing {0}'.format(pattern))
-        run('cd {0} && rm -rf {1}'.format(ROOT, pattern))
+        lrun('rm -rf {0}'.format(pattern))
 
 
 @task
 def demo():
     '''Run the demo'''
-    run('python {0}/examples/todo.py'.format(ROOT))
+    lrun('python examples/todo.py')
 
 
 @task
 def test():
     '''Run tests suite'''
-    run('cd {0} && nosetests --rednose --force-color'.format(ROOT), pty=True)
+    lrun('nosetests --force-color', pty=True)
 
 
 @task
 def cover():
     '''Run tests suite with coverage'''
-    run('cd {0} && nosetests --rednose --force-color \
-        --with-coverage --cover-html --cover-package=flask_restplus'.format(ROOT), pty=True)
+    lrun('nosetests --force-color --with-coverage --cover-html', pty=True)
 
 
 @task
@@ -45,22 +49,28 @@ def tox():
 @task
 def qa():
     '''Run a quality report'''
-    run('flake8 {0}/flask_restplus'.format(ROOT))
+    lrun('flake8 flask_restplus')
 
 
 @task
 def doc():
     '''Build the documentation'''
-    run('cd {0}/doc && make html'.format(ROOT), pty=True)
+    lrun('cd doc && make html', pty=True)
+
+
+@task
+def assets():
+    '''Fetch web assets'''
+    lrun('bower install')
 
 
 @task
 def dist():
     '''Package for distribution'''
-    run('cd {0} && python setup.py sdist bdist_wheel'.format(ROOT), pty=True)
+    lrun('python setup.py sdist bdist_wheel', pty=True)
 
 
-@task(tox, doc, qa, dist, default=True)
+@task(tox, doc, qa, assets, dist, default=True)
 def all():
     '''Run tests, reports and packaging'''
     pass

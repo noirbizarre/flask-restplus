@@ -4,7 +4,9 @@ vcs = git
 commit = true
 tag = true
 tests = tox
-publish = python setup.py sdist bdist_wheel register upload
+publish =
+    inv assets
+    python setup.py sdist bdist_wheel register upload
 clean =
     inv clean
 files =
