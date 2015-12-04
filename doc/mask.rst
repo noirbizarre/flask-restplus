@@ -66,3 +66,12 @@ The header will be exposed as a Swagger parameter each time you use the
 As Swagger does not permet to expose a global header once
 so it can make your Swagger specifications a lot more verbose.
 You can disable this behavior by setting ``RESTPLUS_MASK_SWAGGER`` to ``False``.
+
+You can also specify a default mask that will be applied if no header mask is found.
+
+.. code-block:: python
+
+    class MyResource(Resource):
+        @api.marshal_with(my_model, mask='name,age')
+        def get(self):
+            pass

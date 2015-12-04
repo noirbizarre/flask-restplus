@@ -10,7 +10,7 @@ from flask_restful import unpack  # Not imported yet
 from ._compat import OrderedDict
 
 
-def marshal(data, fields, envelope=None):
+def marshal(data, fields, envelope=None, mask=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
@@ -40,10 +40,10 @@ def marshal(data, fields, envelope=None):
 
     if has_app_context():
         mask_header = current_app.config['RESTPLUS_MASK_HEADER']
-        mask = request.headers.get(mask_header)
-        if mask:
-            from .mask import apply as apply_mask
-            fields = apply_mask(fields, mask, skip=True)
+        mask = request.headers.get(mask_header) or mask
+    if mask:
+        from .mask import apply as apply_mask
+        fields = apply_mask(fields, mask, skip=True)
 
     if isinstance(data, (list, tuple)):
         out = [marshal(d, fields) for d in data]
@@ -86,7 +86,7 @@ class marshal_with(object):
 
     see :meth:`flask_restplus.marshal`
     """
-    def __init__(self, fields, envelope=None):
+    def __init__(self, fields, envelope=None, mask=None):
         """
         :param fields: a dict of whose keys will make up the final
                        serialized response output
@@ -95,6 +95,7 @@ class marshal_with(object):
         """
         self.fields = fields
         self.envelope = envelope
+        self.mask = mask
 
     def __call__(self, f):
         @wraps(f)
@@ -102,9 +103,9 @@ class marshal_with(object):
             resp = f(*args, **kwargs)
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return marshal(data, self.fields, self.envelope), code, headers
+                return marshal(data, self.fields, self.envelope, self.mask), code, headers
             else:
-                return marshal(resp, self.fields, self.envelope)
+                return marshal(resp, self.fields, self.envelope, self.mask)
         return wrapper
 
 

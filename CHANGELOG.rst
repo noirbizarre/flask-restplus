@@ -9,6 +9,7 @@ Current
 - Update Swagger-UI to version 2.1.3
 - Use minified version of Swagger-UI if ``DEBUG=False``
 - Blueprint subdomain support (static only)
+- Added support for default fields mask
 
 0.8.2 (2015-12-01)
 ------------------

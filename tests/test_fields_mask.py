@@ -474,6 +474,57 @@ class MaskAPI(TestCase):
             'age': 42,
         })
 
+    def test_marshal_with_honour_default_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model, mask='{name,age}')
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        data = self.get_json('/test/')
+        self.assertEqual(data, {
+            'name': 'John Doe',
+            'age': 42,
+        })
+
+    def test_marshal_with_honour_header_field_mask_with_default_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model, mask='{name,age}')
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': '{name}'
+        })
+        self.assertEqual(data, {
+            'name': 'John Doe',
+        })
+
     def test_marshal_with_honour_custom_field_mask(self):
         api = Api(self.app)
 
@@ -640,6 +691,7 @@ class SwaggerMaskHeaderTest(TestCase):
         self.assertEqual(param['format'], 'mask')
         self.assertEqual(param['in'], 'header')
         self.assertNotIn('required', param)
+        self.assertNotIn('default', param)
 
     def test_marshal_with_expose_custom_mask_header(self):
         api = Api(self.app)
@@ -718,3 +770,37 @@ class SwaggerMaskHeaderTest(TestCase):
         op = specs['paths']['/test/']['get']
 
         self.assertNotIn('parameters', op)
+
+    def test_marshal_with_expose_default_mask_header(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model, mask='{name,age}')
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        specs = self.get_specs()
+        op = specs['paths']['/test/']['get']
+
+        self.assertIn('parameters', op)
+        self.assertEqual(len(op['parameters']), 1)
+
+        param = op['parameters'][0]
+
+        self.assertEqual(param['name'], 'X-Fields')
+        self.assertEqual(param['type'], 'string')
+        self.assertEqual(param['format'], 'mask')
+        self.assertEqual(param['default'], '{name,age}')
+        self.assertEqual(param['in'], 'header')
+        self.assertNotIn('required', param)
