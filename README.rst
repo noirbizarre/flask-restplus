@@ -50,7 +50,7 @@ With Flask-Restplus, you only import the api instance to route and document your
 .. code-block:: python
 
     from flask import Flask
-    from flask.ext.restplus import Api, Resource, fields
+    from flask_restplus import Api, Resource, fields
 
     app = Flask(__name__)
     api = Api(app, version='1.0', title='Todo API',
@@ -84,7 +84,8 @@ With Flask-Restplus, you only import the api instance to route and document your
 
 
     @ns.route('/<string:todo_id>')
-    @api.doc(responses={404: 'Todo not found'}, params={'todo_id': 'The Todo ID'})
+    @api.response(404, 'Todo not found')
+    @api.doc(params={'todo_id': 'The Todo ID'})
     class Todo(Resource):
         '''Show a single todo item and lets you delete them'''
         @api.doc(description='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
@@ -94,7 +95,7 @@ With Flask-Restplus, you only import the api instance to route and document your
             abort_if_todo_doesnt_exist(todo_id)
             return TODOS[todo_id]
 
-        @api.doc(responses={204: 'Todo deleted'})
+        @api.response(204, 'Todo deleted')
         def delete(self, todo_id):
             '''Delete a given resource'''
             abort_if_todo_doesnt_exist(todo_id)

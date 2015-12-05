@@ -17,8 +17,9 @@ from .marshalling import marshal
 from .utils import camel_to_dash, not_none
 
 
-__all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime', 'Boolean',
-           'Integer', 'Float', 'Arbitrary', 'Fixed', 'Nested', 'List',
+__all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime',
+           'Boolean', 'Integer', 'Float', 'Arbitrary', 'Fixed',
+           'Nested', 'List', 'ClassName', 'Polymorph',
            'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingException')
 
 
@@ -442,8 +443,7 @@ class DateTime(MinMaxMixin, Raw):
 
     See :meth:`datetime.datetime.isoformat` for more info on the ISO 8601 format.
 
-    :param dt_format: ``rfc822`` or ``iso8601``
-    :type dt_format: str
+    :param str dt_format: ``rfc822`` or ``iso8601``
     '''
     __schema_type__ = 'string'
     __schema_format__ = 'date-time'
@@ -540,8 +540,7 @@ class FormattedString(StringMixin, Raw):
     '''
     def __init__(self, src_str, **kwargs):
         '''
-        :param src_str: the string to format with the other values from the response.
-        :type src_str: str
+        :param str src_str: the string to format with the other values from the response.
         '''
         super(FormattedString, self).__init__(**kwargs)
         self.src_str = text_type(src_str)
@@ -555,6 +554,11 @@ class FormattedString(StringMixin, Raw):
 
 
 class ClassName(String):
+    '''
+    Return the serialized object class name as string.
+
+    :param bool dash: If `True`, transform CamelCase to kebab_case.
+    '''
     def __init__(self, dash=False, **kwargs):
         super(ClassName, self).__init__(**kwargs)
         self.dash = dash
@@ -565,6 +569,24 @@ class ClassName(String):
 
 
 class Polymorph(Nested):
+    '''
+    A Nested field handling inheritance.
+
+    Allows you to specify a mapping between Python classes and fields specifications.
+
+    .. code-block:: python
+
+        mapping = {
+            Child1: child1_fields,
+            Child2: child2_fields,
+        }
+
+        fields = api.model('Thing', {
+            owner: fields.Polymorph(mapping)
+        })
+
+    :param dict mapping: Maps classes to their model/fields representation
+    '''
     def __init__(self, mapping, required=False, **kwargs):
         self.mapping = mapping
         parent = self.resolve_ancestor(list(itervalues(mapping)))
