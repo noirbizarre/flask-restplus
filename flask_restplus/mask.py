@@ -14,7 +14,7 @@ from . import fields
 
 log = logging.getLogger(__name__)
 
-LEXER = re.compile(r'\{|\}|\,|[\w_\*]+')
+LEXER = re.compile(r'\{|\}|\,|[\w_:\-\*]+')
 
 
 class MaskError(RestError):

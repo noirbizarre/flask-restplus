@@ -6,6 +6,7 @@ Current
 
 - Improve error handling for inconsistent masks
 - Handle model level default mask
+- support colons and dashes in mask field names
 - **Breaking changes**:
    - Renamed `exceptions` module into `errors`
    - Renamed `RestException` into `RestError`

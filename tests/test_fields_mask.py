@@ -70,6 +70,15 @@ class ParseMaskMixin(object):
         with self.assertRaises(mask.ParseError):
             mask.parse('{field}}')
 
+    def test_support_colons(self):
+        self.assertEqual(mask.parse('field:name'), ['field:name'])
+
+    def test_support_dash(self):
+        self.assertEqual(mask.parse('field-name'), ['field-name'])
+
+    def test_support_underscore(self):
+        self.assertEqual(mask.parse('field_name'), ['field_name'])
+
 
 class ParseMaskUnwrapped(ParseMaskMixin, TestCase):
     def parse(self, value):
