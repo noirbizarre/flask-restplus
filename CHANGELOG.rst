@@ -4,7 +4,10 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- **Breaking changes**:
+   - Renamed `exceptions` module into `errors`
+   - Renamed `RestException` into `RestError`
+   - Renamed `MarshallingException` into `MarshallingError`
 
 0.8.3 (2015-12-05)
 ------------------

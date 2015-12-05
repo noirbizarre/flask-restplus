@@ -6,7 +6,7 @@ from . import fields, reqparse, apidoc, inputs
 from .api import Api  # noqa
 from .marshalling import marshal, marshal_with, marshal_with_field  # noqa
 from .resource import Resource  # noqa
-from .exceptions import RestException, SpecsError, ValidationError
+from .errors import RestError, SpecsError, ValidationError
 from .swagger import Swagger
 from .__about__ import __version__, __description__
 
@@ -23,7 +23,7 @@ __all__ = (
     'fields',
     'inputs',
     'reqparse',
-    'RestException',
+    'RestError',
     'SpecsError',
     'Swagger',
     'ValidationError',

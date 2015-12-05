@@ -3,23 +3,23 @@ from __future__ import unicode_literals
 
 
 __all__ = (
-    'RestException',
+    'RestError',
     'ValidationError',
     'SpecsError',
 )
 
 
-class RestException(Exception):
-    '''Base class for all Flask-Restplus Exceptions'''
+class RestError(Exception):
+    '''Base class for all Flask-Restplus Errors'''
     def __init__(self, msg):
         self.msg = msg
 
 
-class ValidationError(RestException):
+class ValidationError(RestError):
     '''An helper class for validation errors.'''
     pass
 
 
-class SpecsError(RestException):
+class SpecsError(RestError):
     '''An helper class for incoherent specifications.'''
     pass

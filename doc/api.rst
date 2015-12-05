@@ -16,7 +16,6 @@ Core
     :inherited-members:
 
 
-
 Models
 ------
 
@@ -41,6 +40,8 @@ Serialization
 
 .. autofunction:: flask_restplus.mask.apply
 
+.. autoclass:: flask_restplus.mask.Nested
+
 
 Inputs
 ------
@@ -55,10 +56,12 @@ Inputs
 Errors
 ------
 
-.. automodule:: flask_restplus.exceptions
+.. automodule:: flask_restplus.errors
     :members:
 
-.. autoexception:: flask_restplus.fields.MarshallingException
+.. autoexception:: flask_restplus.fields.MarshallingError
+
+.. autoexception:: flask_restplus.mask.MaskError
 
 .. autoexception:: flask_restplus.mask.ParseError
 
@@ -72,6 +75,8 @@ Most of the time you shouldn't have to deal directly with them.
 .. autoclass:: flask_restplus.namespace.ApiNamespace
 
 .. autoclass:: flask_restplus.model.ApiModel
+
+.. autoclass:: flask_restplus.api.SwaggerView
 
 .. autoclass:: flask_restplus.swagger.Swagger
 

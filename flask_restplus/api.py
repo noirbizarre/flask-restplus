@@ -23,7 +23,7 @@ from werkzeug.http import HTTP_STATUS_CODES
 from . import apidoc
 from .marshalling import marshal, marshal_with
 from .model import ApiModel
-from .mask import ParseError
+from .mask import ParseError, MaskError
 from .namespace import ApiNamespace
 from .postman import PostmanCollectionV1
 from .resource import Resource
@@ -53,66 +53,29 @@ class Api(restful.Api):
         - The API root/documentation will be ``{endpoint}.root``
         - A resource registered as 'resource' will be available as ``{endpoint}.resource``
 
-    :param app: the Flask application object or a Blueprint
-    :type app: flask.Flask|flask.Blueprint
-
-    :param version: The API version (used in Swagger documentation)
-    :type version: str
-
-    :param title: The API title (used in Swagger documentation)
-    :type title: str
-
-    :param description: The API description (used in Swagger documentation)
-    :type description: str
-
-    :param terms_url: The API terms page URL (used in Swagger documentation)
-    :type terms_url: str
-
-    :param contact: A contact email for the API (used in Swagger documentation)
-    :type contact: str
-
-    :param license: The license associated to the API (used in Swagger documentation)
-    :type license: str
-
-    :param license_url: The license page URL (used in Swagger documentation)
-    :type license_url: str
-
-    :param endpoint: The API base endpoint (default to 'api).
-    :type endpoint: str
-
-    :param default: The default namespace base name (default to 'default')
-    :type default: str
-
-    :param default_label: The default namespace label (used in Swagger documentation)
-    :type default_label: str
-
-    :param default_mediatype: The default media type to return
-    :type default_mediatype: str
-
-    :param validate: Whether or not the API should perform input payload validation.
-    :type validate: bool
-
-    :param doc: The documentation path. If set to a false value, documentation is disabled.
+    :param flask.Flask|flask.Blueprint app: the Flask application object or a Blueprint
+    :param str version: The API version (used in Swagger documentation)
+    :param str title: The API title (used in Swagger documentation)
+    :param str description: The API description (used in Swagger documentation)
+    :param str terms_url: The API terms page URL (used in Swagger documentation)
+    :param str contact: A contact email for the API (used in Swagger documentation)
+    :param str license: The license associated to the API (used in Swagger documentation)
+    :param str license_url: The license page URL (used in Swagger documentation)
+    :param str endpoint: The API base endpoint (default to 'api).
+    :param str default: The default namespace base name (default to 'default')
+    :param str default_label: The default namespace label (used in Swagger documentation)
+    :param str default_mediatype: The default media type to return
+    :param bool validate: Whether or not the API should perform input payload validation.
+    :param str doc: The documentation path. If set to a false value, documentation is disabled.
                 (Default to '/')
-    :type doc: str
-
-    :param decorators: Decorators to attach to every resource
-    :type decorators: list
-
-    :param catch_all_404s: Use :meth:`handle_error`
+    :param list decorators: Decorators to attach to every resource
+    :param bool catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
     :param url_part_order: A string that controls the order that the pieces
         of the url are concatenated when the full url is constructed.  'b'
         is the blueprint (or blueprint registration) prefix, 'a' is the api
         prefix, and 'e' is the path component the endpoint is added with
-    :type catch_all_404s: bool
-
-    :param errors: A dictionary to define a custom response for each
-        exception or error raised during a request
-    :type errors: dict
-
-    :param authorizations: A Swagger Authorizations declaration as dictionary
-    :type authorizations: dict
+    :param dict authorizations: A Swagger Authorizations declaration as dictionary
 
     '''
 
@@ -141,7 +104,8 @@ class Api(restful.Api):
         self.tags = tags or []
 
         self._error_handlers = {
-            ParseError: mask_error_handler
+            ParseError: mask_parse_error_handler,
+            MaskError: mask_error_handler,
         }
         self._schema = None
         self.models = {}
@@ -162,26 +126,13 @@ class Api(restful.Api):
         >>> api = Api()
         >>> api.init_app(app)
 
-        :param app: the Flask application object
-        :type app: flask.Flask
-
-        :param title: The API title (used in Swagger documentation)
-        :type title: str
-
-        :param description: The API description (used in Swagger documentation)
-        :type description: str
-
-        :param terms_url: The API terms page URL (used in Swagger documentation)
-        :type terms_url: str
-
-        :param contact: A contact email for the API (used in Swagger documentation)
-        :type contact: str
-
-        :param license: The license associated to the API (used in Swagger documentation)
-        :type license: str
-
-        :param license_url: The license page URL (used in Swagger documentation)
-        :type license_url: str
+        :param flask.Flask app: the Flask application object
+        :param str title: The API title (used in Swagger documentation)
+        :param str description: The API description (used in Swagger documentation)
+        :param str terms_url: The API terms page URL (used in Swagger documentation)
+        :param str contact: A contact email for the API (used in Swagger documentation)
+        :param str license: The license associated to the API (used in Swagger documentation)
+        :param str license_url: The license page URL (used in Swagger documentation)
 
         '''
         self.title = kwargs.get('title', self.title)
@@ -228,6 +179,7 @@ class Api(restful.Api):
         app_or_blueprint.add_url_rule('/', 'root', self.render_root)
 
     def documentation(self, func):
+        '''A decorator to specify a view funtion for the documentation'''
         self._doc_view = func
         return func
 
@@ -247,6 +199,12 @@ class Api(restful.Api):
         Provide a default endpoint for a resource on a given namespace.
 
         Endpoints are ensured not to collide.
+
+        Override this method specify a custom algoryhtm for default endpoint.
+
+        :param Resource resource: the resource for which we want an endpoint
+        :param ApiNamespace namespace: the namespace holdingg the resource
+        :returns str: An endpoint name
         '''
         endpoint = camel_to_dash(resource.__name__)
         namespace = namespace or self.default_namespace
@@ -263,7 +221,12 @@ class Api(restful.Api):
         return endpoint
 
     def add_resource(self, resource, *urls, **kwargs):
-        '''Register a Swagger API declaration for a given API Namespace'''
+        '''
+        Register a Swagger API declaration for a given API Namespace
+
+        :param Resource resource: the resource ro register
+        :param ApiNamespace namespace: the namespace holdingg the resource
+        '''
         namespace = kwargs.pop('namespace', None)
         if kwargs.pop('doc', True) and not namespace:
             return self.default_namespace.add_resource(resource, *urls, **kwargs)
@@ -286,11 +249,19 @@ class Api(restful.Api):
             self.namespaces.append(ns)
 
     def namespace(self, *args, **kwargs):
+        '''
+        A namespace factory.
+
+        :returns ApiNamespace: a new namespace instance
+        '''
         ns = ApiNamespace(self, *args, **kwargs)
         self.add_namespace(ns)
         return ns
 
     def route(self, *urls, **kwargs):
+        '''
+        A decorator to route resources.
+        '''
         def wrapper(cls):
             doc = kwargs.pop('doc', None)
             if doc is not None:
@@ -319,24 +290,44 @@ class Api(restful.Api):
 
     @property
     def specs_url(self):
+        '''
+        The Swagger specifications absolute url (ie. `swagger.json`)
+
+        :returns str:
+        '''
         return url_for(self.endpoint('specs'), _external=True)
 
     @property
     def base_url(self):
+        '''
+        The API base absolute url
+
+        :returns str:
+        '''
         return url_for(self.endpoint('root'), _external=True)
 
     @property
     def base_path(self):
+        '''
+        The API path
+
+        :returns str:
+        '''
         return url_for(self.endpoint('root'))
 
     @cached_property
     def __schema__(self):
+        '''
+        The Swagger specifications/schema for this API
+
+        :returns dict: the schema as a serializable dict
+        '''
         if not self._schema:
             self._schema = Swagger(self).as_dict()
         return self._schema
 
     def doc(self, shortcut=None, **kwargs):
-        '''Add some api documentation to the decorated object'''
+        '''A decorator to add some api documentation to the decorated object'''
         if isinstance(shortcut, six.text_type):
             kwargs['id'] = shortcut
         show = shortcut if isinstance(shortcut, bool) else True
@@ -347,6 +338,7 @@ class Api(restful.Api):
         return wrapper
 
     def hide(self, func):
+        '''A decorator to hide a resource or a method from specifications'''
         return self.doc(False)(func)
 
     def abort(self, code=500, message=None, **kwargs):
@@ -409,7 +401,13 @@ class Api(restful.Api):
         return model
 
     def expect(self, body, validate=None):
-        '''Specify the expected input model'''
+        '''
+        A decorator to Specify the expected input model
+
+        :param ApiModel body: The expected model
+        :param bool validate: whether to perform validation or not
+
+        '''
         return self.doc(body=body, validate=validate or self._validate)
 
     def parser(self):
@@ -425,10 +423,9 @@ class Api(restful.Api):
         '''
         A decorator specifying the fields to use for serialization.
 
-        :param as_list: Indicate that the return type is a list (for the documentation)
-        :type as_list: bool
-        :param code: Optionnaly give the expected HTTP response code if its different from 200
-        :type code: integer
+        :param bool as_list: Indicate that the return type is a list (for the documentation)
+        :param int code: Optionnaly give the expected HTTP response code if its different from 200
+
         '''
         def wrapper(func):
             doc = {
@@ -452,7 +449,7 @@ class Api(restful.Api):
         return marshal(data, resolved)
 
     def errorhandler(self, exception):
-        '''Register an error handler for a given exception'''
+        '''A decorator to register an error handler for a given exception'''
         if inspect.isclass(exception) and issubclass(exception, Exception):
             # Register an error handler for a given exception
             def wrapper(func):
@@ -469,8 +466,7 @@ class Api(restful.Api):
         Error handler for the API transforms a raised exception into a Flask response,
         with the appropriate HTTP status code and body.
 
-        :param e: the raised Exception object
-        :type e: Exception
+        :param Exception e: the raised Exception object
 
         '''
         got_request_exception.send(current_app._get_current_object(), exception=e)
@@ -546,21 +542,41 @@ class Api(restful.Api):
         return message
 
     def response(self, code, description, model=None, **kwargs):
-        '''Specify one of the expected responses'''
+        '''
+        A decorator to specify one of the expected responses
+
+        :param int code: the HTTP status code
+        :param str description: a small description about the response
+        :param ApiModel model: an optionnal response model
+
+        '''
         return self.doc(responses={code: (description, model) if model else description})
 
     def header(self, name, description=None, **kwargs):
-        '''Specify one of the expected headers'''
+        '''
+        A decorator to specify one of the expected headers
+
+        :param str name: the HTTP header name
+        :param str description: a description about the header
+
+        '''
         param = kwargs
         param['in'] = 'header'
         param['description'] = description
         return self.doc(params={name: param})
 
     def deprecated(self, func):
-        '''Mark a resource or a method as deprecated'''
+        '''A decorator to mark a resource or a method as deprecated'''
         return self.doc(deprecated=True)(func)
 
     def as_postman(self, urlvars=False, swagger=False):
+        '''
+        Serialize the API as Postman collection (v1)
+
+        :param bool urlvars: whether to include or not placeholders for query strings
+        :param bool swagger: whether to include or not the swagger.json specifications
+
+        '''
         return PostmanCollectionV1(self, swagger=swagger).as_dict(urlvars=urlvars)
 
     def validate_payload(self, func):
@@ -578,6 +594,7 @@ class Api(restful.Api):
 
     @property
     def payload(self):
+        '''Store the input payload in the current request context'''
         return request.get_json()
 
     @property
@@ -588,6 +605,7 @@ class Api(restful.Api):
 
 
 class SwaggerView(Resource):
+    '''Render the Swagger specifications as JSON'''
     def get(self):
         return self.api.__schema__
 
@@ -595,8 +613,12 @@ class SwaggerView(Resource):
         return ['application/json']
 
 
-def mask_error_handler(error):
+def mask_parse_error_handler(error):
     return {'message': 'Mask parse error: {0}'.format(error)}, 400
+
+
+def mask_error_handler(error):
+    return {'message': 'Mask error: {0}'.format(error)}, 400
 
 
 def unshortcut_params_description(data):

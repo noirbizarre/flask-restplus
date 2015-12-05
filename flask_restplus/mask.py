@@ -8,6 +8,7 @@ import six
 from collections import namedtuple
 
 from ._compat import OrderedDict
+from .errors import RestError
 from . import fields
 
 log = logging.getLogger(__name__)
@@ -15,11 +16,17 @@ log = logging.getLogger(__name__)
 LEXER = re.compile(r'\{|\}|\,|[\w_\*]+')
 
 
-class ParseError(ValueError):
-    '''Raise when the mask parsing failed'''
+class MaskError(RestError):
+    '''Raised when an error occurs on mask'''
     pass
 
 
+class ParseError(MaskError):
+    '''Raised when the mask parsing failed'''
+    pass
+
+
+#: An Internal representation for mask nesting
 Nested = namedtuple('Nested', ['name', 'fields'])
 
 
@@ -34,6 +41,10 @@ def parse(mask):
         field,nested{nested_field,another},last
 
     All extras characters will be ignored.
+
+    :param str mask: the mask string to parse
+    :raises ParseError: when a mask is unparseable/invalid
+
     '''
     if not mask:
         return []
@@ -87,7 +98,11 @@ def apply(data, mask, skip=False):
     '''
     Apply a fields mask to the data.
 
-    If skip is True, missing field won't appear in result
+    :param data: The data or model to apply mask on
+    :param str|list mask: the mask (parsed or not) to apply on data
+    :param bool skip: If rue, missing field won't appear in result
+    :raises MaskError: when unable to apply the mask
+
     '''
     parsed_fields = parse(mask) if isinstance(mask, six.text_type) else mask
 

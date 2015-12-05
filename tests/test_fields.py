@@ -32,7 +32,7 @@ class FieldTestCase(object):
         assert_equal(field.output('foo', {'foo': value}), expected)
 
     def assert_field_raises(self, field, value):
-        with assert_raises(fields.MarshallingException):
+        with assert_raises(fields.MarshallingError):
             field.output('foo', {'foo': value})
 
 
@@ -486,7 +486,7 @@ class FormatedStringFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase
     def test_none(self):
         field = fields.FormattedString('{foo}')
         # self.assert_field_raises(field, None)
-        with assert_raises(fields.MarshallingException):
+        with assert_raises(fields.MarshallingError):
             field.output('foo', None)
 
     def test_invalid_object(self):
@@ -511,7 +511,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         field = fields.Url('foobar')
 
         with self.app.test_request_context('/'):
-            with assert_raises(fields.MarshallingException):
+            with assert_raises(fields.MarshallingError):
                 field.output('foo', None)
 
     def test_simple(self):
@@ -544,7 +544,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         field = fields.Url()
 
         with self.app.test_request_context('/foo'):
-            with assert_raises(fields.MarshallingException):
+            with assert_raises(fields.MarshallingError):
                 field.output('foo', None)
 
     def test_without_endpoint(self):
@@ -578,7 +578,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         field = fields.Url()
 
         with self.app.test_request_context('/foo/foo'):
-            with assert_raises(fields.MarshallingException):
+            with assert_raises(fields.MarshallingError):
                 field.output('foo', None)
 
     def test_with_blueprint(self):

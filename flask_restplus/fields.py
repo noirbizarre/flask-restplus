@@ -13,6 +13,7 @@ from flask.ext.restful import fields as base_fields
 from werkzeug import cached_property
 
 from ._compat import urlparse, urlunparse
+from .errors import RestError
 from .marshalling import marshal
 from .utils import camel_to_dash, not_none
 
@@ -20,17 +21,17 @@ from .utils import camel_to_dash, not_none
 __all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime',
            'Boolean', 'Integer', 'Float', 'Arbitrary', 'Fixed',
            'Nested', 'List', 'ClassName', 'Polymorph',
-           'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingException')
+           'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingError')
 
 
-class MarshallingException(Exception):
+class MarshallingError(RestError):
     '''
     This is an encapsulating Exception in case of marshalling error.
     '''
     def __init__(self, underlying_exception):
         # just put the contextual representation of the error to hint on what
         # went wrong without exposing internals
-        super(MarshallingException, self).__init__(text_type(underlying_exception))
+        super(MarshallingError, self).__init__(text_type(underlying_exception))
 
 
 def is_indexable_but_not_string(obj):
@@ -86,24 +87,19 @@ class Raw(object):
     Raw provides a base field class from which others should extend. It
     applies no formatting by default, and should only be used in cases where
     data does not need to be formatted before being serialized. Fields should
-    throw a :class:`MarshallingException` in case of parsing problem.
+    throw a :class:`MarshallingError` in case of parsing problem.
 
     :param default: The default value for the field, if no value is
         specified.
     :param attribute: If the public facing value differs from the internal
         value, use this to retrieve a different attribute from the response
         than the publicly named value.
-    :param title: The field title (for documentation purpose)
-    :type title: str
-    :param description: The field description (for documentation purpose)
-    :type description: str
-    :param required: Is the field required ?
-    :type required: bool
-    :param readonly: Is the field read only ? (for documentation purpose)
-    :type readonly: bool
+    :param str title: The field title (for documentation purpose)
+    :param str description: The field description (for documentation purpose)
+    :param bool required: Is the field required ?
+    :param bool readonly: Is the field read only ? (for documentation purpose)
     :param example: An optionnal data example (for documentation purpose)
-    :param mask: An optionnal mask function to be applied to output
-    :type mask: callable
+    :param callable mask: An optionnal mask function to be applied to output
     '''
     #: The JSON/Swagger schema type
     __schema_type__ = 'object'
@@ -130,7 +126,7 @@ class Raw(object):
         override this and apply the appropriate formatting.
 
         :param value: The value to format
-        :raises MarshallingException: In case of formatting problem
+        :raises MarshallingError: In case of formatting problem
 
         Ex::
 
@@ -148,7 +144,7 @@ class Raw(object):
         values which do not require the existence of the key in the object
         should override this and return the desired value.
 
-        :raises MarshallingException: In case of formatting problem
+        :raises MarshallingError: In case of formatting problem
         '''
 
         value = get_value(key if self.attribute is None else self.attribute, obj)
@@ -245,11 +241,11 @@ class List(Raw):
         error_msg = 'The type of the list elements must be a subclass of fields.Raw'
         if isinstance(cls_or_instance, type):
             if not issubclass(cls_or_instance, Raw):
-                raise MarshallingException(error_msg)
+                raise MarshallingError(error_msg)
             self.container = cls_or_instance()
         else:
             if not isinstance(cls_or_instance, Raw):
-                raise MarshallingException(error_msg)
+                raise MarshallingError(error_msg)
             self.container = cls_or_instance
 
     def format(self, value):
@@ -351,7 +347,7 @@ class String(StringMixin, Raw):
         try:
             return text_type(value)
         except ValueError as ve:
-            raise MarshallingException(ve)
+            raise MarshallingError(ve)
 
     def schema(self):
         enum = self.enum() if callable(self.enum) else self.enum
@@ -366,8 +362,7 @@ class Integer(NumberMixin, Raw):
     '''
     Field for outputting an integer value.
 
-    :param default: The default value for the field, if no value is specified.
-    :type default: int
+    :param int default: The default value for the field, if no value is specified.
     '''
     __schema_type__ = 'integer'
 
@@ -377,7 +372,7 @@ class Integer(NumberMixin, Raw):
                 return self.default
             return int(value)
         except ValueError as ve:
-            raise MarshallingException(ve)
+            raise MarshallingError(ve)
 
 
 class Float(NumberMixin, Raw):
@@ -391,7 +386,7 @@ class Float(NumberMixin, Raw):
         try:
             return float(value)
         except ValueError as ve:
-            raise MarshallingException(ve)
+            raise MarshallingError(ve)
 
 
 class Arbitrary(NumberMixin, Raw):
@@ -419,7 +414,7 @@ class Fixed(NumberMixin, Raw):
     def format(self, value):
         dvalue = Decimal(value)
         if not dvalue.is_normal() and dvalue != ZERO:
-            raise MarshallingException('Invalid Fixed precision number.')
+            raise MarshallingError('Invalid Fixed precision number.')
         return text_type(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
 
@@ -463,18 +458,17 @@ class DateTime(MinMaxMixin, Raw):
             elif self.dt_format == 'iso8601':
                 return self.format_iso8601(value)
             else:
-                raise MarshallingException(
+                raise MarshallingError(
                     'Unsupported date format %s' % self.dt_format
                 )
         except AttributeError as ae:
-            raise MarshallingException(ae)
+            raise MarshallingError(ae)
 
     def format_rfc822(self, dt):
         '''
         Turn a datetime object into a formatted date.
 
-        :param dt: The datetime to transform
-        :type dt: datetime
+        :param datetime dt: The datetime to transform
         :return: A RFC 822 formatted date string
         '''
         return formatdate(timegm(dt.utctimetuple()))
@@ -483,8 +477,7 @@ class DateTime(MinMaxMixin, Raw):
         '''
         Turn a datetime object into an ISO8601 formatted date.
 
-        :param dt: The datetime to transform
-        :type dt: datetime
+        :param datetime dt: The datetime to transform
         :return: A ISO 8601 formatted date string
         '''
         return dt.isoformat()
@@ -494,12 +487,9 @@ class Url(StringMixin, Raw):
     '''
     A string representation of a Url
 
-    :param endpoint: Endpoint name. If endpoint is ``None``, ``request.endpoint`` is used instead
-    :type endpoint: str
-    :param absolute: If ``True``, ensures that the generated urls will have the hostname included
-    :type absolute: bool
-    :param scheme: URL scheme specifier (e.g. ``http``, ``https``)
-    :type scheme: str
+    :param str endpoint: Endpoint name. If endpoint is ``None``, ``request.endpoint`` is used instead
+    :param bool absolute: If ``True``, ensures that the generated urls will have the hostname included
+    :param str scheme: URL scheme specifier (e.g. ``http``, ``https``)
     '''
     def __init__(self, endpoint=None, absolute=False, scheme=None, **kwargs):
         super(Url, self).__init__(**kwargs)
@@ -517,7 +507,7 @@ class Url(StringMixin, Raw):
                 return urlunparse((scheme, o.netloc, o.path, "", "", ""))
             return urlunparse(("", "", o.path, "", "", ""))
         except TypeError as te:
-            raise MarshallingException(te)
+            raise MarshallingError(te)
 
 
 class FormattedString(StringMixin, Raw):
@@ -537,11 +527,10 @@ class FormattedString(StringMixin, Raw):
             'name': 'Doug',
         }
         marshal(data, fields)
+
+    :param str src_str: the string to format with the other values from the response.
     '''
     def __init__(self, src_str, **kwargs):
-        '''
-        :param str src_str: the string to format with the other values from the response.
-        '''
         super(FormattedString, self).__init__(**kwargs)
         self.src_str = text_type(src_str)
 
@@ -550,7 +539,7 @@ class FormattedString(StringMixin, Raw):
             data = to_marshallable_type(obj)
             return self.src_str.format(**data)
         except (TypeError, IndexError) as error:
-            raise MarshallingException(error)
+            raise MarshallingError(error)
 
 
 class ClassName(String):
