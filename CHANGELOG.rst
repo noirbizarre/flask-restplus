@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.8.3 (2015-12-05)
+------------------
 
 - Drop/merge flask-restful fields
 - Drop/merge flask-restplus inputs
