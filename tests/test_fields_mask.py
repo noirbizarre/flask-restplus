@@ -385,6 +385,22 @@ class ApplyMaskTest(TestCase):
         result = mask.apply({}, 'nested{integer}', skip=True)
         self.assertEqual(result, {})
 
+    def test_mask_error_on_simple_fields(self):
+        model = {
+            'name': fields.String,
+        }
+
+        with self.assertRaises(mask.MaskError):
+            mask.apply(model, 'name{notpossible}')
+
+    def test_mask_error_on_list_field(self):
+        model = {
+            'nested': fields.List(fields.String)
+        }
+
+        with self.assertRaises(mask.MaskError):
+            mask.apply(model, 'nested{notpossible}')
+
 
 class MaskAPI(TestCase):
     def test_marshal_with_honour_field_mask(self):

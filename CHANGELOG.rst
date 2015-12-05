@@ -4,6 +4,7 @@ Changelog
 Current
 -------
 
+- Improve error handling for inconsistent masks
 - **Breaking changes**:
    - Renamed `exceptions` module into `errors`
    - Renamed `RestException` into `RestError`

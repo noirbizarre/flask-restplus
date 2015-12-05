@@ -6,6 +6,7 @@ import re
 import six
 
 from collections import namedtuple
+from inspect import isclass
 
 from ._compat import OrderedDict
 from .errors import RestError
@@ -123,6 +124,9 @@ def apply(data, mask, skip=False):
         return fields.Raw(default=data.default, attribute=data.attribute, mask=lambda d: apply(d, parsed_fields, skip))
     elif data == fields.Raw:
         return fields.Raw(mask=lambda d: apply(d, parsed_fields, skip))
+    elif isinstance(data, fields.Raw) or isclass(data) and issubclass(data, fields.Raw):
+        # Not possible to apply a mask on these remaining fields types
+        raise MaskError('Mask is inconsistent with model')
     # Should handle objects
     elif (not isinstance(data, (dict, OrderedDict))
             and hasattr(data, '__dict__')):
