@@ -40,6 +40,8 @@ Serialization
 
 .. autofunction:: flask_restplus.mask.apply
 
+.. autofunction:: flask_restplus.mask.filter_data
+
 .. autoclass:: flask_restplus.mask.Nested
 
 

@@ -55,10 +55,8 @@ def parse(mask):
     if mask[0] != '{':
         mask = '{%s}' % mask
 
-    root = None
-    fields = None
+    root = fields = previous = None
     stack = []
-    previous = None
 
     for token in LEXER.findall(mask):
         if token == '{':
@@ -71,8 +69,7 @@ def parse(mask):
             stack.append(new_fields)
             fields = new_fields
 
-            if not root:
-                root = fields
+            root = root or fields
 
         elif token == '}':
             if not stack:
@@ -132,6 +129,18 @@ def apply(data, mask, skip=False):
             and hasattr(data, '__dict__')):
         data = data.__dict__
 
+    return filter_data(data, parsed_fields, skip)
+
+
+def filter_data(data, parsed_fields, skip):
+    '''
+    Handle the data filtering given a parsed mask
+
+    :param dict data: the raw data to filter
+    :param list mask: a parsed mask tofilter against
+    :param bool skip: whether or not to skip missing fields
+
+    '''
     out = {}
     star = False
     for field in parsed_fields:

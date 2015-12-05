@@ -349,14 +349,14 @@ class Api(restful.Api):
             kwargs['message'] = str(message)
         restful.abort(code, **kwargs)
 
-    def model(self, name=None, model=None, **kwargs):
+    def model(self, name=None, model=None, mask=None, **kwargs):
         '''
         Register a model
 
         Model can be either a dictionary or a fields. Raw subclass.
         '''
         if isinstance(model, dict):
-            model = ApiModel(model)
+            model = ApiModel(model, mask=mask)
             model.__apidoc__ = kwargs
             model.__apidoc__['name'] = name
             self.models[name] = model

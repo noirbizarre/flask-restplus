@@ -30,6 +30,7 @@ class ApiModel(dict, MutableMapping):
     def __init__(self, *args, **kwargs):
         self.__apidoc__ = {}
         self.__parent__ = None
+        self.__mask__ = kwargs.pop('mask', None)
         super(ApiModel, self).__init__(*args, **kwargs)
 
     @cached_property
@@ -99,6 +100,7 @@ class ApiModel(dict, MutableMapping):
             'required': sorted(list(required)) or None,
             'properties': properties,
             'discriminator': discriminator,
+            'x-mask': self.__mask__,
         })
 
         if self.__parent__:

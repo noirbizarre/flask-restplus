@@ -515,6 +515,81 @@ class MaskAPI(TestCase):
             'age': 42,
         })
 
+    def test_marshal_with_honour_default_model_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        }, mask='{name,age}')
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        data = self.get_json('/test/')
+        self.assertEqual(data, {
+            'name': 'John Doe',
+            'age': 42,
+        })
+
+    def test_marshal_with_honour_header_field_mask_with_default_model_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        }, mask='{name,age}')
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': '{name}'
+        })
+        self.assertEqual(data, {
+            'name': 'John Doe',
+        })
+
+    def test_marshal_with_honour_header_default_mask_with_default_model_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        }, mask='{name,boolean}')
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model, mask='{name}')
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        data = self.get_json('/test/')
+        self.assertEqual(data, {
+            'name': 'John Doe',
+        })
+
     def test_marshal_with_honour_header_field_mask_with_default_mask(self):
         api = Api(self.app)
 
@@ -523,6 +598,32 @@ class MaskAPI(TestCase):
             'age': fields.Integer,
             'boolean': fields.Boolean,
         })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model, mask='{name,age}')
+            def get(self):
+                return {
+                    'name': 'John Doe',
+                    'age': 42,
+                    'boolean': True
+                }
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': '{name}'
+        })
+        self.assertEqual(data, {
+            'name': 'John Doe',
+        })
+
+    def test_marshal_with_honour_header_field_mask_with_default_mask_and_default_model_mask(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        }, mask='{name,boolean}')
 
         @api.route('/test/')
         class TestResource(Resource):
@@ -800,11 +901,7 @@ class SwaggerMaskHeaderTest(TestCase):
         class TestResource(Resource):
             @api.marshal_with(model, mask='{name,age}')
             def get(self):
-                return {
-                    'name': 'John Doe',
-                    'age': 42,
-                    'boolean': True
-                }
+                pass
 
         specs = self.get_specs()
         op = specs['paths']['/test/']['get']
@@ -820,3 +917,23 @@ class SwaggerMaskHeaderTest(TestCase):
         self.assertEqual(param['default'], '{name,age}')
         self.assertEqual(param['in'], 'header')
         self.assertNotIn('required', param)
+
+    def test_marshal_with_expose_default_model_mask_header(self):
+        api = Api(self.app)
+
+        model = api.model('Test', {
+            'name': fields.String,
+            'age': fields.Integer,
+            'boolean': fields.Boolean,
+        }, mask='{name,age}')
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(model)
+            def get(self):
+                pass
+
+        specs = self.get_specs()
+        definition = specs['definitions']['Test']
+        self.assertIn('x-mask', definition)
+        self.assertEqual(definition['x-mask'], '{name,age}')

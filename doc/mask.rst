@@ -75,3 +75,32 @@ You can also specify a default mask that will be applied if no header mask is fo
         @api.marshal_with(my_model, mask='name,age')
         def get(self):
             pass
+
+
+Default mask can also be handled at model level:
+
+.. code-block:: python
+
+    model = api.model('Person', {
+        'name': fields.String,
+        'age': fields.Integer,
+        'boolean': fields.Boolean,
+    }, mask='{name,age}')
+
+
+It will be exposed into the model `x-mask` vendor field:
+
+.. code-block:: JSON
+
+    {"definitions": {
+        "Test": {
+            "properties": {
+                "age": {"type": "integer"},
+                "boolean": {"type": "boolean"},
+                "name": {"type": "string"}
+            },
+            "x-mask": "{name,age}"
+        }
+    }}
+
+To override default masks, you need to give another mask or pass `*` as mask.

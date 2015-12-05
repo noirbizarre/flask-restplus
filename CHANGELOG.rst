@@ -5,6 +5,7 @@ Current
 -------
 
 - Improve error handling for inconsistent masks
+- Handle model level default mask
 - **Breaking changes**:
    - Renamed `exceptions` module into `errors`
    - Renamed `RestException` into `RestError`

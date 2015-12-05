@@ -38,6 +38,7 @@ def marshal(data, fields, envelope=None, mask=None):
             return cls()
         return cls
 
+    mask = mask or getattr(fields, '__mask__', None)
     if has_app_context():
         mask_header = current_app.config['RESTPLUS_MASK_HEADER']
         mask = request.headers.get(mask_header) or mask
