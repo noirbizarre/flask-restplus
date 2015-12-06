@@ -6,13 +6,13 @@ from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_EVEN
 from email.utils import formatdate
 
-from six import iteritems, itervalues, text_type
+from six import iteritems, itervalues, text_type, string_types
 
 from flask import url_for, request
-from flask.ext.restful import fields as base_fields
 from werkzeug import cached_property
 
 from ._compat import urlparse, urlunparse
+from .inputs import date_from_iso8601, date_from_rfc822, datetime_from_iso8601, datetime_from_rfc822
 from .errors import RestError
 from .marshalling import marshal
 from .utils import camel_to_dash, not_none
@@ -150,10 +150,16 @@ class Raw(object):
         value = get_value(key if self.attribute is None else self.attribute, obj)
 
         if value is None:
-            return self.default
+            default = self._v('default')
+            return self.format(default) if default else default
 
         data = self.format(value)
         return self.mask(data) if self.mask else data
+
+    def _v(self, key):
+        '''Helper for getting a value from attribute allowing callable'''
+        value = getattr(self, key)
+        return value() if callable(value) else value
 
     @cached_property
     def __schema__(self):
@@ -166,7 +172,7 @@ class Raw(object):
             'title': self.title,
             'description': self.description,
             'readOnly': self.readonly,
-            'default': self.default,
+            'default': self._v('default'),
             'example': self.example,
         }
 
@@ -271,13 +277,15 @@ class List(Raw):
             return self.format(value)
 
         if value is None:
-            return self.default
+            return self._v('default')
 
         return [marshal(value, self.container.nested)]
 
     def schema(self):
         schema = super(List, self).schema()
-        schema.update(minItems=self.min_items, maxItems=self.max_items, uniqueItems=self.unique)
+        schema.update(minItems=self._v('min_items'),
+                      maxItems=self._v('max_items'),
+                      uniqueItems=self._v('unique'))
         schema['type'] = 'array'
         schema['items'] = self.container.__schema__
         return schema
@@ -299,7 +307,9 @@ class StringMixin(object):
 
     def schema(self):
         schema = super(StringMixin, self).schema()
-        schema.update(minLength=self.min_length, maxLength=self.max_length, pattern=self.pattern)
+        schema.update(minLength=self._v('min_length'),
+                      maxLength=self._v('max_length'),
+                      pattern=self._v('pattern'))
         return schema
 
 
@@ -313,8 +323,10 @@ class MinMaxMixin(object):
 
     def schema(self):
         schema = super(MinMaxMixin, self).schema()
-        schema.update(minimum=self.minimum, exclusiveMinimum=self.excluisveMinimum,
-                      maximum=self.maximum, exclusiveMaximum=self.exclusiveMaximum)
+        schema.update(minimum=self._v('minimum'),
+                      exclusiveMinimum=self._v('excluisveMinimum'),
+                      maximum=self._v('maximum'),
+                      exclusiveMaximum=self._v('exclusiveMaximum'))
         return schema
 
 
@@ -327,7 +339,7 @@ class NumberMixin(MinMaxMixin):
 
     def schema(self):
         schema = super(NumberMixin, self).schema()
-        schema.update(multipleOf=self.multiple)
+        schema.update(multipleOf=self._v('multiple'))
         return schema
 
 
@@ -350,7 +362,7 @@ class String(StringMixin, Raw):
             raise MarshallingError(ve)
 
     def schema(self):
-        enum = self.enum() if callable(self.enum) else self.enum
+        enum = self._v('enum')
         schema = super(String, self).schema()
         schema.update(enum=enum)
         if enum and schema['example'] is None:
@@ -443,16 +455,26 @@ class DateTime(MinMaxMixin, Raw):
     __schema_type__ = 'string'
     __schema_format__ = 'date-time'
 
-    def __init__(self, dt_format='rfc822', **kwargs):
+    def __init__(self, dt_format='iso8601', **kwargs):
         super(DateTime, self).__init__(**kwargs)
         self.dt_format = dt_format
-        if self.minimum and isinstance(self.minimum, (date, datetime)):
-            self.minimum = self.minimum.isoformat()
-        if self.maximum and isinstance(self.maximum, (date, datetime)):
-            self.maximum = self.maximum.isoformat()
+
+    def parse(self, value):
+        if value is None:
+            return None
+        elif isinstance(value, string_types):
+            parser = datetime_from_iso8601 if self.dt_format == 'iso8601' else datetime_from_rfc822
+            return parser(value)
+        elif isinstance(value, datetime):
+            return value
+        elif isinstance(value, date):
+            return datetime(value.year, value.month, value.day)
+        else:
+            raise ValueError('Unsupported DateTime format')
 
     def format(self, value):
         try:
+            value = self.parse(value)
             if self.dt_format == 'rfc822':
                 return self.format_rfc822(value)
             elif self.dt_format == 'iso8601':
@@ -461,8 +483,8 @@ class DateTime(MinMaxMixin, Raw):
                 raise MarshallingError(
                     'Unsupported date format %s' % self.dt_format
                 )
-        except AttributeError as ae:
-            raise MarshallingError(ae)
+        except (AttributeError, ValueError) as e:
+            raise MarshallingError(e)
 
     def format_rfc822(self, dt):
         '''
@@ -481,6 +503,34 @@ class DateTime(MinMaxMixin, Raw):
         :return: A ISO 8601 formatted date string
         '''
         return dt.isoformat()
+
+    def _for_schema(self, name):
+        value = self.parse(self._v(name))
+        return self.format(value) if value else None
+
+    def schema(self):
+        schema = super(DateTime, self).schema()
+        schema['default'] = self._for_schema('default')
+        schema['minimum'] = self._for_schema('minimum')
+        schema['maximum'] = self._for_schema('maximum')
+        return schema
+
+
+class Date(DateTime):
+    __schema_format__ = 'date'
+
+    def parse(self, value):
+        if value is None:
+            return None
+        elif isinstance(value, string_types):
+            parser = date_from_iso8601 if self.dt_format == 'iso8601' else date_from_rfc822
+            return parser(value)
+        elif isinstance(value, datetime):
+            return value.date()
+        elif isinstance(value, date):
+            return value
+        else:
+            raise ValueError('Unsupported Date format')
 
 
 class Url(StringMixin, Raw):
@@ -554,6 +604,8 @@ class ClassName(String):
 
     def output(self, key, obj):
         classname = obj.__class__.__name__
+        if classname == 'dict':
+            return 'object'
         return camel_to_dash(classname) if self.dash else classname
 
 
@@ -583,7 +635,7 @@ class Polymorph(Nested):
 
     def output(self, key, obj):
         # Copied from upstream NestedField
-        value = base_fields.get_value(key if self.attribute is None else self.attribute, obj)
+        value = get_value(key if self.attribute is None else self.attribute, obj)
         if value is None:
             if self.allow_null:
                 return None
@@ -601,7 +653,7 @@ class Polymorph(Nested):
         elif len(candidates) > 1:
             raise ValueError('Unable to determine a candidate for: ' + value.__class__.__name__)
         else:
-            return base_fields.marshal(value, candidates[0].resolved)
+            return marshal(value, candidates[0].resolved)
 
     def resolve_ancestor(self, fields):
         '''

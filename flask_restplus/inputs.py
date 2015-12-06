@@ -54,8 +54,7 @@ class regex(object):
     Input to the ``example`` argument will be rejected if it contains anything
     but numbers.
 
-    :param pattern: The regular expression the input must match
-    :type pattern: str
+    :param str pattern: The regular expression the input must match
     '''
 
     def __init__(self, pattern):
@@ -165,11 +164,10 @@ def iso8601interval(value, argument='argument'):
         "2013-01-01T12:00/PT30M" -> datetime(2013, 1, 1, 12), datetime(2013, 1, 1, 12, 30)
         "2013-01-01T06:00/2013-01-01T12:00" -> datetime(2013, 1, 1, 6), datetime(2013, 1, 1, 12)
 
-    :param value: The ISO8601 date time as a string
-    :type value: str
+    :param str value: The ISO8601 date time as a string
     :return: Two UTC datetimes, the start and the end of the specified interval
     :rtype: A tuple (datetime, datetime)
-    :raises: ValueError, if the interval is invalid.
+    :raises ValueError: if the interval is invalid.
     '''
 
     try:
@@ -239,6 +237,8 @@ def boolean(value):
     Also accepts ``"1"`` and ``"0"`` as ``True``/``False`` (respectively).
     If the input is from the request JSON body, the type is already a native python boolean,
     and will be passed through without further parsing.
+
+    :raises ValueError: if the boolean value is invalid
     '''
     if isinstance(value, bool):
         return value
@@ -253,7 +253,7 @@ def boolean(value):
     raise ValueError('Invalid literal for boolean(): {0}'.format(value))
 
 
-def datetime_from_rfc822(datetime_str):
+def datetime_from_rfc822(value):
     '''
     Turns an RFC822 formatted date into a datetime object.
 
@@ -261,14 +261,19 @@ def datetime_from_rfc822(datetime_str):
 
         inputs.datetime_from_rfc822('Wed, 02 Oct 2002 08:00:00 EST')
 
-    :param datetime_str: The RFC822-complying string to transform
-    :type datetime_str: str
-    :return: A datetime
+    :param str value: The RFC822-complying string to transform
+    :return: The parsed datetime
+    :rtype: datetime
+    :raises ValueError: if value is an invalid date literal
+
     '''
-    return datetime.fromtimestamp(mktime_tz(parsedate_tz(datetime_str)), pytz.utc)
+    try:
+        return datetime.fromtimestamp(mktime_tz(parsedate_tz(value)), pytz.utc)
+    except:
+        raise ValueError('Invalid date literal "{0}"'.format(value))
 
 
-def datetime_from_iso8601(datetime_str):
+def datetime_from_iso8601(value):
     '''
     Turns an ISO8601 formatted date into a datetime object.
 
@@ -276,8 +281,51 @@ def datetime_from_iso8601(datetime_str):
 
         inputs.datetime_from_iso8601("2012-01-01T23:30:00+02:00")
 
-    :param datetime_str: The ISO8601-complying string to transform
-    :type datetime_str: str
+    :param str value: The ISO8601-complying string to transform
     :return: A datetime
+    :rtype: datetime
+    :raises ValueError: if value is an invalid date literal
+
     '''
-    return aniso8601.parse_datetime(datetime_str)
+    try:
+        try:
+            return aniso8601.parse_datetime(value)
+        except ValueError:
+            date = aniso8601.parse_date(value)
+            return datetime(date.year, date.month, date.day)
+    except:
+        raise ValueError('Invalid date literal "{0}"'.format(value))
+
+
+def date_from_rfc822(value):
+    '''
+    Turns an RFC822 formatted date into a date object.
+
+    Example::
+
+        inputs.date_from_rfc822('Wed, 02 Oct 2002 08:00:00 EST')
+
+    :param str value: The RFC822-complying string to transform
+    :return: A date
+    :rtype: date
+    :raises ValueError: if value is an invalid date literal
+
+    '''
+    return datetime_from_rfc822(value).date()
+
+
+def date_from_iso8601(value):
+    '''
+    Turns an ISO8601 formatted date into a date object.
+
+    Example::
+
+        inputs.date_from_iso8601("2012-01-01")
+
+    :param str value: The ISO8601-complying string to transform
+    :return: A date
+    :rtype: date
+    :raises ValueError: if value is an invalid date literal
+
+    '''
+    return datetime_from_iso8601(value).date()

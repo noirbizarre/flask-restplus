@@ -4,6 +4,10 @@ Changelog
 Current
 -------
 
+- Drop `flask_restful.Resource` resolving a recursion problem
+- Allow any `callable` as field `default`, `min`, `max`...
+- Added some missing fields:
+   - :class:`~fields.Date`
 - Improve error handling for inconsistent masks
 - Handle model level default mask
 - support colons and dashes in mask field names
@@ -11,6 +15,7 @@ Current
    - Renamed `exceptions` module into `errors`
    - Renamed `RestException` into `RestError`
    - Renamed `MarshallingException` into `MarshallingError`
+   - :class:`~fields.DateTime` field always output datetime
 
 0.8.3 (2015-12-05)
 ------------------

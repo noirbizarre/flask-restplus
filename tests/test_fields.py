@@ -64,6 +64,11 @@ class NumberTestMixin(object):
         assert_equal(field.__schema__['minimum'], 0)
         assert_not_in('exclusiveMinimum', field.__schema__)
 
+    def test_min_as_callable(self):
+        field = self.field_class(min=lambda: 0)
+        assert_in('minimum', field.__schema__)
+        assert_equal(field.__schema__['minimum'], 0)
+
     def test_min_exlusive(self):
         field = self.field_class(min=0, exclusiveMin=True)
         assert_in('minimum', field.__schema__)
@@ -76,6 +81,11 @@ class NumberTestMixin(object):
         assert_in('maximum', field.__schema__)
         assert_equal(field.__schema__['maximum'], 42)
         assert_not_in('exclusiveMaximum', field.__schema__)
+
+    def test_max_as_callable(self):
+        field = self.field_class(max=lambda: 42)
+        assert_in('maximum', field.__schema__)
+        assert_equal(field.__schema__['maximum'], 42)
 
     def test_max_exclusive(self):
         field = self.field_class(max=42, exclusiveMax=True)
@@ -96,8 +106,18 @@ class StringTestMixin(object):
         assert_in('minLength', field.__schema__)
         assert_equal(field.__schema__['minLength'], 1)
 
+    def test_min_length_as_callable(self):
+        field = self.field_class(min_length=lambda: 1)
+        assert_in('minLength', field.__schema__)
+        assert_equal(field.__schema__['minLength'], 1)
+
     def test_max_length(self):
         field = self.field_class(max_length=42)
+        assert_in('maxLength', field.__schema__)
+        assert_equal(field.__schema__['maxLength'], 42)
+
+    def test_max_length(self):
+        field = self.field_class(max_length=lambda: 42)
         assert_in('maxLength', field.__schema__)
         assert_equal(field.__schema__['maxLength'], 42)
 
@@ -118,6 +138,12 @@ class RawFieldTest(BaseFieldTestMixin, FieldTestCase):
     def test_default(self):
         field = fields.Raw(default='aaa')
         assert_equal(field.__schema__['default'], 'aaa')
+        self.assert_field(field, None, 'aaa')
+
+    def test_default_as_callable(self):
+        field = fields.Raw(default=lambda: 'aaa')
+        assert_equal(field.__schema__['default'], 'aaa')
+        self.assert_field(field, None, 'aaa')
 
     def test_with_attribute(self):
         field = fields.Raw(attribute='bar')
@@ -372,21 +398,33 @@ class DatetimeFieldTest(BaseFieldTestMixin, FieldTestCase):
         field = fields.DateTime()
         assert not field.required
         assert_equal(field.__schema__, {'type': 'string', 'format': 'date-time'})
+        self.assert_field(field, None, None)
 
     def test_with_default(self):
         field = fields.DateTime(default='2014-08-25')
-        assert_equal(field.__schema__, {'type': 'string', 'format': 'date-time', 'default': '2014-08-25'})
+        assert_equal(field.__schema__, {'type': 'string', 'format': 'date-time', 'default': '2014-08-25T00:00:00'})
+        self.assert_field(field, None, '2014-08-25T00:00:00')
+
+    def test_with_default_as_datetime(self):
+        field = fields.DateTime(default=datetime(2014, 8, 25))
+        assert_equal(field.__schema__, {'type': 'string', 'format': 'date-time', 'default': '2014-08-25T00:00:00'})
+        self.assert_field(field, None, '2014-08-25T00:00:00')
+
+    def test_with_default_as_date(self):
+        field = fields.DateTime(default=date(2014, 8, 25))
+        assert_equal(field.__schema__, {'type': 'string', 'format': 'date-time', 'default': '2014-08-25T00:00:00'})
+        self.assert_field(field, None, '2014-08-25T00:00:00')
 
     def test_min(self):
-        field = fields.DateTime(min='1984-06-07')
+        field = fields.DateTime(min='1984-06-07T00:00:00')
         assert_in('minimum', field.__schema__)
-        assert_equal(field.__schema__['minimum'], '1984-06-07')
+        assert_equal(field.__schema__['minimum'], '1984-06-07T00:00:00')
         assert_not_in('exclusiveMinimum', field.__schema__)
 
     def test_min_as_date(self):
         field = fields.DateTime(min=date(1984, 6, 7))
         assert_in('minimum', field.__schema__)
-        assert_equal(field.__schema__['minimum'], '1984-06-07')
+        assert_equal(field.__schema__['minimum'], '1984-06-07T00:00:00')
         assert_not_in('exclusiveMinimum', field.__schema__)
 
     def test_min_as_datetime(self):
@@ -396,22 +434,22 @@ class DatetimeFieldTest(BaseFieldTestMixin, FieldTestCase):
         assert_not_in('exclusiveMinimum', field.__schema__)
 
     def test_min_exlusive(self):
-        field = fields.DateTime(min='1984-06-07', exclusiveMin=True)
+        field = fields.DateTime(min='1984-06-07T00:00:00', exclusiveMin=True)
         assert_in('minimum', field.__schema__)
-        assert_equal(field.__schema__['minimum'], '1984-06-07')
+        assert_equal(field.__schema__['minimum'], '1984-06-07T00:00:00')
         assert_in('exclusiveMinimum', field.__schema__)
         assert_equal(field.__schema__['exclusiveMinimum'], True)
 
     def test_max(self):
-        field = fields.DateTime(max='1984-06-07')
+        field = fields.DateTime(max='1984-06-07T00:00:00')
         assert_in('maximum', field.__schema__)
-        assert_equal(field.__schema__['maximum'], '1984-06-07')
+        assert_equal(field.__schema__['maximum'], '1984-06-07T00:00:00')
         assert_not_in('exclusiveMaximum', field.__schema__)
 
     def test_max_as_date(self):
         field = fields.DateTime(max=date(1984, 6, 7))
         assert_in('maximum', field.__schema__)
-        assert_equal(field.__schema__['maximum'], '1984-06-07')
+        assert_equal(field.__schema__['maximum'], '1984-06-07T00:00:00')
         assert_not_in('exclusiveMaximum', field.__schema__)
 
     def test_max_as_datetime(self):
@@ -421,14 +459,15 @@ class DatetimeFieldTest(BaseFieldTestMixin, FieldTestCase):
         assert_not_in('exclusiveMaximum', field.__schema__)
 
     def test_max_exclusive(self):
-        field = fields.DateTime(max='1984-06-07', exclusiveMax=True)
+        field = fields.DateTime(max='1984-06-07T00:00:00', exclusiveMax=True)
         assert_in('maximum', field.__schema__)
-        assert_equal(field.__schema__['maximum'], '1984-06-07')
+        assert_equal(field.__schema__['maximum'], '1984-06-07T00:00:00')
         assert_in('exclusiveMaximum', field.__schema__)
         assert_equal(field.__schema__['exclusiveMaximum'], True)
 
     def test_rfc822_values(self):
         values = [
+            (date(2011, 1, 1), 'Sat, 01 Jan 2011 00:00:00 -0000'),
             (datetime(2011, 1, 1), 'Sat, 01 Jan 2011 00:00:00 -0000'),
             (datetime(2011, 1, 1, 23, 59, 59),
              'Sat, 01 Jan 2011 23:59:59 -0000'),
@@ -441,6 +480,7 @@ class DatetimeFieldTest(BaseFieldTestMixin, FieldTestCase):
 
     def test_iso8601_values(self):
         values = [
+            (date(2011, 1, 1), '2011-01-01T00:00:00'),
             (datetime(2011, 1, 1), '2011-01-01T00:00:00'),
             (datetime(2011, 1, 1, 23, 59, 59),
              '2011-01-01T23:59:59'),
@@ -458,6 +498,112 @@ class DatetimeFieldTest(BaseFieldTestMixin, FieldTestCase):
     def test_unsupported_format(self):
         field = fields.DateTime(dt_format='raw')
         self.assert_field_raises(field, datetime.now())
+
+    def test_unsupported_value_format(self):
+        field = fields.DateTime(dt_format='raw')
+        self.assert_field_raises(field, 'xxx')
+
+
+class DateFieldTest(BaseFieldTestMixin, FieldTestCase):
+    field_class = fields.Date
+
+    def test_defaults(self):
+        field = fields.Date()
+        assert not field.required
+        assert_equal(field.__schema__, {'type': 'string', 'format': 'date'})
+
+    def test_with_default(self):
+        field = fields.Date(default='2014-08-25')
+        assert_equal(field.__schema__, {'type': 'string', 'format': 'date', 'default': '2014-08-25'})
+        self.assert_field(field, None, '2014-08-25')
+
+    def test_with_default_as_datetime(self):
+        field = fields.Date(default=datetime(2014, 8, 25))
+        assert_equal(field.__schema__, {'type': 'string', 'format': 'date', 'default': '2014-08-25'})
+
+    def test_with_default_as_date(self):
+        field = fields.Date(default=date(2014, 8, 25))
+        assert_equal(field.__schema__, {'type': 'string', 'format': 'date', 'default': '2014-08-25'})
+
+    def test_min(self):
+        field = fields.Date(min='1984-06-07')
+        assert_in('minimum', field.__schema__)
+        assert_equal(field.__schema__['minimum'], '1984-06-07')
+        assert_not_in('exclusiveMinimum', field.__schema__)
+
+    def test_min_as_date(self):
+        field = fields.Date(min=date(1984, 6, 7))
+        assert_in('minimum', field.__schema__)
+        assert_equal(field.__schema__['minimum'], '1984-06-07')
+        assert_not_in('exclusiveMinimum', field.__schema__)
+
+    def test_min_as_datetime(self):
+        field = fields.Date(min=datetime(1984, 6, 7, 1, 2, 0))
+        assert_in('minimum', field.__schema__)
+        assert_equal(field.__schema__['minimum'], '1984-06-07')
+        assert_not_in('exclusiveMinimum', field.__schema__)
+
+    def test_min_exlusive(self):
+        field = fields.Date(min='1984-06-07', exclusiveMin=True)
+        assert_in('minimum', field.__schema__)
+        assert_equal(field.__schema__['minimum'], '1984-06-07')
+        assert_in('exclusiveMinimum', field.__schema__)
+        assert_equal(field.__schema__['exclusiveMinimum'], True)
+
+    def test_max(self):
+        field = fields.Date(max='1984-06-07')
+        assert_in('maximum', field.__schema__)
+        assert_equal(field.__schema__['maximum'], '1984-06-07')
+        assert_not_in('exclusiveMaximum', field.__schema__)
+
+    def test_max_as_date(self):
+        field = fields.Date(max=date(1984, 6, 7))
+        assert_in('maximum', field.__schema__)
+        assert_equal(field.__schema__['maximum'], '1984-06-07')
+        assert_not_in('exclusiveMaximum', field.__schema__)
+
+    def test_max_as_datetime(self):
+        field = fields.Date(max=datetime(1984, 6, 7, 1, 2, 0))
+        assert_in('maximum', field.__schema__)
+        assert_equal(field.__schema__['maximum'], '1984-06-07')
+        assert_not_in('exclusiveMaximum', field.__schema__)
+
+    def test_max_exclusive(self):
+        field = fields.Date(max='1984-06-07', exclusiveMax=True)
+        assert_in('maximum', field.__schema__)
+        assert_equal(field.__schema__['maximum'], '1984-06-07')
+        assert_in('exclusiveMaximum', field.__schema__)
+        assert_equal(field.__schema__['exclusiveMaximum'], True)
+
+    def test_rfc822_values(self):
+        values = [
+            (date(2011, 1, 1), 'Sat, 01 Jan 2011'),
+            (datetime(2011, 1, 1), 'Sat, 01 Jan 2011'),
+            (datetime(2011, 1, 1, 23, 59, 59), 'Sat, 01 Jan 2011'),
+            (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc), 'Sat, 01 Jan 2011'),
+            (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')), 'Sat, 01 Jan 2011')
+        ]
+        self.assert_values(values, dt_format='rfc822')
+
+    def test_iso8601_values(self):
+        values = [
+            (date(2011, 1, 1), '2011-01-01'),
+            (datetime(2011, 1, 1), '2011-01-01'),
+            (datetime(2011, 1, 1, 23, 59, 59), '2011-01-01'),
+            (datetime(2011, 1, 1, 23, 59, 59, 1000), '2011-01-01'),
+            (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc), '2011-01-01'),
+            (datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc), '2011-01-01'),
+            (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')), '2011-01-01')
+        ]
+        self.assert_values(values, dt_format='iso8601')
+
+    def test_unsupported_format(self):
+        field = fields.Date(dt_format='raw')
+        self.assert_field_raises(field, datetime.now())
+
+    def test_unsupported_value_format(self):
+        field = fields.DateTime(dt_format='raw')
+        self.assert_field_raises(field, 'xxx')
 
 
 class FormatedStringFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
@@ -771,6 +917,14 @@ class ClassNameFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
 
         data = self.api.marshal(FakeClass(), model)
         assert_equal(data, {'name': 'fake_class'})
+
+    def test_with_dict(self):
+        model = self.api.model('Test', {
+            'name': fields.ClassName(),
+        })
+
+        data = self.api.marshal({}, model)
+        assert_equal(data, {'name': 'object'})
 
 
 class PolymorphTest(FieldTestCase):
