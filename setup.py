@@ -20,6 +20,8 @@ PYPI_RST_FILTERS = (
     # Replace Python crossreferences by simple monospace
     (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`~(?:\w+\.)*(\w+)`', r'``\1``'),
     (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`(.+)`', r'``\1``'),
+    # replace doc references
+    (r':doc:`(.+) <(.*)>`', r'`\1 <http://flask-restplus.readthedocs.org/en/stable\2.html>`_'),
 )
 
 

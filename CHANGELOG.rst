@@ -11,7 +11,7 @@ Current
 
 - Drop/merge `flask_restful.Resource` resolving a recursion problem
 - Allow any `callable` as field `default`, `min`, `max`...
-- Added :class:`~flask_restplus.fields.Date`
+- Added :class:`~flask_restplus.fields.Date` field
 - Improve error handling for inconsistent masks
 - Handle model level default mask
 - support colons and dashes in mask field names
@@ -46,7 +46,7 @@ Current
     - allow to register a custom view with ``@api.documentation``
     - allow to register a custom URL with the ``doc`` parameter
     - allow to disable documentation with ``doc=False``
-- Added fields mask support through header (see: `Fields Masks Documentation`_)
+- Added fields mask support through header (see: :doc:`Fields Masks Documentation </mask>`)
 - Expose ``flask_restful.inputs`` module on ``flask_restplus.inputs``
 - Added support for some missing fields and attributes:
     - ``host`` root field (filed only if ``SERVER_NAME`` config is set)
@@ -97,7 +97,7 @@ Current
 - Expose models and fields schema through the ``__schema__`` attribute
 - Drop support for model as class
 - Added ``@api.errorhandler()`` to register custom error handlers
-- Added ``@api.response''`` shortcut decorator
+- Added ``@api.response()`` shortcut decorator
 - Fix list nested models missing in definitions
 
 
@@ -213,7 +213,3 @@ Current
 ---
 
 - Initial release
-
-
-
-.. _Fields Masks Documentation: http://flask-restplus.readthedocs.org/en/stable/mask.html
