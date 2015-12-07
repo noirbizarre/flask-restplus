@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.8.4 (2015-12-07)
+------------------
 
 - Drop/merge `flask_restful.Resource` resolving a recursion problem
 - Allow any `callable` as field `default`, `min`, `max`...
