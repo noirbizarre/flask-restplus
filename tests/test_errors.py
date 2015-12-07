@@ -144,6 +144,32 @@ class APITestCase(TestCase):
                 'test': 'value',
             })
 
+    def test_errorhandler_for_custom_exception_with_headers(self):
+        api = restplus.Api(self.app)
+
+        class CustomException(RuntimeError):
+            pass
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise CustomException('error')
+
+        @api.errorhandler(CustomException)
+        def handle_custom_exception(error):
+            return {'message': 'some maintenance'}, 503, {'Retry-After': 120}
+
+        with self.app.test_client() as client:
+            response = client.get('/test/')
+            self.assertEquals(response.status_code, 503)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertEqual(data, {
+                'message': 'some maintenance'
+            })
+            self.assertEqual(response.headers['Retry-After'], '120')
+
     def test_default_errorhandler(self):
         api = restplus.Api(self.app)
 
@@ -202,6 +228,29 @@ class APITestCase(TestCase):
                 'message': 'error',
                 'test': 'value',
             })
+
+    def test_custom_default_errorhandler_with_headers(self):
+        api = restplus.Api(self.app)
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise Exception('error')
+
+        @api.errorhandler
+        def default_error_handler(error):
+            return {'message': 'some maintenance'}, 503, {'Retry-After': 120}
+
+        with self.app.test_client() as client:
+            response = client.get('/test/')
+            self.assertEquals(response.status_code, 503)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertEqual(data, {
+                'message': 'some maintenance'
+            })
+            self.assertEqual(response.headers['Retry-After'], '120')
 
     def test_errorhandler_lazy(self):
         api = restplus.Api()
