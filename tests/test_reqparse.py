@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import json
 
-from flask.ext import restplus
+import flask_restplus as restplus
 
 from . import TestCase
 

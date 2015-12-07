@@ -8,7 +8,7 @@ from os.path import join, dirname
 from jsonschema import validate
 from werkzeug.datastructures import FileStorage
 
-from flask.ext import restplus
+import flask_restplus as restplus
 
 from . import TestCase
 

@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from flask import url_for, Blueprint
 from werkzeug.routing import BuildError
 
-from flask.ext import restplus
+import flask_restplus as restplus
 
 from . import TestCase
 

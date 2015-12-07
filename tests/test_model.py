@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from flask import Blueprint
-from flask.ext.restplus import fields, Api
+from flask_restplus import fields, Api
 
 from . import TestCase
 

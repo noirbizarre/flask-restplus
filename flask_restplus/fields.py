@@ -18,7 +18,7 @@ from .marshalling import marshal
 from .utils import camel_to_dash, not_none
 
 
-__all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime',
+__all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime', 'Date',
            'Boolean', 'Integer', 'Float', 'Arbitrary', 'Fixed',
            'Nested', 'List', 'ClassName', 'Polymorph',
            'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingError')

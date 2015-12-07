@@ -14,6 +14,9 @@ class RestError(Exception):
     def __init__(self, msg):
         self.msg = msg
 
+    def __str__(self):
+        return self.msg
+
 
 class ValidationError(RestError):
     '''An helper class for validation errors.'''

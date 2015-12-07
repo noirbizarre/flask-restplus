@@ -4,8 +4,9 @@ from __future__ import unicode_literals
 from textwrap import dedent
 
 from flask import url_for, Blueprint
-from flask.ext import restplus
 from werkzeug.datastructures import FileStorage
+
+import flask_restplus as restplus
 
 from . import TestCase
 

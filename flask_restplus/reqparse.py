@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from flask.ext.restful import marshal, reqparse
+from flask_restful import reqparse
 
+from .marshalling import marshal
 from .model import ApiModel
 
 

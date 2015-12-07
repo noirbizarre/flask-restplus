@@ -308,9 +308,6 @@ class APITestCase(TestCase):
             })
 
     def test_error_router_falls_back_to_original(self):
-        """Verify that if an exception occurs in the Flask-RESTful error handler,
-        the error_router will call the original flask error handler instead.
-        """
         api = restplus.Api(self.app)
         self.app.handle_exception = Mock()
         api.handle_error = Mock(side_effect=Exception())
