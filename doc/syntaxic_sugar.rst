@@ -103,8 +103,8 @@ Handle errors with ``@api.errorhandler()`` decorator
 ----------------------------------------------------
 
 The ``@api.errorhandler()`` decorator allows you to register
-a specific handler for a given exception, in the same maner
-than you can do with Flask/Blueprint ``@errorhandler`` decorator.
+a specific handler for a given exception, in the same manner
+that you can do with Flask/Blueprint ``@errorhandler`` decorator.
 
 .. code-block:: python
 
@@ -119,7 +119,7 @@ than you can do with Flask/Blueprint ``@errorhandler`` decorator.
         '''Return a custom message and 500 status code'''
         return {'message': error.specific}
 
-It also allow to override the default error handler when used wihtout parameter:
+It also allows for overriding the default error handler when used wihtout parameter:
 
 .. code-block:: python
 

@@ -2,7 +2,7 @@ Fields masks
 ============
 
 Flask-Restplus support partial object fetching (aka. fields mask)
-by suppling a custom header in the request.
+by supplying a custom header in the request.
 
 By default the header is ``X-Fields``
 but it ca be changed with the ``RESTPLUS_MASK_HEADER`` parameter.
@@ -12,7 +12,7 @@ Syntax
 
 The syntax is actually quite simple.
 You just provide a coma separated list of field names,
-optionaly wrapped in brackets.
+optionally wrapped in brackets.
 
 .. code-block:: python
 
@@ -63,8 +63,8 @@ the mask will be automatically applied if the header is present.
 The header will be exposed as a Swagger parameter each time you use the
 ``@api.marshal_with`` decorator.
 
-As Swagger does not permet to expose a global header once
-so it can make your Swagger specifications a lot more verbose.
+As Swagger does not permit exposing a global header once
+it can make your Swagger specifications a lot more verbose.
 You can disable this behavior by setting ``RESTPLUS_MASK_SWAGGER`` to ``False``.
 
 You can also specify a default mask that will be applied if no header mask is found.
