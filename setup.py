@@ -17,6 +17,9 @@ PYPI_RST_FILTERS = (
     (r'\.\. image:: .*', ''),
     (r'\s+:target: .*', ''),
     (r'\s+:alt: .*', ''),
+    # Replace Python crossreferences by simple monospace
+    (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`~(?:\w+\.)*(\w+)`', r'``\1``'),
+    (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`(.+)`', r'``\1``'),
 )
 
 
