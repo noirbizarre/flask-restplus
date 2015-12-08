@@ -443,10 +443,10 @@ class Api(restful.Api):
         '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
         return self.marshal_with(fields, True, **kwargs)
 
-    def marshal(self, data, fields):
+    def marshal(self, data, fields, envelope=None, mask=None):
         '''A shortcut to the :func:`marshal` helper'''
         resolved = getattr(fields, 'resolved', fields)
-        return marshal(data, resolved)
+        return marshal(data, resolved, envelope=envelope, mask=mask)
 
     def errorhandler(self, exception):
         '''A decorator to register an error handler for a given exception'''

@@ -39,9 +39,6 @@ def marshal(data, fields, envelope=None, mask=None):
         return cls
 
     mask = mask or getattr(fields, '__mask__', None)
-    if has_app_context():
-        mask_header = current_app.config['RESTPLUS_MASK_HEADER']
-        mask = request.headers.get(mask_header) or mask
     if mask:
         from .mask import apply as apply_mask
         fields = apply_mask(fields, mask, skip=True)
@@ -102,11 +99,15 @@ class marshal_with(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             resp = f(*args, **kwargs)
+            mask = self.mask
+            if has_app_context():
+                mask_header = current_app.config['RESTPLUS_MASK_HEADER']
+                mask = request.headers.get(mask_header) or mask
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return marshal(data, self.fields, self.envelope, self.mask), code, headers
+                return marshal(data, self.fields, self.envelope, mask), code, headers
             else:
-                return marshal(resp, self.fields, self.envelope, self.mask)
+                return marshal(resp, self.fields, self.envelope, mask)
         return wrapper
 
 

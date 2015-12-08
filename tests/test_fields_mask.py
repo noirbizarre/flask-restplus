@@ -412,7 +412,7 @@ class ApplyMaskTest(TestCase):
 
 
 class MaskAPI(TestCase):
-    def test_marshal_with_honour_field_mask(self):
+    def test_marshal_with_honour_field_mask_header(self):
         api = Api(self.app)
 
         model = api.model('Test', {
@@ -482,19 +482,15 @@ class MaskAPI(TestCase):
             'boolean': fields.Boolean,
         })
 
-        @api.route('/test/')
-        class TestResource(Resource):
-            def get(self):
-                return api.marshal({
-                    'name': 'John Doe',
-                    'age': 42,
-                    'boolean': True
-                }, model)
+        data = {
+            'name': 'John Doe',
+            'age': 42,
+            'boolean': True
+        }
 
-        data = self.get_json('/test/', headers={
-            'X-Fields': '{name,age}'
-        })
-        self.assertEqual(data, {
+        result = api.marshal(data, model, mask='{name,age}')
+
+        self.assertEqual(result, {
             'name': 'John Doe',
             'age': 42,
         })
@@ -680,38 +676,10 @@ class MaskAPI(TestCase):
             'age': 42,
         })
 
-    def test_marshal_honour_custom_field_mask(self):
-        api = Api(self.app)
-
-        model = api.model('Test', {
-            'name': fields.String,
-            'age': fields.Integer,
-            'boolean': fields.Boolean,
-        })
-
-        @api.route('/test/')
-        class TestResource(Resource):
-            def get(self):
-                return api.marshal({
-                    'name': 'John Doe',
-                    'age': 42,
-                    'boolean': True
-                }, model)
-
-        with self.settings(RESTPLUS_MASK_HEADER='X-Mask'):
-            data = self.get_json('/test/', headers={
-                'X-Mask': '{name,age}'
-            })
-
-        self.assertEqual(data, {
-            'name': 'John Doe',
-            'age': 42,
-        })
-
     def test_marshal_does_not_hit_unrequired_attributes(self):
         api = Api(self.app)
 
-        model = api.model('Test', {
+        model = api.model('Person', {
             'name': fields.String,
             'age': fields.Integer,
             'boolean': fields.Boolean,
