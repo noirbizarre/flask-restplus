@@ -107,6 +107,9 @@ def apply(data, mask, skip=False):
     # Should handle lists
     if isinstance(data, (list, tuple, set)):
         return [apply(d, parsed_fields, skip=skip) for d in data]
+    # Should handle inheritance
+    elif isinstance(data, fields.Polymorph):
+        return data.clone(mask=parsed_fields)
     # Should handle fields.Nested
     elif isinstance(data, fields.Nested):
         data = data.clone()

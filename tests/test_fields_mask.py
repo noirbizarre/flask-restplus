@@ -732,6 +732,77 @@ class MaskAPI(TestCase):
             'name': 'John Doe',
         })
 
+    def test_marshal_with_handle_inheritance(self):
+        api = Api(self.app)
+
+        parent = api.model('Person', {
+            'name': fields.String,
+        })
+
+        child1 = api.inherit('Child1', parent, {
+            'extra1': fields.String,
+        })
+
+        child2 = api.inherit('Child2', parent, {
+            'extra2': fields.String,
+        })
+
+        class Child1(object):
+            name = 'child1'
+            extra1 = 'extra1'
+
+        class Child2(object):
+            name = 'child2'
+            extra2 = 'extra2'
+
+        mapping = {
+            Child1: child1,
+            Child2: child2
+        }
+
+        thing = api.model('Thing', {
+            'owner': fields.Polymorph(mapping),
+        })
+
+        # def data(cls):
+        #     return self.api.marshal({'owner': cls()}, thing)
+
+        @api.route('/thing-1/')
+        class Thing1Resource(Resource):
+            @api.marshal_with(thing)
+            def get(self):
+                return {'owner': Child1()}
+
+        @api.route('/thing-2/')
+        class Thing2Resource(Resource):
+            @api.marshal_with(thing)
+            def get(self):
+                return {'owner': Child2()}
+
+        data = self.get_json('/thing-1/', headers={
+            'X-Fields': 'owner{name}'
+        })
+
+        self.assertEqual(data, {
+            'owner': {'name': 'child1'},
+        })
+
+        data = self.get_json('/thing-1/', headers={
+            'X-Fields': 'owner{extra1}'
+        })
+
+        self.assertEqual(data, {
+            'owner': {'extra1': 'extra1'},
+        })
+
+        data = self.get_json('/thing-2/', headers={
+            'X-Fields': 'owner{name}'
+        })
+
+        self.assertEqual(data, {
+            'owner': {'name': 'child2'},
+        })
+
     def test_raise_400_on_invalid_mask(self):
         api = Api(self.app)
 

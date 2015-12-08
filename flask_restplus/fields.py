@@ -653,7 +653,7 @@ class Polymorph(Nested):
         elif len(candidates) > 1:
             raise ValueError('Unable to determine a candidate for: ' + value.__class__.__name__)
         else:
-            return marshal(value, candidates[0].resolved)
+            return marshal(value, candidates[0].resolved, mask=self.mask)
 
     def resolve_ancestor(self, fields):
         '''
@@ -669,3 +669,11 @@ class Polymorph(Nested):
 
         parent_name = candidates.pop()
         return fields[0].get_parent(parent_name)
+
+    def clone(self, **kwargs):
+        data = self.__dict__.copy()
+        data.update(**kwargs)
+        mapping = data.pop('mapping')
+        for field in ('allow_null', 'model'):
+            data.pop(field, None)
+        return Polymorph(mapping, **data)
