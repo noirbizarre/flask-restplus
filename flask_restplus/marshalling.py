@@ -39,6 +39,7 @@ def marshal(data, fields, envelope=None, mask=None):
         return cls
 
     mask = mask or getattr(fields, '__mask__', None)
+    fields = getattr(fields, 'resolved', fields)
     if mask:
         from .mask import apply as apply_mask
         fields = apply_mask(fields, mask, skip=True)

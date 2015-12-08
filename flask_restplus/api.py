@@ -436,18 +436,16 @@ class Api(restful.Api):
                 '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
             }
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            resolved = getattr(fields, 'resolved', fields)
-            return marshal_with(resolved, **kwargs)(func)
+            return marshal_with(fields, **kwargs)(func)
         return wrapper
 
     def marshal_list_with(self, fields, **kwargs):
         '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
         return self.marshal_with(fields, True, **kwargs)
 
-    def marshal(self, data, fields, envelope=None, mask=None):
+    def marshal(self, *args, **kwargs):
         '''A shortcut to the :func:`marshal` helper'''
-        resolved = getattr(fields, 'resolved', fields)
-        return marshal(data, resolved, envelope=envelope, mask=mask)
+        return marshal(*args, **kwargs)
 
     def errorhandler(self, exception):
         '''A decorator to register an error handler for a given exception'''

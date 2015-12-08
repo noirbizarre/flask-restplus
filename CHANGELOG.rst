@@ -5,6 +5,7 @@ Current
 -------
 
 - Handle mask on :class:`~flask_restplus.fields.Polymorph` field
+- Handle mask on inherited models
 - Drop/merge `flask_restful.abort`
 
 

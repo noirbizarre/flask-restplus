@@ -732,7 +732,35 @@ class MaskAPI(TestCase):
             'name': 'John Doe',
         })
 
-    def test_marshal_with_handle_inheritance(self):
+    def test_marshal_handle_inheritance(self):
+        api = Api(self.app)
+
+        person = api.model('Person', {
+            'name': fields.String,
+            'age': fields.Integer,
+        })
+
+        child = api.inherit('Child', person, {
+            'extra': fields.String,
+        })
+
+        data = {
+            'name': 'John Doe',
+            'age': 42,
+            'extra': 'extra'
+        }
+
+        values = (
+            ('name', {'name': 'John Doe'}),
+            ('name,extra', {'name': 'John Doe', 'extra': 'extra'}),
+            ('extra', {'extra': 'extra'}),
+        )
+
+        for mask, expected in values:
+            result = marshal(data, child, mask=mask)
+            self.assertEqual(result, expected)
+
+    def test_marshal_with_handle_polymorph(self):
         api = Api(self.app)
 
         parent = api.model('Person', {
