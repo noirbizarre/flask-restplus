@@ -4,7 +4,9 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Handle mask on :class:`~flask_restplus.fields.Polymorph` field
+- Drop/merge `flask_restful.abort`
+
 
 0.8.4 (2015-12-07)
 ------------------

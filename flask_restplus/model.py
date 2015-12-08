@@ -8,7 +8,7 @@ from collections import MutableMapping
 from six import iteritems, itervalues
 from werkzeug import cached_property
 
-from flask_restful import abort
+from .errors import abort
 
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError

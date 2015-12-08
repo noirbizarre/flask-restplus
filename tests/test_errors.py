@@ -15,6 +15,25 @@ from . import TestCase, Mock
 
 
 class APITestCase(TestCase):
+    def test_abort_type(self):
+        with self.assertRaises(HTTPException):
+            restplus.abort(404)
+
+    def test_abort_data(self):
+        with self.assertRaises(HTTPException) as cm:
+            restplus.abort(404, foo='bar')
+        self.assertEquals(cm.exception.data, {'foo': 'bar'})
+
+    def test_abort_no_data(self):
+        with self.assertRaises(HTTPException) as cm:
+            restplus.abort(404)
+        self.assertFalse(hasattr(cm.exception, 'data'))
+
+    def test_abort_custom_message(self):
+        with self.assertRaises(HTTPException) as cm:
+            restplus.abort(404, 'My message')
+        self.assertEquals(cm.exception.data['message'], 'My message')
+
     def test_abort_code_only_with_defaults(self):
         api = restplus.Api(self.app)
 

@@ -21,6 +21,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.http import HTTP_STATUS_CODES
 
 from . import apidoc
+from .errors import abort
 from .marshalling import marshal, marshal_with
 from .model import ApiModel
 from .mask import ParseError, MaskError
@@ -341,13 +342,13 @@ class Api(restful.Api):
         '''A decorator to hide a resource or a method from specifications'''
         return self.doc(False)(func)
 
-    def abort(self, code=500, message=None, **kwargs):
-        '''Properly abort the current request'''
-        if message or kwargs and 'status' not in kwargs:
-            kwargs['status'] = code
-        if message:
-            kwargs['message'] = str(message)
-        restful.abort(code, **kwargs)
+    def abort(self, *args, **kwargs):
+        '''
+        Properly abort the current request
+
+        See: :func:`~flask_restplus.errors.abort`
+        '''
+        abort(*args, **kwargs)
 
     def model(self, name=None, model=None, mask=None, **kwargs):
         '''

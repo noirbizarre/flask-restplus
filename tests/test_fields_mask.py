@@ -764,9 +764,6 @@ class MaskAPI(TestCase):
             'owner': fields.Polymorph(mapping),
         })
 
-        # def data(cls):
-        #     return self.api.marshal({'owner': cls()}, thing)
-
         @api.route('/thing-1/')
         class Thing1Resource(Resource):
             @api.marshal_with(thing)
