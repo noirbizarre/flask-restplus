@@ -29,10 +29,14 @@ class Model(dict, MutableMapping):
     '''
     A thin wrapper on dict to store API doc metadata.
 
+    :param str name: The model public name
     :param str mask: an optionnal default model mask
     '''
-    def __init__(self, *args, **kwargs):
-        self.__apidoc__ = {}
+    def __init__(self, name, *args, **kwargs):
+        self.__apidoc__ = {
+            'name': name
+        }
+        self.name = name
         self.__parent__ = None
         self.__mask__ = kwargs.pop('mask', None)
         super(Model, self).__init__(*args, **kwargs)
@@ -56,7 +60,7 @@ class Model(dict, MutableMapping):
             raise ValueError('There can only be one discriminator by schema')
         # Ensure discriminator always output the model name
         elif len(candidates) == 1:
-            candidates[0].default = self.__apidoc__['name']
+            candidates[0].default = self.name
 
         return resolved
 
@@ -72,12 +76,8 @@ class Model(dict, MutableMapping):
         '''
         Return the inheritance tree
         '''
-        tree = [self.__apidoc__['name']]
+        tree = [self.name]
         return self.ancestors + tree if self.__parent__ else tree
-
-    @property
-    def name(self):
-        return self.__apidoc__['name']
 
     def get_parent(self, name):
         if self.name == name:
@@ -116,6 +116,28 @@ class Model(dict, MutableMapping):
             }
         else:
             return schema
+
+    def extend(self, name, fields):
+        '''
+        Extend this model (Duplicate all fields)
+
+        :param str name: The new model name
+        :param dict fields: The new model extra fields
+        '''
+        model = Model(name, copy.deepcopy(self))
+        model.update(fields)
+        return model
+
+    def inherit(self, name, fields):
+        '''
+        Inherit this model (use the Swagger composition pattern aka. allOf)
+
+        :param str name: The new model name
+        :param dict fields: The new model extra fields
+        '''
+        model = Model(name, fields)
+        model.__parent__ = self
+        return model
 
     def validate(self, data, resolver=None):
         validator = Draft4Validator(self.__schema__, resolver=resolver)

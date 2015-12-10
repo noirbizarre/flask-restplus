@@ -356,38 +356,22 @@ class Api(restful.Api):
 
         Model can be either a dictionary or a fields. Raw subclass.
         '''
-        if isinstance(model, dict):
-            model = Model(model, mask=mask)
-            model.__apidoc__ = kwargs
-            model.__apidoc__['name'] = name
-            self.models[name] = model
-            return model
-        else:
-            def wrapper(cls):
-                cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), kwargs)
-                cls.__apidoc__['name'] = name or cls.__name__
-                self.models[name or cls.__name__] = kwargs.get('fields', cls)
-                return cls
-            return wrapper
+        model = Model(name, model, mask=mask)
+        model.__apidoc__.update(kwargs)
+        self.models[name] = model
+        return model
 
     def extend(self, name, parent, fields):
         '''
         Extend a model (Duplicate all fields)
         '''
         if isinstance(parent, list):
-            parents = []
+            model = Model(None, {})
+            for p in parent:
+                model.update(copy.deepcopy(p))
+            parent = model
 
-            for item in parent:
-                parents.append(copy.deepcopy(item))
-
-            parent = {}
-
-            for value in parents:
-                parent.update(value)
-
-        model = Model(copy.deepcopy(parent))
-        model.__apidoc__['name'] = name
-        model.update(fields)
+        model = parent.extend(name, fields)
         self.models[name] = model
         return model
 
@@ -395,9 +379,7 @@ class Api(restful.Api):
         '''
         Inherit a modal (use the Swagger composition pattern aka. allOf)
         '''
-        model = Model(fields)
-        model.__apidoc__['name'] = name
-        model.__parent__ = parent
+        model = parent.inherit(name, fields)
         self.models[name] = model
         return model
 
