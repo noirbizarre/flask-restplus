@@ -504,9 +504,6 @@ class Api(restful.Api):
         elif code == 404 and current_app.config.get("ERROR_404_HELP", True):
             data['message'] = self._help_on_404(data.get('message', None))
 
-        elif code == 405:
-            headers['Allow'] = ', '.join(e.valid_methods)
-
         elif code == 406 and self.default_mediatype is None:
             # if we are handling NotAcceptable (406), make sure that
             # make_response uses a representation we support as the
