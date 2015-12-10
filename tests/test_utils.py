@@ -86,3 +86,39 @@ class CamelToDashTestCase(TestCase):
         }
         for value, expected in tests.items():
             self.assertEqual(utils.camel_to_dash(value), expected)
+
+
+class UnpackTest(TestCase):
+    def test_single_value(self):
+        data, code, headers = utils.unpack('test')
+        self.assertEqual(data, 'test')
+        self.assertEqual(code, 200)
+        self.assertEqual(headers, {})
+
+    def test_single_value_with_default_code(self):
+        data, code, headers = utils.unpack('test', 500)
+        self.assertEqual(data, 'test')
+        self.assertEqual(code, 500)
+        self.assertEqual(headers, {})
+
+    def test_value_code(self):
+        data, code, headers = utils.unpack(('test', 201))
+        self.assertEqual(data, 'test')
+        self.assertEqual(code, 201)
+        self.assertEqual(headers, {})
+
+    def test_value_code_headers(self):
+        data, code, headers = utils.unpack(('test', 201, {'Header': 'value'}))
+        self.assertEqual(data, 'test')
+        self.assertEqual(code, 201)
+        self.assertEqual(headers, {'Header': 'value'})
+
+    def test_value_headers_default_code(self):
+        data, code, headers = utils.unpack(('test', None, {'Header': 'value'}))
+        self.assertEqual(data, 'test')
+        self.assertEqual(code, 200)
+        self.assertEqual(headers, {'Header': 'value'})
+
+    def test_too_many_values(self):
+        with self.assertRaises(ValueError):
+            utils.unpack((None, None, None, None))

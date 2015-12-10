@@ -6,7 +6,8 @@ Current
 
 - Handle mask on :class:`~flask_restplus.fields.Polymorph` field
 - Handle mask on inherited models
-- Drop/merge `flask_restful.abort`
+- Replace `flask_restful.abort` by :func:`flask_restplus.errors.abort`
+- Replace `flask_restful.unpack` by :func:`flask_restplus.utils.unpack`
 - **Breaking changes**:
     - Renamed ``ApiModel`` into :class:`~flask_restplus.model.Model`
     - Renamed ``ApiNamespace`` into :class:`~flask_restplus.namespace.Namespace`

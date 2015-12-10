@@ -5,7 +5,7 @@ from flask import request
 from flask.views import MethodView
 from werkzeug.wrappers import Response
 
-from flask_restful import unpack
+from .utils import unpack
 
 
 class Resource(MethodView):

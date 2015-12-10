@@ -83,3 +83,6 @@ Most of the time you shouldn't have to deal directly with them.
 .. autoclass:: flask_restplus.swagger.Swagger
 
 .. autoclass:: flask_restplus.postman.PostmanCollectionV1
+
+.. automodule:: flask_restplus.utils
+    :members:

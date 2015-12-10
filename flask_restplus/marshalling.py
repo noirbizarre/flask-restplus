@@ -5,9 +5,8 @@ from functools import wraps
 
 from flask import request, current_app, has_app_context
 
-from flask_restful import unpack  # Not imported yet
-
 from ._compat import OrderedDict
+from .utils import unpack
 
 
 def marshal(data, fields, envelope=None, mask=None):
