@@ -25,13 +25,13 @@ def instance(cls):
     return cls
 
 
-class ApiModel(dict, MutableMapping):
+class Model(dict, MutableMapping):
     '''A thin wrapper on dict to store API doc metadata'''
     def __init__(self, *args, **kwargs):
         self.__apidoc__ = {}
         self.__parent__ = None
         self.__mask__ = kwargs.pop('mask', None)
-        super(ApiModel, self).__init__(*args, **kwargs)
+        super(Model, self).__init__(*args, **kwargs)
 
     @cached_property
     def resolved(self):

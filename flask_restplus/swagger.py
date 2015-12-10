@@ -13,7 +13,7 @@ from ._compat import OrderedDict
 
 from . import fields
 from .errors import SpecsError
-from .model import ApiModel
+from .model import Model
 from .utils import merge, not_none, not_none_sorted
 
 
@@ -54,7 +54,7 @@ DEFAULT_RESPONSE = {'description': DEFAULT_RESPONSE_DESCRIPTION}
 
 def ref(model):
     '''Return a reference to model in definitions'''
-    name = model.name if isinstance(model, ApiModel) else model
+    name = model.name if isinstance(model, Model) else model
     return {'$ref': '#/definitions/{0}'.format(name)}
 
 
@@ -402,7 +402,7 @@ class Swagger(object):
                 'items': self.serialize_schema(model),
             }
 
-        elif isinstance(model, ApiModel):
+        elif isinstance(model, Model):
             self.register_model(model)
             return ref(model)
 
@@ -422,12 +422,12 @@ class Swagger(object):
         raise ValueError('Model {0} not registered'.format(model))
 
     def register_model(self, model):
-        name = model.name if isinstance(model, ApiModel) else model
+        name = model.name if isinstance(model, Model) else model
         if name not in self.api.models:
             raise ValueError('Model {0} not registered'.format(name))
         specs = self.api.models[name]
         self._registered_models[name] = specs
-        if isinstance(specs, ApiModel):
+        if isinstance(specs, Model):
             if specs.__parent__:
                 self.register_model(specs.__parent__)
             for field in itervalues(specs):

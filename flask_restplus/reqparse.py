@@ -4,12 +4,12 @@ from __future__ import unicode_literals
 from flask_restful import reqparse
 
 from .marshalling import marshal
-from .model import ApiModel
+from .model import Model
 
 
 class Argument(reqparse.Argument):
     def convert(self, value, op):
-        if isinstance(self.type, ApiModel) and isinstance(value, dict):
+        if isinstance(self.type, Model) and isinstance(value, dict):
             return marshal(value, self.type)
         return super(Argument, self).convert(value, op)
 

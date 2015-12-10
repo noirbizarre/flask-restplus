@@ -23,7 +23,7 @@ from werkzeug.http import HTTP_STATUS_CODES
 from . import apidoc
 from .errors import abort
 from .marshalling import marshal, marshal_with
-from .model import ApiModel
+from .model import Model
 from .mask import ParseError, MaskError
 from .namespace import ApiNamespace
 from .postman import PostmanCollectionV1
@@ -357,7 +357,7 @@ class Api(restful.Api):
         Model can be either a dictionary or a fields. Raw subclass.
         '''
         if isinstance(model, dict):
-            model = ApiModel(model, mask=mask)
+            model = Model(model, mask=mask)
             model.__apidoc__ = kwargs
             model.__apidoc__['name'] = name
             self.models[name] = model
@@ -385,7 +385,7 @@ class Api(restful.Api):
             for value in parents:
                 parent.update(value)
 
-        model = ApiModel(copy.deepcopy(parent))
+        model = Model(copy.deepcopy(parent))
         model.__apidoc__['name'] = name
         model.update(fields)
         self.models[name] = model
@@ -395,7 +395,7 @@ class Api(restful.Api):
         '''
         Inherit a modal (use the Swagger composition pattern aka. allOf)
         '''
-        model = ApiModel(fields)
+        model = Model(fields)
         model.__apidoc__['name'] = name
         model.__parent__ = parent
         self.models[name] = model
@@ -405,7 +405,7 @@ class Api(restful.Api):
         '''
         A decorator to Specify the expected input model
 
-        :param ApiModel body: The expected model
+        :param Model body: The expected model
         :param bool validate: whether to perform validation or not
 
         '''
@@ -543,7 +543,7 @@ class Api(restful.Api):
 
         :param int code: the HTTP status code
         :param str description: a small description about the response
-        :param ApiModel model: an optionnal response model
+        :param Model model: an optionnal response model
 
         '''
         return self.doc(responses={code: (description, model) if model else description})

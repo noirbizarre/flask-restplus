@@ -76,7 +76,7 @@ Most of the time you shouldn't have to deal directly with them.
 
 .. autoclass:: flask_restplus.namespace.ApiNamespace
 
-.. autoclass:: flask_restplus.model.ApiModel
+.. autoclass:: flask_restplus.model.Model
 
 .. autoclass:: flask_restplus.api.SwaggerView
 
