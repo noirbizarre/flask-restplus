@@ -26,7 +26,11 @@ def instance(cls):
 
 
 class Model(dict, MutableMapping):
-    '''A thin wrapper on dict to store API doc metadata'''
+    '''
+    A thin wrapper on dict to store API doc metadata.
+
+    :param str mask: an optionnal default model mask
+    '''
     def __init__(self, *args, **kwargs):
         self.__apidoc__ = {}
         self.__parent__ = None

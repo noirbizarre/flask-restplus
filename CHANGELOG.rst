@@ -9,6 +9,7 @@ Current
 - Drop/merge `flask_restful.abort`
 - **Breaking changes**:
     - Renamed ``ApiModel`` into :class:`~flask_restplus.model.Model`
+    - Renamed ``ApiNamespace`` into :class:`~flask_restplus.namespace.Namespace`
 
 
 0.8.4 (2015-12-07)

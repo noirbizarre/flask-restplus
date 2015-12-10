@@ -25,7 +25,7 @@ from .errors import abort
 from .marshalling import marshal, marshal_with
 from .model import Model
 from .mask import ParseError, MaskError
-from .namespace import ApiNamespace
+from .namespace import Namespace
 from .postman import PostmanCollectionV1
 from .resource import Resource
 from .swagger import Swagger
@@ -112,7 +112,7 @@ class Api(restful.Api):
         self.models = {}
         self._refresolver = None
         self.namespaces = []
-        self.default_namespace = ApiNamespace(self, default, default_label,
+        self.default_namespace = Namespace(self, default, default_label,
             endpoint='{0}-declaration'.format(default),
             path='/'
         )
@@ -204,7 +204,7 @@ class Api(restful.Api):
         Override this method specify a custom algoryhtm for default endpoint.
 
         :param Resource resource: the resource for which we want an endpoint
-        :param ApiNamespace namespace: the namespace holdingg the resource
+        :param Namespace namespace: the namespace holdingg the resource
         :returns str: An endpoint name
         '''
         endpoint = camel_to_dash(resource.__name__)
@@ -226,7 +226,7 @@ class Api(restful.Api):
         Register a Swagger API declaration for a given API Namespace
 
         :param Resource resource: the resource ro register
-        :param ApiNamespace namespace: the namespace holdingg the resource
+        :param Namespace namespace: the namespace holdingg the resource
         '''
         namespace = kwargs.pop('namespace', None)
         if kwargs.pop('doc', True) and not namespace:
@@ -253,9 +253,9 @@ class Api(restful.Api):
         '''
         A namespace factory.
 
-        :returns ApiNamespace: a new namespace instance
+        :returns Namespace: a new namespace instance
         '''
-        ns = ApiNamespace(self, *args, **kwargs)
+        ns = Namespace(self, *args, **kwargs)
         self.add_namespace(ns)
         return ns
 
