@@ -29,7 +29,7 @@ from .namespace import Namespace
 from .postman import PostmanCollectionV1
 from .resource import Resource
 from .swagger import Swagger
-from .utils import merge, default_id, camel_to_dash
+from .utils import merge, default_id, camel_to_dash, unpack
 from .reqparse import RequestParser
 
 RE_RULES = re.compile('(<.*>)')
@@ -462,10 +462,10 @@ class Api(restful.Api):
         elif e.__class__ in self._error_handlers:
             handler = self._error_handlers[e.__class__]
             result = handler(e)
-            default_data, code = result if len(result) == 2 else (result, 500)
+            default_data, code, headers = unpack(result, 500)
         elif self._default_error_handler:
             result = self._default_error_handler(e)
-            default_data, code = result if len(result) == 2 else (result, 500)
+            default_data, code, headers = unpack(result, 500)
         else:
             code = 500
             default_data = {
