@@ -44,6 +44,13 @@ except:
     del dummy
 
 
+def assert_data_equal(tested, expected):
+    '''Compare data without caring about order and type (dict vs. OrderedDict)'''
+    tested = json.loads(json.dumps(tested))
+    expected = json.loads(json.dumps(expected))
+    assert_equal(tested, expected)
+
+
 class TestCase(unittest.TestCase):
     '''An helper mixin for common operations'''
     def setUp(self):
@@ -84,3 +91,7 @@ class TestCase(unittest.TestCase):
     def get_specs(self, prefix='', status=200, **kwargs):
         '''Get a Swagger specification for a RestPlus API'''
         return self.get_json('{0}/swagger.json'.format(prefix), status=status, **kwargs)
+
+    def assertDataEqual(self, tested, expected):
+        '''Compare data without caring about order and type (dict vs. OrderedDict)'''
+        assert_data_equal(tested, expected)
