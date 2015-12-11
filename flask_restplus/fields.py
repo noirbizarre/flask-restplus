@@ -109,7 +109,7 @@ class Raw(object):
     __schema_example__ = None
 
     def __init__(self, default=None, attribute=None, title=None, description=None,
-                 required=None, readonly=None, example=None, mask=None):
+                 required=None, readonly=None, example=None, mask=None, **kwargs):
         self.attribute = attribute
         self.default = default
         self.title = title
@@ -154,7 +154,7 @@ class Raw(object):
             return self.format(default) if default else default
 
         data = self.format(value)
-        return self.mask(data) if self.mask else data
+        return self.mask.apply(data) if self.mask else data
 
     def _v(self, key):
         '''Helper for getting a value from attribute allowing callable'''
@@ -226,9 +226,12 @@ class Nested(Raw):
 
         return schema
 
-    def clone(self):
+    def clone(self, mask=None):
         kwargs = self.__dict__.copy()
-        return Nested(kwargs.pop('model').copy(), **kwargs)
+        model = kwargs.pop('model')
+        if mask:
+            model = mask.apply(model.resolved if hasattr(model, 'resolved') else model)
+        return self.__class__(model, **kwargs)
 
 
 class List(Raw):
@@ -290,10 +293,12 @@ class List(Raw):
         schema['items'] = self.container.__schema__
         return schema
 
-    def clone(self):
+    def clone(self, mask=None):
         kwargs = self.__dict__.copy()
-        cls = kwargs.pop('container')
-        return List(cls, **kwargs)
+        model = kwargs.pop('container')
+        if mask:
+            model = mask.apply(model)
+        return self.__class__(model, **kwargs)
 
 
 class StringMixin(object):
@@ -670,10 +675,11 @@ class Polymorph(Nested):
         parent_name = candidates.pop()
         return fields[0].get_parent(parent_name)
 
-    def clone(self, **kwargs):
+    def clone(self, mask=None):
         data = self.__dict__.copy()
-        data.update(**kwargs)
         mapping = data.pop('mapping')
         for field in ('allow_null', 'model'):
             data.pop(field, None)
+
+        data['mask'] = mask
         return Polymorph(mapping, **data)

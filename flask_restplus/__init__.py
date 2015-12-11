@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from . import fields, reqparse, apidoc, inputs
 from .api import Api  # noqa
 from .marshalling import marshal, marshal_with, marshal_with_field  # noqa
+from .mask import Mask
 from .model import Model  # noqa
 from .resource import Resource  # noqa
 from .errors import abort, RestError, SpecsError, ValidationError
@@ -19,6 +20,7 @@ __all__ = (
     'marshal',
     'marshal_with',
     'marshal_with_field',
+    'Mask',
     'Model',
     'abort',
     'fields',

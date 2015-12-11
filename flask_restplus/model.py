@@ -8,6 +8,7 @@ from collections import MutableMapping
 from six import iteritems, itervalues
 from werkzeug import cached_property
 
+from .mask import Mask
 from .errors import abort
 
 from jsonschema import Draft4Validator
@@ -39,6 +40,8 @@ class Model(dict, MutableMapping):
         self.name = name
         self.__parent__ = None
         self.__mask__ = kwargs.pop('mask', None)
+        if self.__mask__ and not isinstance(self.__mask__, Mask):
+            self.__mask__ = Mask(self.__mask__)
         super(Model, self).__init__(*args, **kwargs)
 
     @cached_property
@@ -104,7 +107,7 @@ class Model(dict, MutableMapping):
             'required': sorted(list(required)) or None,
             'properties': properties,
             'discriminator': discriminator,
-            'x-mask': self.__mask__,
+            'x-mask': str(self.__mask__) if self.__mask__ else None,
         })
 
         if self.__parent__:

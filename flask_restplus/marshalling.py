@@ -6,6 +6,7 @@ from functools import wraps
 from flask import request, current_app, has_app_context
 
 from ._compat import OrderedDict
+from .mask import Mask, apply as apply_mask
 from .utils import unpack
 
 
@@ -40,7 +41,6 @@ def marshal(data, fields, envelope=None, mask=None):
     mask = mask or getattr(fields, '__mask__', None)
     fields = getattr(fields, 'resolved', fields)
     if mask:
-        from .mask import apply as apply_mask
         fields = apply_mask(fields, mask, skip=True)
 
     if isinstance(data, (list, tuple)):
@@ -93,7 +93,7 @@ class marshal_with(object):
         """
         self.fields = fields
         self.envelope = envelope
-        self.mask = mask
+        self.mask = Mask(mask, skip=True)
 
     def __call__(self, f):
         @wraps(f)

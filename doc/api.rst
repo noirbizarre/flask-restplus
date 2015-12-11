@@ -36,13 +36,10 @@ Serialization
 
 .. autofunction:: marshal_with_field
 
-.. autofunction:: flask_restplus.mask.parse
+.. autoclass:: flask_restplus.mask.Mask
+    :members:
 
 .. autofunction:: flask_restplus.mask.apply
-
-.. autofunction:: flask_restplus.mask.filter_data
-
-.. autoclass:: flask_restplus.mask.Nested
 
 
 Inputs

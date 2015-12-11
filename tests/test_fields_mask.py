@@ -1,93 +1,122 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json
-
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
 
-from flask_restplus import mask, Api, Resource, fields, marshal
+from flask_restplus import mask, Api, Resource, fields, marshal, Mask
 
 from . import TestCase
 
 
-class ParseMaskMixin(object):
+class MaskMixin(object):
     def test_empty_mask(self):
-        self.assertEqual(mask.parse(''), [])
+        self.assertEqual(Mask(''), {})
 
     def test_one_field(self):
-        self.assertEqual(mask.parse('field_name'), ['field_name'])
+        self.assertEqual(Mask('field_name'), {'field_name': True})
 
     def test_multiple_field(self):
-        parsed = mask.parse('field1, field2,field3')
-        self.assertEqual(parsed, ['field1', 'field2', 'field3'])
+        mask = Mask('field1, field2, field3')
+        self.assertDataEqual(mask, {
+            'field1': True,
+            'field2': True,
+            'field3': True,
+        })
 
     def test_nested_fields(self):
-        parsed = mask.parse('nested{field1,field2}')
-        expected = [mask.Nested('nested', ['field1', 'field2'])]
+        parsed = Mask('nested{field1,field2}')
+        expected = {
+            'nested': {
+                'field1': True,
+                'field2': True,
+            }
+        }
         self.assertEqual(parsed, expected)
 
     def test_complex(self):
-        parsed = mask.parse('field1, nested{field, sub{subfield}}, field2')
-        expected = [
-            'field1',
-            mask.Nested('nested', [
-                'field',
-                mask.Nested('sub', ['subfield'])
-            ]),
-            'field2'
-        ]
-        self.assertEqual(parsed, expected)
+        parsed = Mask('field1, nested{field, sub{subfield}}, field2')
+        expected = {
+            'field1': True,
+            'nested': {
+                'field': True,
+                'sub': {
+                    'subfield': True,
+                }
+            },
+            'field2': True,
+        }
+        self.assertDataEqual(parsed, expected)
 
     def test_star(self):
-        parsed = mask.parse('nested{field1,field2},*')
-        expected = [mask.Nested('nested', ['field1', 'field2']), '*']
+        parsed = Mask('nested{field1,field2},*')
+        expected = {
+            'nested': {
+                'field1': True,
+                'field2': True,
+            },
+            '*': True,
+        }
+        self.assertDataEqual(parsed, expected)
+
+    def test_order(self):
+        parsed = Mask('f_3, nested{f_1, f_2, f_3}, f_2, f_1')
+        expected = OrderedDict([
+            ('f_3', True),
+            ('nested', OrderedDict([
+                ('f_1', True),
+                ('f_2', True),
+                ('f_3', True),
+            ])),
+            ('f_2', True),
+            ('f_1', True),
+        ])
         self.assertEqual(parsed, expected)
 
     def test_missing_closing_bracket(self):
         with self.assertRaises(mask.ParseError):
-            mask.parse('nested{')
+            Mask('nested{')
 
     def test_consecutive_coma(self):
         with self.assertRaises(mask.ParseError):
-            mask.parse('field,,')
+            Mask('field,,')
 
     def test_coma_before_bracket(self):
         with self.assertRaises(mask.ParseError):
-            mask.parse('field,{}')
+            Mask('field,{}')
 
     def test_coma_after_bracket(self):
         with self.assertRaises(mask.ParseError):
-            mask.parse('nested{,}')
+            Mask('nested{,}')
 
     def test_unexpected_opening_bracket(self):
         with self.assertRaises(mask.ParseError):
-            mask.parse('{{field}}')
+            Mask('{{field}}')
 
     def test_unexpected_closing_bracket(self):
         with self.assertRaises(mask.ParseError):
-            mask.parse('{field}}')
+            Mask('{field}}')
 
     def test_support_colons(self):
-        self.assertEqual(mask.parse('field:name'), ['field:name'])
+        self.assertEqual(Mask('field:name'), {'field:name': True})
 
     def test_support_dash(self):
-        self.assertEqual(mask.parse('field-name'), ['field-name'])
+        self.assertEqual(Mask('field-name'), {'field-name': True})
 
     def test_support_underscore(self):
-        self.assertEqual(mask.parse('field_name'), ['field_name'])
+        self.assertEqual(Mask('field_name'), {'field_name': True})
 
 
-class ParseMaskUnwrapped(ParseMaskMixin, TestCase):
+class MaskUnwrapped(MaskMixin, TestCase):
     def parse(self, value):
-        return mask.parse(value)
+        return Mask(value)
 
 
-class ParseMaskWrapped(ParseMaskMixin, TestCase):
+class MaskWrapped(MaskMixin, TestCase):
     def parse(self, value):
-        return mask.parse('{' + value + '}')
+        return Mask('{' + value + '}')
 
 
 class DObject(object):
@@ -100,10 +129,6 @@ person_fields = {
     'name': fields.String,
     'age': fields.Integer
 }
-
-
-def ordered_to_dict(o):
-    return json.loads(json.dumps(o))
 
 
 class ApplyMaskTest(TestCase):
@@ -221,9 +246,9 @@ class ApplyMaskTest(TestCase):
         }
         expected = {'father': {'name': 'John'}, 'mother': {'age': 42}}
 
-        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        self.assertDataEqual(marshal(data, result), expected)
         # Should leave th original mask untouched
-        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+        self.assertDataEqual(marshal(data, family_fields), data)
 
     def test_nested_api_fields(self):
         family_fields = {
@@ -244,9 +269,9 @@ class ApplyMaskTest(TestCase):
         }
         expected = {'father': {'name': 'John'}, 'mother': {'age': 42}}
 
-        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        self.assertDataEqual(marshal(data, result), expected)
         # Should leave th original mask untouched
-        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+        self.assertDataEqual(marshal(data, family_fields), data)
 
     def test_multiple_nested_api_fields(self):
         level_2 = {'nested_2': fields.Nested(person_fields)}
@@ -273,9 +298,9 @@ class ApplyMaskTest(TestCase):
             }
         }
 
-        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        self.assertDataEqual(marshal(data, result), expected)
         # Should leave th original mask untouched
-        self.assertEqual(ordered_to_dict(marshal(data, root)), data)
+        self.assertDataEqual(marshal(data, root), data)
 
     def test_list_fields_with_simple_field(self):
         family_fields = {
@@ -291,9 +316,9 @@ class ApplyMaskTest(TestCase):
         data = {'name': 'Doe', 'members': ['John', 'Jane']}
         expected = {'members': ['John', 'Jane']}
 
-        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        self.assertDataEqual(marshal(data, result), expected)
         # Should leave th original mask untouched
-        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+        self.assertDataEqual(marshal(data, family_fields), data)
 
     def test_list_fields_with_nested(self):
         family_fields = {
@@ -312,9 +337,39 @@ class ApplyMaskTest(TestCase):
         ]}
         expected = {'members': [{'name': 'John'}, {'name': 'Jane'}]}
 
-        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        self.assertDataEqual(marshal(data, result), expected)
         # Should leave th original mask untouched
-        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+        self.assertDataEqual(marshal(data, family_fields), data)
+
+    def test_list_fields_with_nested_inherited(self):
+        api = Api(self.app)
+
+        person = api.model('Person', {
+            'name': fields.String,
+            'age': fields.Integer
+        })
+        child = api.inherit('Child', person, {
+            'attr': fields.String
+        })
+
+        family = api.model('Family', {
+            'children': fields.List(fields.Nested(child))
+        })
+
+        result = mask.apply(family.resolved, 'children{name,attr}')
+
+        data = {'children': [
+            {'name': 'John', 'age': 5, 'attr': 'value-john'},
+            {'name': 'Jane', 'age': 42, 'attr': 'value-jane'},
+        ]}
+        expected = {'children': [
+            {'name': 'John', 'attr': 'value-john'},
+            {'name': 'Jane', 'attr': 'value-jane'},
+        ]}
+
+        self.assertDataEqual(marshal(data, result), expected)
+        # Should leave th original mask untouched
+        self.assertDataEqual(marshal(data, family), data)
 
     def test_list_fields_with_raw(self):
         family_fields = {
@@ -329,9 +384,9 @@ class ApplyMaskTest(TestCase):
         ]}
         expected = {'members': [{'name': 'John'}, {'name': 'Jane'}]}
 
-        self.assertEqual(ordered_to_dict(marshal(data, result)), expected)
+        self.assertDataEqual(marshal(data, result), expected)
         # Should leave th original mask untouched
-        self.assertEqual(ordered_to_dict(marshal(data, family_fields)), data)
+        self.assertDataEqual(marshal(data, family_fields), data)
 
     def test_list(self):
         data = [{
@@ -472,6 +527,53 @@ class MaskAPI(TestCase):
             'name': 'Jane Doe',
             'age': 33,
         }])
+
+    def test_marshal_with_honour_complex_field_mask_header(self):
+        api = Api(self.app)
+
+        person = api.model('Person', person_fields)
+        child = api.inherit('Child', person, {
+            'attr': fields.String
+        })
+
+        family = api.model('Family', {
+            'father': fields.Nested(person),
+            'mother': fields.Nested(person),
+            'children': fields.List(fields.Nested(child)),
+            'free': fields.List(fields.Raw),
+        })
+
+        house = api.model('House', {
+            'family': fields.Nested(family, attribute='people')
+        })
+
+        @api.route('/test/')
+        class TestResource(Resource):
+            @api.marshal_with(house)
+            def get(self):
+                return {'people': {
+                    'father': {'name': 'John', 'age': 42},
+                    'mother': {'name': 'Jane', 'age': 42},
+                    'children': [
+                        {'name': 'Jack', 'age': 5, 'attr': 'value-1'},
+                        {'name': 'Julie', 'age': 7, 'attr': 'value-2'},
+                    ],
+                    'free': [
+                        {'key-1': '1-1', 'key-2': '1-2'},
+                        {'key-1': '2-1', 'key-2': '2-2'},
+                    ]
+                }}
+
+        data = self.get_json('/test/', headers={
+            'X-Fields': 'family{father{name},mother{age},children{name,attr},free{key-2}}'
+        })
+        expected = {'family': {
+            'father': {'name': 'John'},
+            'mother': {'age': 42},
+            'children': [{'name': 'Jack', 'attr': 'value-1'}, {'name': 'Julie', 'attr': 'value-2'}],
+            'free': [{'key-2': '1-2'}, {'key-2': '2-2'}]
+        }}
+        self.assertEqual(data, expected)
 
     def test_marshal_honour_field_mask(self):
         api = Api(self.app)
