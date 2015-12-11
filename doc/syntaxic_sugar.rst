@@ -119,6 +119,13 @@ that you can do with Flask/Blueprint ``@errorhandler`` decorator.
         '''Return a custom message and 500 status code'''
         return {'message': error.specific}
 
+
+    @api.errorhandler(FakeException)
+    def handle_fake_exception_with_header(error):
+        '''Return a custom message and 500 status code'''
+        return {'message': error.message}, 400, {'My-Header': 'Value'}
+        
+
 It also allows for overriding the default error handler when used wihtout parameter:
 
 .. code-block:: python
