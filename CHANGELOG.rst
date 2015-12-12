@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.8.5 (2015-12-12)
+------------------
 
 - Handle mask on :class:`~flask_restplus.fields.Polymorph` field
 - Handle mask on inherited models
