@@ -58,6 +58,11 @@ def ref(model):
     return {'$ref': '#/definitions/{0}'.format(name)}
 
 
+def _v(value):
+    '''Dereference values (callable)'''
+    return value() if callable(value) else value
+
+
 def extract_path(path):
     '''
     Transform a Flask/Werkzeug URL pattern in a Swagger one.
@@ -151,23 +156,23 @@ class Swagger(object):
         if len(basepath) > 1 and basepath.endswith('/'):
             basepath = basepath[:-1]
         infos = {
-            'title': self.api.title,
-            'version': self.api.version,
+            'title': _v(self.api.title),
+            'version': _v(self.api.version),
         }
         if self.api.description:
-            infos['description'] = self.api.description
+            infos['description'] = _v(self.api.description)
         if self.api.terms_url:
-            infos['termsOfService'] = self.api.terms_url
+            infos['termsOfService'] = _v(self.api.terms_url)
         if self.api.contact and (self.api.contact_email or self.api.contact_url):
             infos['contact'] = {
-                'name': self.api.contact,
-                'email': self.api.contact_email,
-                'url': self.api.contact_url,
+                'name': _v(self.api.contact),
+                'email': _v(self.api.contact_email),
+                'url': _v(self.api.contact_url),
             }
         if self.api.license:
-            infos['license'] = {'name': self.api.license}
+            infos['license'] = {'name': _v(self.api.license)}
             if self.api.license_url:
-                infos['license']['url'] = self.api.license_url
+                infos['license']['url'] = _v(self.api.license_url)
 
         paths = {}
         tags = self.extract_tags(self.api)

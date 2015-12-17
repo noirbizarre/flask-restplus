@@ -128,6 +128,40 @@ class SwaggerTestCase(TestCase):
             'url': 'http://www.apache.org/licenses/LICENSE-2.0.html',
         })
 
+    def test_specs_endpoint_info_callable(self):
+        api = restplus.Api(version=lambda: '1.0',
+            title=lambda: 'My API',
+            description=lambda: 'This is a testing API',
+            terms_url=lambda: 'http://somewhere.com/terms/',
+            contact=lambda: 'Support',
+            contact_url=lambda: 'http://support.somewhere.com',
+            contact_email=lambda: 'contact@somewhere.com',
+            license=lambda: 'Apache 2.0',
+            license_url=lambda: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+        )
+        api.init_app(self.app)
+
+        data = self.get_specs()
+        self.assertEqual(data['swagger'], '2.0')
+        self.assertEqual(data['basePath'], '/')
+        self.assertEqual(data['produces'], ['application/json'])
+        self.assertEqual(data['paths'], {})
+
+        self.assertIn('info', data)
+        self.assertEqual(data['info']['title'], 'My API')
+        self.assertEqual(data['info']['version'], '1.0')
+        self.assertEqual(data['info']['description'], 'This is a testing API')
+        self.assertEqual(data['info']['termsOfService'], 'http://somewhere.com/terms/')
+        self.assertEqual(data['info']['contact'], {
+            'name': 'Support',
+            'url': 'http://support.somewhere.com',
+            'email': 'contact@somewhere.com',
+        })
+        self.assertEqual(data['info']['license'], {
+            'name': 'Apache 2.0',
+            'url': 'http://www.apache.org/licenses/LICENSE-2.0.html',
+        })
+
     def test_specs_endpoint_no_host(self):
         restplus.Api(self.app)
 

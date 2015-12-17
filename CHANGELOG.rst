@@ -4,7 +4,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Handle callable on API infos
 
 0.8.5 (2015-12-12)
 ------------------
