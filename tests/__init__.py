@@ -9,10 +9,10 @@ except ImportError:
     import unittest
 
 try:
-    from mock import Mock
+    from mock import Mock, patch
 except:
     # python3
-    from unittest.mock import Mock  # noqa
+    from unittest.mock import Mock, patch  # noqa
 
 from contextlib import contextmanager
 
