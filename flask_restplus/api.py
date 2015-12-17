@@ -383,15 +383,23 @@ class Api(restful.Api):
         self.models[name] = model
         return model
 
-    def expect(self, body, validate=None):
+    def expect(self, *inputs, **kwargs):
         '''
         A decorator to Specify the expected input model
 
-        :param Model body: The expected model
+        :param Model|Parse inputs: An expect model or request parser
         :param bool validate: whether to perform validation or not
 
         '''
-        return self.doc(body=body, validate=validate or self._validate)
+        params = {
+            'validate': kwargs.get('validate', None) or self._validate
+        }
+        for param in inputs:
+            if isinstance(param, (Model, list, tuple)):
+                params['body'] = param
+            elif isinstance(param, RequestParser):
+                params['parser'] = param
+        return self.doc(**params)
 
     def parser(self):
         '''Instanciate a :class:`~RequestParser`'''

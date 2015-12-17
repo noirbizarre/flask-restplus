@@ -541,6 +541,29 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['in'], 'query')
         self.assertEqual(parameter['description'], 'Some param')
 
+    def test_parser_from_expect(self):
+        api = self.build_api()
+        parser = api.parser()
+        parser.add_argument('param', type=int, help='Some param')
+
+        @api.route('/with-parser/', endpoint='with-parser')
+        class WithParserResource(restplus.Resource):
+            @api.expect(parser)
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+        self.assertIn('/with-parser/', data['paths'])
+
+        op = data['paths']['/with-parser/']['get']
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'param')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['in'], 'query')
+        self.assertEqual(parameter['description'], 'Some param')
+
     def test_parser_parameters_on_class(self):
         api = self.build_api()
         parser = api.parser()
@@ -2109,6 +2132,110 @@ class SwaggerTestCase(TestCase):
             }
         })
         self.assertNotIn('description', parameter)
+
+    def test_expect_model_list(self):
+        api = self.build_api()
+
+        model = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/model-list/')
+        class ModelAsDict(restplus.Resource):
+            @api.expect([model])
+            def post(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertEqual(data['definitions']['Person'], {
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                }
+            }
+        })
+
+        op = data['paths']['/model-list/']['post']
+        parameter = op['parameters'][0]
+
+        self.assertEqual(parameter, {
+            'name': 'payload',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'type': 'array',
+                'items': {'$ref': '#/definitions/Person'},
+            }
+        })
+
+    def test_both_model_and_parser_from_expect(self):
+        api = self.build_api()
+        parser = api.parser()
+        parser.add_argument('param', type=int, help='Some param')
+
+        person = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/with-parser/', endpoint='with-parser')
+        class WithParserResource(restplus.Resource):
+            @api.expect(parser, person)
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('definitions', data)
+        self.assertIn('Person', data['definitions'])
+        self.assertEqual(data['definitions']['Person'], {
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                }
+            }
+        })
+
+        self.assertIn('/with-parser/', data['paths'])
+
+        op = data['paths']['/with-parser/']['get']
+        self.assertEqual(len(op['parameters']), 2)
+
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'param')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['in'], 'query')
+        self.assertEqual(parameter['description'], 'Some param')
+
+        parameter = op['parameters'][1]
+        self.assertEqual(parameter, {
+            'name': 'payload',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                '$ref': '#/definitions/Person'
+            }
+        })
 
     def test_body_primitive_list(self):
         api = self.build_api()

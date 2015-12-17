@@ -224,6 +224,22 @@ It allows you specify lists as expected input too:
             pass
 
 
+Or a :exc:`~flask_restplus.reqparse.RequestParser`:
+
+.. code-block:: python
+
+    parser = api.parser()
+    parser.add_argument('param', type=int, help='Some param', location='form')
+    parser.add_argument('in_files', type=FileStorage, location='files')
+
+
+    @api.route('/with-parser/', endpoint='with-parser')
+    class WithParserResource(restplus.Resource):
+        @api.expect(parser)
+        def get(self):
+            return {}
+
+
 An exemple of on-demand validation:
 
 .. code-block:: python
@@ -523,9 +539,9 @@ You can specify an input format for ``POST`` and ``PUT`` with the ``body`` docum
 
 
 You can't have body and form or file parameters at the same time,
-it will raise a SpecsError.
+it will raise a :exc:`~flask_restplus.errors.SpecsError`.
 
-Models can be specified with a RequestParser.
+Models can be specified with a :class:`~flask_restplus.reqparse.RequestParser`.
 
 .. code-block:: python
 
