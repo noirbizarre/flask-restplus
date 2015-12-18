@@ -21,7 +21,7 @@ def abort(code=500, message=None, **kwargs):
     Attach any keyword arguments to the exception for later processing.
 
     :param int code: The associated HTTP status code
-    :param str message: An optionnal details message
+    :param str message: An optional details message
     :param kwargs: Any additionnal data to pass to the error payload
     :raise HTTPException:
     '''

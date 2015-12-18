@@ -98,14 +98,14 @@ class Raw(object):
     :param str description: The field description (for documentation purpose)
     :param bool required: Is the field required ?
     :param bool readonly: Is the field read only ? (for documentation purpose)
-    :param example: An optionnal data example (for documentation purpose)
-    :param callable mask: An optionnal mask function to be applied to output
+    :param example: An optional data example (for documentation purpose)
+    :param callable mask: An optional mask function to be applied to output
     '''
     #: The JSON/Swagger schema type
     __schema_type__ = 'object'
     #: The JSON/Swagger schema format
     __schema_format__ = None
-    #: An optionnal JSON/Swagger schema example
+    #: An optional JSON/Swagger schema example
     __schema_example__ = None
 
     def __init__(self, default=None, attribute=None, title=None, description=None,

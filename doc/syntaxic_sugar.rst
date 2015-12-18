@@ -28,7 +28,7 @@ With Flask-Restplus, you can write:
         def get(self, id):
             return {}
 
-You can optionnaly provide class-wide documentation:
+You can optionaly provide class-wide documentation:
 
 .. code-block:: python
 

@@ -8,8 +8,8 @@ class Namespace(object):
 
     :param Api api: The API on which the namespace is attached
     :param str name: The namespace name
-    :param str description: An optionnale short description
-    :param str path: An optionnal prefix path. If not provided, prefix is ``/+name``
+    :param str description: An optionale short description
+    :param str path: An optional prefix path. If not provided, prefix is ``/+name``
     '''
     def __init__(self, api, name, description=None, endpoint=None, path=None, **kwargs):
         self.api = api

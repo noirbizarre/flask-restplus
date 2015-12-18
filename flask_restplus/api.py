@@ -525,7 +525,7 @@ class Api(restful.Api):
 
         :param int code: the HTTP status code
         :param str description: a small description about the response
-        :param Model model: an optionnal response model
+        :param Model model: an optional response model
 
         '''
         return self.doc(responses={code: (description, model) if model else description})

@@ -355,7 +355,7 @@ class Swagger(object):
                 'in': 'header',
                 'type': 'string',
                 'format': 'mask',
-                'description': 'An optionnal fields mask',
+                'description': 'An optional fields mask',
             }
             if isinstance(mask, string_types):
                 param['default'] = mask
