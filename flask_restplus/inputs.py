@@ -41,6 +41,8 @@ def url(value):
         raise ValueError(message.format(value))
     return value
 
+url.__schema__ = {'type': 'string', 'format': 'url'}
+
 
 class regex(object):
     '''
@@ -69,6 +71,13 @@ class regex(object):
 
     def __deepcopy__(self, memo):
         return regex(self.pattern)
+
+    @property
+    def __schema__(self):
+        return {
+            'type': 'string',
+            'pattern': self.pattern,
+        }
 
 
 def _normalize_interval(start, end, value):
@@ -184,11 +193,15 @@ def iso8601interval(value, argument='argument'):
 
     return start, end
 
+iso8601interval.__schema__ = {'type': 'string', 'format': 'iso8601-interval'}
+
 
 def date(value):
     '''Parse a valid looking date in the format YYYY-mm-dd'''
     date = datetime.strptime(value, "%Y-%m-%d")
     return date
+
+date.__schema__ = {'type': 'string', 'format': 'date'}
 
 
 def _get_integer(value):
@@ -206,6 +219,8 @@ def natural(value, argument='argument'):
         raise ValueError(msg.format(arg=argument, value=value))
     return value
 
+natural.__schema__ = {'type': 'integer', 'minimum': 0}
+
 
 def positive(value, argument='argument'):
     '''Restrict input type to the positive integers (1, 2, 3...)'''
@@ -214,6 +229,8 @@ def positive(value, argument='argument'):
         msg = 'Invalid {arg}: {value}. {arg} must be a positive integer'
         raise ValueError(msg.format(arg=argument, value=value))
     return value
+
+positive.__schema__ = {'type': 'integer', 'minimum': 0, 'exclusiveMinimum': True}
 
 
 class int_range(object):
@@ -229,6 +246,14 @@ class int_range(object):
             msg = 'Invalid {arg}: {val}. {arg} must be within the range {lo} - {hi}'
             raise ValueError(msg.format(arg=self.argument, val=value, lo=self.low, hi=self.high))
         return value
+
+    @property
+    def __schema__(self):
+        return {
+            'type': 'integer',
+            'minimum': self.low,
+            'maximum': self.high,
+        }
 
 
 def boolean(value):
@@ -253,6 +278,8 @@ def boolean(value):
     if value in ('false', '0',):
         return False
     raise ValueError('Invalid literal for boolean(): {0}'.format(value))
+
+boolean.__schema__ = {'type': 'boolean'}
 
 
 def datetime_from_rfc822(value):
@@ -298,6 +325,8 @@ def datetime_from_iso8601(value):
     except:
         raise ValueError('Invalid date literal "{0}"'.format(value))
 
+datetime_from_iso8601.__schema__ = {'type': 'string', 'format': 'date-time'}
+
 
 def date_from_rfc822(value):
     '''
@@ -331,3 +360,5 @@ def date_from_iso8601(value):
 
     '''
     return datetime_from_iso8601(value).date()
+
+date_from_iso8601.__schema__ = {'type': 'string', 'format': 'date'}

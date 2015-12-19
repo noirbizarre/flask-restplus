@@ -227,7 +227,7 @@ class SwaggerTestCase(TestCase):
 
     def test_specs_endpoint_tags_namespaces(self):
         api = restplus.Api(self.app, tags=['ns', 'tag'])
-        ns = api.namespace('ns', 'Description')
+        api.namespace('ns', 'Description')
 
         data = self.get_specs('')
         self.assertEqual(data['tags'], [

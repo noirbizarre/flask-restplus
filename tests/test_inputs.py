@@ -23,6 +23,9 @@ class InputTest(object):
         for value in values:
             yield assert_raises, error, lambda: input(value)
 
+    def assertSchema(self, input, schema):
+        assert_equal(input.__schema__, schema)
+
 
 class Rfc822DatetimeTest(InputTest):
     def test_valid_values(self):
@@ -54,6 +57,9 @@ class Iso8601DatetimeTest(InputTest):
         with assert_raises(ValueError):
             inputs.datetime_from_iso8601('2008-13-13')
 
+    def test_schema(self):
+        self.assertSchema(inputs.datetime_from_iso8601, {'type': 'string', 'format': 'date-time'})
+
 
 class Rfc822DateTest(InputTest):
     def test_valid_values(self):
@@ -84,6 +90,9 @@ class Iso8601DateTest(InputTest):
     def test_error(self):
         with assert_raises(ValueError):
             inputs.date_from_iso8601('2008-13-13')
+
+    def test_schema(self):
+        self.assertSchema(inputs.date_from_iso8601, {'type': 'string', 'format': 'date'})
 
 
 class UrlTest(InputTest):
@@ -150,6 +159,9 @@ class UrlTest(InputTest):
         for url in urls:
             yield self.assert_bad_url_with_suggestion, url
 
+    def test_schema(self):
+        self.assertSchema(inputs.url, {'type': 'string', 'format': 'url'})
+
 
 class RegexTest(InputTest):
     def test_valid_input(self):
@@ -178,6 +190,9 @@ class RegexTest(InputTest):
     def test_bad_pattern(self):
         assert_raises(re.error, inputs.regex, '[')
 
+    def test_schema(self):
+        self.assertSchema(inputs.regex(r'^[0-9]+$'), {'type': 'string', 'pattern': '^[0-9]+$'})
+
 
 class BooleanTest(InputTest):
     def test_false(self):
@@ -204,6 +219,9 @@ class BooleanTest(InputTest):
         with assert_raises(ValueError):
             inputs.boolean('blah')
 
+    def test_schema(self):
+        self.assertSchema(inputs.boolean, {'type': 'boolean'})
+
 
 class DateTest(InputTest):
     def test_later_than_1900(self):
@@ -215,6 +233,9 @@ class DateTest(InputTest):
 
     def test_default(self):
         assert_equal(inputs.date('2008-08-01'), datetime(2008, 8, 1))
+
+    def test_schema(self):
+        self.assertSchema(inputs.date, {'type': 'string', 'format': 'date'})
 
 
 class Natural(InputTest):
@@ -229,6 +250,9 @@ class Natural(InputTest):
         with assert_raises(ValueError):
             inputs.natural('foo')
 
+    def test_schema(self):
+        self.assertSchema(inputs.natural, {'type': 'integer', 'minimum': 0})
+
 
 class PositiveTest(InputTest):
     def test_positive(self):
@@ -242,6 +266,9 @@ class PositiveTest(InputTest):
     def test_negative(self):
         with assert_raises(ValueError):
             inputs.positive(-1)
+
+    def test_schema(self):
+        self.assertSchema(inputs.positive, {'type': 'integer', 'minimum': 0, 'exclusiveMinimum': True})
 
 
 class IntRangeTest(InputTest):
@@ -262,6 +289,9 @@ class IntRangeTest(InputTest):
         int_range = inputs.int_range(0, 5)
         with assert_raises(ValueError):
             int_range(6)
+
+    def test_schema(self):
+        self.assertSchema(inputs.int_range(1, 5), {'type': 'integer', 'minimum': 1, 'maximum': 5})
 
 
 class IsoIntervalTest(InputTest):
@@ -413,3 +443,6 @@ class IsoIntervalTest(InputTest):
             '01/01/2013',
         ]
         self.assert_values_raises(inputs.iso8601interval, values, ValueError)
+
+    def test_schema(self):
+        self.assertSchema(inputs.iso8601interval, {'type': 'string', 'format': 'iso8601-interval'})

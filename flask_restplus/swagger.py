@@ -131,6 +131,8 @@ def _handle_arg_type(arg, param):
     elif hasattr(arg.type, '__apidoc__'):
         param['type'] = arg.type.__apidoc__['name']
         param['in'] = 'body'
+    elif hasattr(arg.type, '__schema__'):
+        param.update(arg.type.__schema__)
     elif arg.location == 'files':
         param['type'] = 'file'
     else:

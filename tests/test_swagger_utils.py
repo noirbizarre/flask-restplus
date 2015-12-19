@@ -103,8 +103,6 @@ class ExtractPathParamsTestCase(TestCase):
     #         }])
 
 
-
-
 class ParserToParamsTestCase(TestCase):
     def test_empty_parser(self):
         parser = reqparse.RequestParser()
@@ -273,5 +271,25 @@ class ParserToParamsTestCase(TestCase):
                 'type': 'array',
                 'collectionFormat': 'multi',
                 'items': {'type': 'integer'}
+            }
+        })
+
+    def test_schema_interface(self):
+        def custom(value):
+            pass
+
+        custom.__schema__ = {
+            'type': 'string',
+            'format': 'custom-format',
+        }
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('custom', type=custom)
+
+        self.assertDataEqual(parser_to_params(parser), {
+            'custom': {
+                'in': 'query',
+                'type': 'string',
+                'format': 'custom-format',
             }
         })
