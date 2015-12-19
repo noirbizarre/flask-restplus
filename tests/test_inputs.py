@@ -163,6 +163,209 @@ class UrlTest(InputTest):
         self.assertSchema(inputs.url, {'type': 'string', 'format': 'url'})
 
 
+class IPTest(InputTest):
+    def test_valid_values(self):
+        ips = [
+            '200.8.9.10',
+            '127.0.0.1',
+            '2001:db8:85a3::8a2e:370:7334',
+            '::1',
+        ]
+        self.assert_values(inputs.ip, zip(ips, ips))
+
+    def test_bad_values(self):
+        ips = [
+            'foo',
+            'http://',
+            'http://example',
+            'http://example.',
+            'http://.com',
+            'http://invalid-.com',
+            'http://-invalid.com',
+            'http://inv-.alid-.com',
+            'http://inv-.-alid.com',
+            'foo bar baz',
+            'foo \u2713',
+            'http://@foo:bar@example.com',
+            'http://:bar@example.com',
+            'http://bar:bar:bar@example.com',
+            '127.0'
+        ]
+
+        self.assert_values_raises(inputs.ip, ips, ValueError)
+
+    def test_schema(self):
+        self.assertSchema(inputs.ip, {'type': 'string', 'format': 'ip'})
+
+
+class EmailTest(InputTest):
+
+    def assert_bad_emails(self, input, values, msg=None):
+        msg = msg or '{0} is not a valid email'
+        for value in values:
+            with assert_raises(ValueError) as cm:
+                input(value)
+            assert_equal(str(cm.exception), msg.format(value))
+
+    def test_valid_values_default(self):
+        emails = [
+            'test@gmail.com',
+            'coucou@cmoi.fr',
+            'coucou+another@cmoi.fr',
+            'Coucou@cmoi.fr',
+            'me@valid-with-hyphens.com',
+            'me@subdomain.example.com',
+            'me@sub.subdomain.example.com',
+            'Loïc.Accentué@voilà.fr',
+        ]
+        invalids = [
+            'me@localhost',
+            'me@127.0.0.1',
+            'me@127.1.2.3',
+            'me@::1'
+            'me@200.8.9.10',
+            'me@2001:db8:85a3::8a2e:370:7334'
+        ]
+        self.assert_values(inputs.email(), zip(emails, emails))
+        self.assert_bad_emails(inputs.email(), invalids)
+
+    def test_valid_values_check(self):
+        valids = [
+            'test@gmail.com',
+            'test@live.com',
+        ]
+        invalids = [
+            'coucou@not-found.fr',
+            'me@localhost',
+            'me@127.0.0.1',
+            'me@127.1.2.3',
+            'me@::1'
+            'me@200.8.9.10',
+            'me@2001:db8:85a3::8a2e:370:7334'
+        ]
+        email = inputs.email(check=True)
+
+        self.assert_values(email, zip(valids, valids))
+        self.assert_bad_emails(email, invalids)
+
+    def test_valid_values_ip(self):
+        emails = [
+            'test@gmail.com',
+            'coucou@cmoi.fr',
+            'coucou+another@cmoi.fr',
+            'Coucou@cmoi.fr',
+            'coucou@localhost',
+            'me@valid-with-hyphens.com',
+            'me@subdomain.example.com',
+            'me@200.8.9.10',
+            'me@2001:db8:85a3::8a2e:370:7334'
+        ]
+        invalids = [
+            'me@localhost',
+            'me@127.0.0.1',
+            'me@127.1.2.3',
+            'me@::1'
+        ]
+        email = inputs.email(ip=True)
+
+        self.assert_values(email, zip(emails, emails))
+        self.assert_bad_emails(email, invalids)
+
+    def test_valid_values_local(self):
+        emails = [
+            'test@gmail.com',
+            'coucou@cmoi.fr',
+            'coucou+another@cmoi.fr',
+            'Coucou@cmoi.fr',
+            'coucou@localhost',
+            'me@valid-with-hyphens.com',
+            'me@subdomain.example.com',
+            'me@localhost',
+        ]
+        invalids = [
+            'me@127.0.0.1',
+            'me@127.1.2.3',
+            'me@::1'
+            'me@200.8.9.10',
+            'me@2001:db8:85a3::8a2e:370:7334'
+        ]
+        email = inputs.email(local=True)
+
+        self.assert_values(email, zip(emails, emails))
+        self.assert_bad_emails(email, invalids)
+
+    def test_valid_values_ip_and_local(self):
+        emails = [
+            'test@gmail.com',
+            'coucou@cmoi.fr',
+            'coucou+another@cmoi.fr',
+            'Coucou@cmoi.fr',
+            'coucou@localhost',
+            'me@valid-with-hyphens.com',
+            'me@subdomain.example.com',
+            'me@200.8.9.10',
+            'me@2001:db8:85a3::8a2e:370:7334'
+            'me@localhost',
+            'me@127.0.0.1',
+            'me@127.1.2.3',
+            'me@::1'
+        ]
+        email = inputs.email(ip=True, local=True)
+
+        self.assert_values(email, zip(emails, emails))
+
+    def test_valid_values_domains(self):
+        emails = [
+            'test@gmail.com',
+            'coucou@cmoi.fr',
+            'coucou+another@cmoi.fr',
+            'Coucou@cmoi.fr',
+        ]
+        invalids = [
+            'me@valid-with-hyphens.com',
+            'me@subdomain.example.com',
+            'me@localhost',
+            'me@127.0.0.1',
+            'me@127.1.2.3',
+            'me@::1',
+            'me@200.8.9.10',
+            'me@2001:db8:85a3::8a2e:370:7334',
+        ]
+        email = inputs.email(domains=('gmail.com', 'cmoi.fr'))
+        self.assert_values(email, zip(emails, emails))
+        self.assert_bad_emails(email, invalids, '{0} does not belong to the authorized domains')
+
+    def test_valid_values_exclude(self):
+        emails = [
+            'test@gmail.com',
+            'coucou@cmoi.fr',
+            'coucou+another@cmoi.fr',
+            'Coucou@cmoi.fr',
+        ]
+        invalids = [
+            'me@somewhere.com',
+            'me@foo.bar',
+        ]
+        email = inputs.email(exclude=('somewhere.com', 'foo.bar'))
+        self.assert_values(email, zip(emails, emails))
+        self.assert_bad_emails(email, invalids, '{0} belongs to a forbidden domain')
+
+    def test_bad_email(self):
+        emails = (
+            'someone@',
+            '@somewhere',
+            'email.somewhere.com',
+            '[invalid!email]',
+            'me.@somewhere',
+            'me..something@somewhere',
+        )
+        email = inputs.email()
+        self.assert_bad_emails(email, emails)
+
+    def test_schema(self):
+        self.assertSchema(inputs.email(), {'type': 'string', 'format': 'email'})
+
+
 class RegexTest(InputTest):
     def test_valid_input(self):
         values = (

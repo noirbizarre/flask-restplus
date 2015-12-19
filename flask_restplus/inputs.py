@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import re
+import socket
 
 from datetime import datetime, time, timedelta
 from email.utils import parsedate_tz, mktime_tz
@@ -25,6 +26,34 @@ url_regex = re.compile(
     r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 
+email_regex = re.compile(
+    r'^'
+    '(?P<local>[^@]*[^@.])'
+    r'@'
+    r'(?P<server>[^@]+(?:\.[^@]+)*)'
+    r'$', re.IGNORECASE)
+
+
+def ip(value):
+    '''Validate an IP (both ipv4 and ipv6)'''
+    try:
+        # Check IPv4 address
+        socket.inet_aton(value)
+        if value.count('.') == 3:
+            return value
+    except socket.error:
+        pass
+    try:
+        # Check IPv6 address
+        socket.inet_pton(socket.AF_INET6, value)
+        return value
+    except socket.error:
+        pass
+    raise ValueError('{0} is not a valid ip'.format(value))
+
+ip.__schema__ = {'type': 'string', 'format': 'ip'}
+
+
 def url(value):
     '''
     Validate a URL.
@@ -42,6 +71,70 @@ def url(value):
     return value
 
 url.__schema__ = {'type': 'string', 'format': 'url'}
+
+
+class email(object):
+    '''
+    Validate an email.
+
+    Example::
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('email', type=inputs.email(dns=True))
+
+    Input to the ``email`` argument will be rejected if it does not match an email
+    and if domain does not exists.
+
+    :param bool check: Check the domain exists (perform a DNS resolution)
+    :param bool ip: Allow IP (both ipv4/ipv6) as domain
+    :param bool local: Allow localhost (both string or ip) as domain
+    :param list|tuple domains: Restrict valid domains to this list
+    :param list|tuple exclude: Exclude some domains
+    '''
+    def __init__(self, check=False, ip=False, local=False, domains=None, exclude=None):
+        self.check = check
+        self.ip = ip
+        self.local = local
+        self.domains = domains
+        self.exclude = exclude
+
+    def error(self, value, msg=None):
+        msg = msg or '{0} is not a valid email'
+        raise ValueError(msg.format(value))
+
+    def is_ip(self, value):
+        try:
+            ip(value)
+            return True
+        except ValueError:
+            return False
+
+    def __call__(self, value):
+        match = email_regex.match(value)
+        if not match or '..' in value:
+            self.error(value)
+        server = match.group('server')
+        if self.check:
+            try:
+                socket.getaddrinfo(server, None)
+            except socket.error:
+                self.error(value)
+        if self.domains and server not in self.domains:
+            self.error(value, '{0} does not belong to the authorized domains')
+        if self.exclude and server in self.exclude:
+            self.error(value, '{0} belongs to a forbidden domain')
+        if not self.local and (server in 'localhost', '::1' or server.startswith('127.')):
+            self.error(value)
+        if self.is_ip(server) and not self.ip:
+            self.error(value)
+        return value
+
+    @property
+    def __schema__(self):
+        return {
+            'type': 'string',
+            'format': 'email',
+        }
 
 
 class regex(object):
