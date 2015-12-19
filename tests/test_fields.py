@@ -26,7 +26,7 @@ class FieldTestCase(object):
 
     def assert_values(self, values, *args, **kwargs):
         for value, expected in values:
-            yield self.assert_field, self.field_class(*args, **kwargs), value, expected
+            self.assert_field(self.field_class(*args, **kwargs), value, expected)
 
     def assert_field(self, field, value, expected):
         assert_equal(field.output('foo', {'foo': value}), expected)
@@ -116,7 +116,7 @@ class StringTestMixin(object):
         assert_in('maxLength', field.__schema__)
         assert_equal(field.__schema__['maxLength'], 42)
 
-    def test_max_length(self):
+    def test_max_length_as_callable(self):
         field = self.field_class(max_length=lambda: 42)
         assert_in('maxLength', field.__schema__)
         assert_equal(field.__schema__['maxLength'], 42)
@@ -263,9 +263,10 @@ class IntegerFieldTest(BaseFieldTestMixin, NumberTestMixin, FieldTestCase):
 
     def test_values(self):
         values = [
+            (0, 0),
             (42, 42),
             ('42', 42),
-            (None, 0),
+            (None, None),
             (66.6, 66),
         ]
         self.assert_values(values)
@@ -385,8 +386,8 @@ class ArbitraryFieldTest(BaseFieldTestMixin, NumberTestMixin, FieldTestCase):
 
     def test_values(self):
         values = [
-            (PI_STR, PI),
-            (PI, PI),
+            (PI_STR, PI_STR),
+            (PI, PI_STR),
         ]
         self.assert_values(values)
 
@@ -517,12 +518,12 @@ class DateFieldTest(BaseFieldTestMixin, FieldTestCase):
         assert_equal(field.__schema__, {'type': 'string', 'format': 'date', 'default': '2014-08-25'})
         self.assert_field(field, None, '2014-08-25')
 
-    def test_with_default_as_datetime(self):
-        field = fields.Date(default=datetime(2014, 8, 25))
-        assert_equal(field.__schema__, {'type': 'string', 'format': 'date', 'default': '2014-08-25'})
-
     def test_with_default_as_date(self):
         field = fields.Date(default=date(2014, 8, 25))
+        assert_equal(field.__schema__, {'type': 'string', 'format': 'date', 'default': '2014-08-25'})
+
+    def test_with_default_as_datetime(self):
+        field = fields.Date(default=datetime(2014, 8, 25))
         assert_equal(field.__schema__, {'type': 'string', 'format': 'date', 'default': '2014-08-25'})
 
     def test_min(self):
@@ -575,17 +576,7 @@ class DateFieldTest(BaseFieldTestMixin, FieldTestCase):
         assert_in('exclusiveMaximum', field.__schema__)
         assert_equal(field.__schema__['exclusiveMaximum'], True)
 
-    def test_rfc822_values(self):
-        values = [
-            (date(2011, 1, 1), 'Sat, 01 Jan 2011'),
-            (datetime(2011, 1, 1), 'Sat, 01 Jan 2011'),
-            (datetime(2011, 1, 1, 23, 59, 59), 'Sat, 01 Jan 2011'),
-            (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc), 'Sat, 01 Jan 2011'),
-            (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')), 'Sat, 01 Jan 2011')
-        ]
-        self.assert_values(values, dt_format='rfc822')
-
-    def test_iso8601_values(self):
+    def test_values(self):
         values = [
             (date(2011, 1, 1), '2011-01-01'),
             (datetime(2011, 1, 1), '2011-01-01'),
@@ -595,15 +586,10 @@ class DateFieldTest(BaseFieldTestMixin, FieldTestCase):
             (datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc), '2011-01-01'),
             (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')), '2011-01-01')
         ]
-        self.assert_values(values, dt_format='iso8601')
-
-    def test_unsupported_format(self):
-        field = fields.Date(dt_format='raw')
-        self.assert_field_raises(field, datetime.now())
+        self.assert_values(values)
 
     def test_unsupported_value_format(self):
-        field = fields.DateTime(dt_format='raw')
-        self.assert_field_raises(field, 'xxx')
+        self.assert_field_raises(fields.Date(), 'xxx')
 
 
 class FormatedStringFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
@@ -846,11 +832,18 @@ class ListFieldTest(BaseFieldTestMixin, FieldTestCase):
     def test_values(self):
         values = [
             (['a', 'b', 'c'], ['a', 'b', 'c']),
-            (set(['a', 'b', 'c']), set(['a', 'b', 'c'])),
-            (('a', 'b', 'c'), ('a', 'b', 'c')),
+            (['c', 'b', 'a'], ['c', 'b', 'a']),
+            (('a', 'b', 'c'), ['a', 'b', 'c']),
+            (['a'], ['a']),
             (None, None),
         ]
         self.assert_values(values)
+
+    def test_with_set(self):
+        field = fields.List(fields.String)
+        value = set(['a', 'b', 'c'])
+        output = field.output('foo', {'foo': value})
+        assert_equal(set(output), value)
 
     def test_with_scoped_attribute_on_dict_or_obj(self):
         class Test(object):

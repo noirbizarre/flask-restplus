@@ -17,63 +17,15 @@ from . import assert_equal, assert_raises
 class InputTest(object):
     def assert_values(self, input, values):
         for value, expected in values:
-            yield assert_equal, input(value), expected
+            assert_equal(input(value), expected)
 
-    def assert_values_raises(self, input, values, error):
+    def assert_values_raises(self, input, values):
         for value in values:
-            yield assert_raises, error, lambda: input(value)
+            with assert_raises(ValueError):
+                input(value)
 
-    def assertSchema(self, input, schema):
+    def assert_schema(self, input, schema):
         assert_equal(input.__schema__, schema)
-
-
-class Rfc822DatetimeTest(InputTest):
-    def test_valid_values(self):
-        values = [
-            ('Sat, 01 Jan 2011', datetime(2011, 1, 1, tzinfo=pytz.utc)),
-            ('Sat, 01 Jan 2011 00:00:00 -0000', datetime(2011, 1, 1, tzinfo=pytz.utc)),
-            ('Sat, 01 Jan 2011 23:59:59 -0000', datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
-            ('Sat, 01 Jan 2011 21:59:59 -0200', datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
-        ]
-        self.assert_values(inputs.datetime_from_rfc822, values)
-
-    def test_error(self):
-        with assert_raises(ValueError):
-            inputs.datetime_from_rfc822('Fake, 01 Jan 2011')
-
-
-class Iso8601DatetimeTest(InputTest):
-    def test_valid_values(self):
-        values = [
-            ('2011-01-01', datetime(2011, 1, 1, tzinfo=pytz.utc)),
-            ('2011-01-01T00:00:00+00:00', datetime(2011, 1, 1, tzinfo=pytz.utc)),
-            ('2011-01-01T23:59:59+00:00', datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
-            ('2011-01-01T23:59:59.001000+00:00', datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc)),
-            ('2011-01-01T23:59:59+02:00', datetime(2011, 1, 1, 21, 59, 59, tzinfo=pytz.utc)),
-        ]
-        self.assert_values(inputs.datetime_from_iso8601, values)
-
-    def test_error(self):
-        with assert_raises(ValueError):
-            inputs.datetime_from_iso8601('2008-13-13')
-
-    def test_schema(self):
-        self.assertSchema(inputs.datetime_from_iso8601, {'type': 'string', 'format': 'date-time'})
-
-
-class Rfc822DateTest(InputTest):
-    def test_valid_values(self):
-        values = [
-            ('Sat, 01 Jan 2011', date(2011, 1, 1)),
-            ('Sat, 01 Jan 2011 00:00:00 -0000', date(2011, 1, 1)),
-            ('Sat, 01 Jan 2011 23:59:59 -0000', date(2011, 1, 1)),
-            ('Sat, 01 Jan 2011 21:59:59 -0200', date(2011, 1, 1)),
-        ]
-        self.assert_values(inputs.date_from_rfc822, values)
-
-    def test_error(self):
-        with assert_raises(ValueError):
-            inputs.date_from_rfc822('Fake, 01 Jan 2011')
 
 
 class Iso8601DateTest(InputTest):
@@ -92,7 +44,45 @@ class Iso8601DateTest(InputTest):
             inputs.date_from_iso8601('2008-13-13')
 
     def test_schema(self):
-        self.assertSchema(inputs.date_from_iso8601, {'type': 'string', 'format': 'date'})
+        self.assert_schema(inputs.date_from_iso8601, {'type': 'string', 'format': 'date'})
+
+
+class Iso8601DatetimeTest(InputTest):
+    def test_valid_values(self):
+        values = [
+            ('2011-01-01', datetime(2011, 1, 1)),
+            ('2011-01-01T00:00:00+00:00', datetime(2011, 1, 1, tzinfo=pytz.utc)),
+            ('2011-01-01T23:59:59+00:00', datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+            ('2011-01-01T23:59:59.001000+00:00', datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc)),
+            ('2011-01-01T23:59:59+02:00', datetime(2011, 1, 1, 21, 59, 59, tzinfo=pytz.utc)),
+        ]
+        self.assert_values(inputs.datetime_from_iso8601, values)
+
+    def test_error(self):
+        with assert_raises(ValueError):
+            inputs.datetime_from_iso8601('2008-13-13')
+
+    def test_schema(self):
+        self.assert_schema(inputs.datetime_from_iso8601, {'type': 'string', 'format': 'date-time'})
+
+
+class Rfc822DatetimeTest(InputTest):
+    def test_valid_values(self):
+        values = [
+            ('Sat, 01 Jan 2011', datetime(2011, 1, 1, tzinfo=pytz.utc)),
+            ('Sat, 01 Jan 2011 00:00', datetime(2011, 1, 1, tzinfo=pytz.utc)),
+            ('Sat, 01 Jan 2011 00:00:00', datetime(2011, 1, 1, tzinfo=pytz.utc)),
+            ('Sat, 01 Jan 2011 00:00:00 +0000', datetime(2011, 1, 1, tzinfo=pytz.utc)),
+            ('Sat, 01 Jan 2011 00:00:00 -0000', datetime(2011, 1, 1, tzinfo=pytz.utc)),
+            ('Sat, 01 Jan 2011 23:59:59 -0000', datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+            ('Sat, 01 Jan 2011 21:00:00 +0200', datetime(2011, 1, 1, 19, 0, 0, tzinfo=pytz.utc)),
+            ('Sat, 01 Jan 2011 21:00:00 -0200', datetime(2011, 1, 1, 23, 0, 0, tzinfo=pytz.utc)),
+        ]
+        self.assert_values(inputs.datetime_from_rfc822, values)
+
+    def test_error(self):
+        with assert_raises(ValueError):
+            inputs.datetime_from_rfc822('Fake, 01 XXX 2011')
 
 
 class UrlTest(InputTest):
@@ -160,7 +150,7 @@ class UrlTest(InputTest):
             yield self.assert_bad_url_with_suggestion, url
 
     def test_schema(self):
-        self.assertSchema(inputs.url, {'type': 'string', 'format': 'url'})
+        self.assert_schema(inputs.url, {'type': 'string', 'format': 'url'})
 
 
 class IPTest(InputTest):
@@ -192,10 +182,80 @@ class IPTest(InputTest):
             '127.0'
         ]
 
-        self.assert_values_raises(inputs.ip, ips, ValueError)
+        self.assert_values_raises(inputs.ip, ips)
 
     def test_schema(self):
-        self.assertSchema(inputs.ip, {'type': 'string', 'format': 'ip'})
+        self.assert_schema(inputs.ip, {'type': 'string', 'format': 'ip'})
+
+
+class IPv4Test(InputTest):
+    def test_valid_values(self):
+        ips = [
+            '200.8.9.10',
+            '127.0.0.1',
+        ]
+        self.assert_values(inputs.ipv4, zip(ips, ips))
+
+    def test_bad_values(self):
+        ips = [
+            '2001:db8:85a3::8a2e:370:7334',
+            '::1',
+            'foo',
+            'http://',
+            'http://example',
+            'http://example.',
+            'http://.com',
+            'http://invalid-.com',
+            'http://-invalid.com',
+            'http://inv-.alid-.com',
+            'http://inv-.-alid.com',
+            'foo bar baz',
+            'foo \u2713',
+            'http://@foo:bar@example.com',
+            'http://:bar@example.com',
+            'http://bar:bar:bar@example.com',
+            '127.0'
+        ]
+
+        self.assert_values_raises(inputs.ipv4, ips)
+
+    def test_schema(self):
+        self.assert_schema(inputs.ipv4, {'type': 'string', 'format': 'ipv4'})
+
+
+class IPv6Test(InputTest):
+    def test_valid_values(self):
+        ips = [
+            '2001:db8:85a3::8a2e:370:7334',
+            '::1',
+        ]
+        self.assert_values(inputs.ipv6, zip(ips, ips))
+
+    def test_bad_values(self):
+        ips = [
+            '200.8.9.10',
+            '127.0.0.1',
+            'foo',
+            'http://',
+            'http://example',
+            'http://example.',
+            'http://.com',
+            'http://invalid-.com',
+            'http://-invalid.com',
+            'http://inv-.alid-.com',
+            'http://inv-.-alid.com',
+            'foo bar baz',
+            'foo \u2713',
+            'http://@foo:bar@example.com',
+            'http://:bar@example.com',
+            'http://bar:bar:bar@example.com',
+            '127.0'
+        ]
+
+        self.assert_values_raises(inputs.ipv6, ips)
+
+    def test_schema(self):
+        self.assert_schema(inputs.ipv6, {'type': 'string', 'format': 'ipv6'})
 
 
 class EmailTest(InputTest):
@@ -222,9 +282,9 @@ class EmailTest(InputTest):
             'me@localhost',
             'me@127.0.0.1',
             'me@127.1.2.3',
-            'me@::1'
+            'me@::1',
             'me@200.8.9.10',
-            'me@2001:db8:85a3::8a2e:370:7334'
+            'me@2001:db8:85a3::8a2e:370:7334',
         ]
         self.assert_values(inputs.email(), zip(emails, emails))
         self.assert_bad_emails(inputs.email(), invalids)
@@ -239,9 +299,9 @@ class EmailTest(InputTest):
             'me@localhost',
             'me@127.0.0.1',
             'me@127.1.2.3',
-            'me@::1'
+            'me@::1',
             'me@200.8.9.10',
-            'me@2001:db8:85a3::8a2e:370:7334'
+            'me@2001:db8:85a3::8a2e:370:7334',
         ]
         email = inputs.email(check=True)
 
@@ -254,17 +314,16 @@ class EmailTest(InputTest):
             'coucou@cmoi.fr',
             'coucou+another@cmoi.fr',
             'Coucou@cmoi.fr',
-            'coucou@localhost',
             'me@valid-with-hyphens.com',
             'me@subdomain.example.com',
             'me@200.8.9.10',
-            'me@2001:db8:85a3::8a2e:370:7334'
+            'me@2001:db8:85a3::8a2e:370:7334',
         ]
         invalids = [
             'me@localhost',
             'me@127.0.0.1',
             'me@127.1.2.3',
-            'me@::1'
+            'me@::1',
         ]
         email = inputs.email(ip=True)
 
@@ -285,9 +344,9 @@ class EmailTest(InputTest):
         invalids = [
             'me@127.0.0.1',
             'me@127.1.2.3',
-            'me@::1'
+            'me@::1',
             'me@200.8.9.10',
-            'me@2001:db8:85a3::8a2e:370:7334'
+            'me@2001:db8:85a3::8a2e:370:7334',
         ]
         email = inputs.email(local=True)
 
@@ -304,11 +363,11 @@ class EmailTest(InputTest):
             'me@valid-with-hyphens.com',
             'me@subdomain.example.com',
             'me@200.8.9.10',
-            'me@2001:db8:85a3::8a2e:370:7334'
+            'me@2001:db8:85a3::8a2e:370:7334',
             'me@localhost',
             'me@127.0.0.1',
             'me@127.1.2.3',
-            'me@::1'
+            'me@::1',
         ]
         email = inputs.email(ip=True, local=True)
 
@@ -363,7 +422,7 @@ class EmailTest(InputTest):
         self.assert_bad_emails(email, emails)
 
     def test_schema(self):
-        self.assertSchema(inputs.email(), {'type': 'string', 'format': 'email'})
+        self.assert_schema(inputs.email(), {'type': 'string', 'format': 'email'})
 
 
 class RegexTest(InputTest):
@@ -376,7 +435,7 @@ class RegexTest(InputTest):
 
         num_only = inputs.regex(r'^[0-9]+$')
 
-        self.assert_values(num_only, values)
+        self.assert_values(num_only, zip(values, values))
 
     def test_bad_input(self):
         values = (
@@ -388,13 +447,13 @@ class RegexTest(InputTest):
 
         num_only = inputs.regex(r'^[0-9]+$')
 
-        self.assert_values_raises(num_only, values, ValueError)
+        self.assert_values_raises(num_only, values)
 
     def test_bad_pattern(self):
         assert_raises(re.error, inputs.regex, '[')
 
     def test_schema(self):
-        self.assertSchema(inputs.regex(r'^[0-9]+$'), {'type': 'string', 'pattern': '^[0-9]+$'})
+        self.assert_schema(inputs.regex(r'^[0-9]+$'), {'type': 'string', 'pattern': '^[0-9]+$'})
 
 
 class BooleanTest(InputTest):
@@ -423,7 +482,7 @@ class BooleanTest(InputTest):
             inputs.boolean('blah')
 
     def test_schema(self):
-        self.assertSchema(inputs.boolean, {'type': 'boolean'})
+        self.assert_schema(inputs.boolean, {'type': 'boolean'})
 
 
 class DateTest(InputTest):
@@ -438,7 +497,7 @@ class DateTest(InputTest):
         assert_equal(inputs.date('2008-08-01'), datetime(2008, 8, 1))
 
     def test_schema(self):
-        self.assertSchema(inputs.date, {'type': 'string', 'format': 'date'})
+        self.assert_schema(inputs.date, {'type': 'string', 'format': 'date'})
 
 
 class Natural(InputTest):
@@ -454,7 +513,7 @@ class Natural(InputTest):
             inputs.natural('foo')
 
     def test_schema(self):
-        self.assertSchema(inputs.natural, {'type': 'integer', 'minimum': 0})
+        self.assert_schema(inputs.natural, {'type': 'integer', 'minimum': 0})
 
 
 class PositiveTest(InputTest):
@@ -471,7 +530,7 @@ class PositiveTest(InputTest):
             inputs.positive(-1)
 
     def test_schema(self):
-        self.assertSchema(inputs.positive, {'type': 'integer', 'minimum': 0, 'exclusiveMinimum': True})
+        self.assert_schema(inputs.positive, {'type': 'integer', 'minimum': 0, 'exclusiveMinimum': True})
 
 
 class IntRangeTest(InputTest):
@@ -494,7 +553,7 @@ class IntRangeTest(InputTest):
             int_range(6)
 
     def test_schema(self):
-        self.assertSchema(inputs.int_range(1, 5), {'type': 'integer', 'minimum': 1, 'maximum': 5})
+        self.assert_schema(inputs.int_range(1, 5), {'type': 'integer', 'minimum': 1, 'maximum': 5})
 
 
 class IsoIntervalTest(InputTest):
@@ -645,7 +704,7 @@ class IsoIntervalTest(InputTest):
             'asdf',
             '01/01/2013',
         ]
-        self.assert_values_raises(inputs.iso8601interval, values, ValueError)
+        self.assert_values_raises(inputs.iso8601interval, values)
 
     def test_schema(self):
-        self.assertSchema(inputs.iso8601interval, {'type': 'string', 'format': 'iso8601-interval'})
+        self.assert_schema(inputs.iso8601interval, {'type': 'string', 'format': 'iso8601-interval'})

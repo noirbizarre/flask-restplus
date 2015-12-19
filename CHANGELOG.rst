@@ -8,7 +8,12 @@ Current
 - Drop/merge flask_restful `flask_restful.RequestParser`
 - Handle :class:`~flask_restplus.reqparse.RequestParser` into :meth:`~flask_restplus.Api.expect` decorator
 - Handle schema for :mod:`~flask_restplus.inputs` parsers
-- Added :class:`~flask_restplus.inputs.email` and :func:`~flask_restplus.inputs.ip`
+- Added some inputs:
+    - :class:`~flask_restplus.inputs.email`
+    - :func:`~flask_restplus.inputs.ip`
+    - :func:`~flask_restplus.inputs.ipv4`
+    - :func:`~flask_restplus.inputs.ipv6`
+
 
 0.8.5 (2015-12-12)
 ------------------

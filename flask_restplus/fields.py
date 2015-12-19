@@ -12,7 +12,7 @@ from flask import url_for, request
 from werkzeug import cached_property
 
 from ._compat import urlparse, urlunparse
-from .inputs import date_from_iso8601, date_from_rfc822, datetime_from_iso8601, datetime_from_rfc822
+from .inputs import date_from_iso8601, datetime_from_iso8601, datetime_from_rfc822
 from .errors import RestError
 from .marshalling import marshal
 from .utils import camel_to_dash, not_none
@@ -480,10 +480,10 @@ class DateTime(MinMaxMixin, Raw):
     def format(self, value):
         try:
             value = self.parse(value)
-            if self.dt_format == 'rfc822':
-                return self.format_rfc822(value)
-            elif self.dt_format == 'iso8601':
+            if self.dt_format == 'iso8601':
                 return self.format_iso8601(value)
+            elif self.dt_format == 'rfc822':
+                return self.format_rfc822(value)
             else:
                 raise MarshallingError(
                     'Unsupported date format %s' % self.dt_format
@@ -522,14 +522,22 @@ class DateTime(MinMaxMixin, Raw):
 
 
 class Date(DateTime):
+    '''
+    Return a formatted date string in UTC in ISO 8601.
+
+    See :meth:`datetime.date.isoformat` for more info on the ISO 8601 format.
+    '''
     __schema_format__ = 'date'
+
+    def __init__(self, **kwargs):
+        kwargs.pop('dt_format', None)
+        super(Date, self).__init__(dt_format='iso8601', **kwargs)
 
     def parse(self, value):
         if value is None:
             return None
         elif isinstance(value, string_types):
-            parser = date_from_iso8601 if self.dt_format == 'iso8601' else date_from_rfc822
-            return parser(value)
+            return date_from_iso8601(value)
         elif isinstance(value, datetime):
             return value.date()
         elif isinstance(value, date):

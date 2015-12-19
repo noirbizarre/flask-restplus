@@ -33,23 +33,43 @@ email_regex = re.compile(
     r'(?P<server>[^@]+(?:\.[^@]+)*)'
     r'$', re.IGNORECASE)
 
+time_regex = re.compile(r'\d{2}:\d{2}')
 
-def ip(value):
-    '''Validate an IP (both ipv4 and ipv6)'''
+
+def ipv4(value):
+    '''Validate an IPv4 address'''
     try:
-        # Check IPv4 address
         socket.inet_aton(value)
         if value.count('.') == 3:
             return value
     except socket.error:
         pass
+    raise ValueError('{0} is not a valid ipv4 address'.format(value))
+
+ipv4.__schema__ = {'type': 'string', 'format': 'ipv4'}
+
+
+def ipv6(value):
+    '''Validate an IPv6 address'''
     try:
-        # Check IPv6 address
         socket.inet_pton(socket.AF_INET6, value)
         return value
     except socket.error:
+        raise ValueError('{0} is not a valid ipv4 address'.format(value))
+
+ipv6.__schema__ = {'type': 'string', 'format': 'ipv6'}
+
+
+def ip(value):
+    '''Validate an IP address (both IPv4 and IPv6)'''
+    try:
+        return ipv4(value)
+    except ValueError:
         pass
-    raise ValueError('{0} is not a valid ip'.format(value))
+    try:
+        return ipv6(value)
+    except ValueError:
+        raise ValueError('{0} is not a valid ip'.format(value))
 
 ip.__schema__ = {'type': 'string', 'format': 'ip'}
 
@@ -123,7 +143,7 @@ class email(object):
             self.error(value, '{0} does not belong to the authorized domains')
         if self.exclude and server in self.exclude:
             self.error(value, '{0} belongs to a forbidden domain')
-        if not self.local and (server in 'localhost', '::1' or server.startswith('127.')):
+        if not self.local and (server in ('localhost', '::1') or server.startswith('127.')):
             self.error(value)
         if self.is_ip(server) and not self.ip:
             self.error(value)
@@ -389,10 +409,18 @@ def datetime_from_rfc822(value):
     :raises ValueError: if value is an invalid date literal
 
     '''
+    raw = value
+    if not time_regex.search(value):
+        value = ' '.join((value, '00:00:00'))
     try:
-        return datetime.fromtimestamp(mktime_tz(parsedate_tz(value)), pytz.utc)
-    except:
-        raise ValueError('Invalid date literal "{0}"'.format(value))
+        timetuple = parsedate_tz(value)
+        timestamp = mktime_tz(timetuple)
+        if timetuple[-1] is None:
+            return datetime.fromtimestamp(timestamp).replace(tzinfo=pytz.utc)
+        else:
+            return datetime.fromtimestamp(timestamp, pytz.utc)
+    except Exception:
+        raise ValueError('Invalid date literal "{0}"'.format(raw))
 
 
 def datetime_from_iso8601(value):
@@ -421,23 +449,6 @@ def datetime_from_iso8601(value):
 datetime_from_iso8601.__schema__ = {'type': 'string', 'format': 'date-time'}
 
 
-def date_from_rfc822(value):
-    '''
-    Turns an RFC822 formatted date into a date object.
-
-    Example::
-
-        inputs.date_from_rfc822('Wed, 02 Oct 2002 08:00:00 EST')
-
-    :param str value: The RFC822-complying string to transform
-    :return: A date
-    :rtype: date
-    :raises ValueError: if value is an invalid date literal
-
-    '''
-    return datetime_from_rfc822(value).date()
-
-
 def date_from_iso8601(value):
     '''
     Turns an ISO8601 formatted date into a date object.
@@ -445,6 +456,8 @@ def date_from_iso8601(value):
     Example::
 
         inputs.date_from_iso8601("2012-01-01")
+
+
 
     :param str value: The ISO8601-complying string to transform
     :return: A date
