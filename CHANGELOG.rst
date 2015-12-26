@@ -5,6 +5,7 @@ Current
 -------
 
 - Handle callable on API infos
+- Handle documentation on error handlers
 - Drop/merge flask_restful `flask_restful.RequestParser`
 - Handle :class:`~flask_restplus.reqparse.RequestParser` into :meth:`~flask_restplus.Api.expect` decorator
 - Handle schema for :mod:`~flask_restplus.inputs` parsers

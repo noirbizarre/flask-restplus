@@ -452,3 +452,55 @@ class APITestCase(TestCase):
             response = api.handle_error(exception)
             self.assertEquals(response.status_code, 500)
             self.assertEquals(json.loads(response.data.decode()), {"foo": "bar"})
+
+    def test_errorhandler_swagger_doc(self):
+        api = restplus.Api(self.app)
+
+        class CustomException(RuntimeError):
+            pass
+
+        error = api.model('Error', {
+            'message': restplus.fields.String()
+        })
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                '''
+                Do something
+
+                :raises CustomException: In case of something
+                '''
+                pass
+
+        @api.errorhandler(CustomException)
+        @api.header('Custom-Header', 'Some custom header')
+        @api.marshal_with(error, code=503)
+        def handle_custom_exception(error):
+            '''Some description'''
+            pass
+
+        specs = self.get_specs()
+
+        self.assertIn('Error', specs['definitions'])
+        self.assertIn('CustomException', specs['responses'])
+
+        response = specs['responses']['CustomException']
+        self.assertEqual(response['description'], 'Some description')
+        self.assertEqual(response['schema'], {
+            '$ref': '#/definitions/Error'
+        })
+        self.assertEqual(response['headers'], {
+            'Custom-Header': {
+                'description': 'Some custom header',
+                'type': 'string'
+            }
+        })
+
+        operation = specs['paths']['/test/']['get']
+        self.assertIn('responses', operation)
+        self.assertEqual(operation['responses'], {
+            '503': {
+                '$ref': '#/responses/CustomException'
+            }
+        })

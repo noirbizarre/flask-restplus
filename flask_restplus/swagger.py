@@ -3,7 +3,7 @@ from __future__ import unicode_literals, absolute_import
 
 import re
 
-from inspect import isclass
+from inspect import isclass, getdoc
 from collections import Hashable
 from six import string_types, itervalues, iteritems, iterkeys
 
@@ -50,6 +50,8 @@ RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
 
 DEFAULT_RESPONSE_DESCRIPTION = 'Success'
 DEFAULT_RESPONSE = {'description': DEFAULT_RESPONSE_DESCRIPTION}
+
+RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)$', re.MULTILINE)
 
 
 def ref(model):
@@ -139,6 +141,40 @@ def _handle_arg_type(arg, param):
         param['type'] = 'string'
 
 
+def _param_to_header(param):
+    if 'in' in param:
+        del param['in']
+
+    typedef = param.get('type', 'string')
+    if isinstance(typedef, Hashable) and typedef in PY_TYPES:
+        param['type'] = PY_TYPES[typedef]
+    elif hasattr(typedef, '__schema__'):
+        param.update(typedef.__schema__)
+    else:
+        param['type'] = typedef
+    return param
+
+
+def parse_docstring(obj):
+    raw = getdoc(obj)
+    summary = raw.strip(' \n').split('\n')[0].split('.')[0] if raw else None
+    raises = {}
+    details = raw.replace(summary, '').lstrip('. \n').strip(' \n') if raw else None
+    for match in RE_RAISES.finditer(raw or ''):
+        raises[match.group('name')] = match.group('description')
+        if details:
+            details = details.replace(match.group(0), '')
+    parsed = {
+        'raw': raw,
+        'summary': summary or None,
+        'details': details or None,
+        'returns': None,
+        'params': [],
+        'raises': raises,
+    }
+    return parsed
+
+
 class Swagger(object):
     '''
     A Swagger documentation wrapper for an API instance.
@@ -179,6 +215,9 @@ class Swagger(object):
         paths = {}
         tags = self.extract_tags(self.api)
 
+        # register errors
+        responses = self.register_errors()
+
         for ns in self.api.namespaces:
             for resource, urls, kwargs in ns.resources.values():
                 for url in urls:
@@ -195,6 +234,7 @@ class Swagger(object):
             'security': self.security_requirements(self.api.security) or None,
             'tags': tags,
             'definitions': self.serialize_definitions() or None,
+            'responses': responses or None,
             'host': self.get_host(),
         }
         return not_none(specs)
@@ -244,7 +284,7 @@ class Swagger(object):
                 method_impl = method_impl.__func__
             method_doc = merge(method_doc, getattr(method_impl, '__apidoc__', OrderedDict()))
             if method_doc is not False:
-                method_doc['docstring'] = getattr(method_impl, '__doc__')
+                method_doc['docstring'] = parse_docstring(method_impl)
                 method_doc['params'] = self.merge_params(OrderedDict(), method_doc)
             doc[method] = method_doc
         return doc
@@ -276,6 +316,25 @@ class Swagger(object):
 
         return params
 
+    def register_errors(self):
+        responses = {}
+        for exception, handler in self.api._error_handlers.items():
+            doc = parse_docstring(handler)
+            response = {
+                'description': doc['summary']
+            }
+            apidoc = getattr(handler, '__apidoc__', {})
+            if 'params' in apidoc:
+                response['headers'] = dict(
+                    (n, _param_to_header(o))
+                    for n, o in apidoc['params'].items() if o.get('in') == 'header'
+                )
+            if 'responses' in apidoc:
+                _, model = list(apidoc['responses'].values())[0]
+                response['schema'] = self.serialize_schema(model)
+            responses[exception.__name__] = not_none(response)
+        return responses
+
     def serialize_resource(self, ns, resource, url):
         doc = self.extract_resource_doc(resource, url)
         if doc is False:
@@ -291,7 +350,7 @@ class Swagger(object):
     def serialize_operation(self, doc, method):
         operation = {
             'responses': self.responses_for(doc, method) or None,
-            'summary': self.summary_for(doc, method) or None,
+            'summary': doc[method]['docstring']['summary'],
             'description': self.description_for(doc, method) or None,
             'operationId': self.operation_id_for(doc, method),
             'parameters': self.parameters_for(doc, method) or None,
@@ -308,13 +367,6 @@ class Swagger(object):
                 operation['consumes'] = ['application/x-www-form-urlencoded', 'multipart/form-data']
         return not_none(operation)
 
-    def summary_for(self, doc, method):
-        '''Extract the first sentence from the first docstring line'''
-        if not doc[method].get('docstring'):
-            return
-        first_line = doc[method]['docstring'].strip().split('\n')[0]
-        return first_line.split('.')[0]
-
     def description_for(self, doc, method):
         '''Extract the description metadata and fallback on the whole docstring'''
         parts = []
@@ -322,10 +374,8 @@ class Swagger(object):
             parts.append(doc['description'])
         if method in doc and 'description' in doc[method]:
             parts.append(doc[method]['description'])
-        if doc[method].get('docstring'):
-            splitted = doc[method]['docstring'].strip().split('\n', 1)
-            if len(splitted) == 2:
-                parts.append(splitted[1].strip())
+        if doc[method]['docstring']['details']:
+            parts.append(doc[method]['docstring']['details'])
 
         return '\n'.join(parts).strip()
 
@@ -391,6 +441,15 @@ class Swagger(object):
                     responses[code] = DEFAULT_RESPONSE.copy()
                 responses[code]['schema'] = self.serialize_schema(d['model'])
 
+            if 'docstring' in d:
+                for name, description in d['docstring']['raises'].items():
+                    for exception, handler in self.api._error_handlers.items():
+                        error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
+                        code = list(error_responses.keys())[0] if error_responses else None
+                        if code and exception.__name__ == name:
+                            responses[code] = {'$ref': '#/responses/{0}'.format(name)}
+                            break
+
         if not responses:
             responses['200'] = DEFAULT_RESPONSE.copy()
         return responses
@@ -439,6 +498,7 @@ class Swagger(object):
                 self.register_model(specs.__parent__)
             for field in itervalues(specs):
                 self.register_field(field)
+        return ref(model)
 
     def register_field(self, field):
         if isinstance(field, fields.Polymorph):

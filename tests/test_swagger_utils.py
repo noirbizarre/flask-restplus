@@ -5,7 +5,7 @@ from flask import Flask
 from werkzeug.datastructures import FileStorage
 
 from flask_restplus import fields, reqparse, Api, SpecsError
-from flask_restplus.swagger import extract_path, extract_path_params, parser_to_params
+from flask_restplus.swagger import extract_path, extract_path_params, parser_to_params, parse_docstring
 
 from . import TestCase
 
@@ -292,4 +292,86 @@ class ParserToParamsTestCase(TestCase):
                 'type': 'string',
                 'format': 'custom-format',
             }
+        })
+
+
+class ParseDocstringTest(TestCase):
+    def test_empty(self):
+        def without_doc():
+            pass
+
+        parsed = parse_docstring(without_doc)
+
+        self.assertIsNone(parsed['raw'])
+        self.assertIsNone(parsed['summary'])
+        self.assertIsNone(parsed['details'])
+        self.assertIsNone(parsed['returns'])
+        self.assertEqual(parsed['raises'], {})
+        self.assertEqual(parsed['params'], [])
+
+    def test_single_line(self):
+        def func():
+            '''Some summary'''
+            pass
+
+        parsed = parse_docstring(func)
+
+        self.assertEqual(parsed['raw'], 'Some summary')
+        self.assertEqual(parsed['summary'], 'Some summary')
+        self.assertIsNone(parsed['details'])
+        self.assertIsNone(parsed['returns'])
+        self.assertEqual(parsed['raises'], {})
+        self.assertEqual(parsed['params'], [])
+
+    def test_multi_line(self):
+        def func():
+            '''
+            Some summary
+            Some details
+            '''
+            pass
+
+        parsed = parse_docstring(func)
+
+        self.assertEqual(parsed['raw'], 'Some summary\nSome details')
+        self.assertEqual(parsed['summary'], 'Some summary')
+        self.assertEqual(parsed['details'], 'Some details')
+        self.assertIsNone(parsed['returns'])
+        self.assertEqual(parsed['raises'], {})
+        self.assertEqual(parsed['params'], [])
+
+    def test_multi_line_and_dot(self):
+        def func():
+            '''
+            Some summary. bla bla
+            Some details
+            '''
+            pass
+
+        parsed = parse_docstring(func)
+
+        self.assertEqual(parsed['raw'], 'Some summary. bla bla\nSome details')
+        self.assertEqual(parsed['summary'], 'Some summary')
+        self.assertEqual(parsed['details'], 'bla bla\nSome details')
+        self.assertIsNone(parsed['returns'])
+        self.assertEqual(parsed['raises'], {})
+        self.assertEqual(parsed['params'], [])
+
+    def test_raises(self):
+        def func():
+            '''
+            Some summary.
+            :raises SomeException: in case of something
+            '''
+            pass
+
+        parsed = parse_docstring(func)
+
+        self.assertEqual(parsed['raw'], 'Some summary.\n:raises SomeException: in case of something')
+        self.assertEqual(parsed['summary'], 'Some summary')
+        self.assertIsNone(parsed['details'])
+        self.assertIsNone(parsed['returns'])
+        self.assertEqual(parsed['params'], [])
+        self.assertEqual(parsed['raises'], {
+            'SomeException': 'in case of something'
         })

@@ -122,9 +122,34 @@ that you can do with Flask/Blueprint ``@errorhandler`` decorator.
 
     @api.errorhandler(FakeException)
     def handle_fake_exception_with_header(error):
-        '''Return a custom message and 500 status code'''
+        '''Return a custom message and 400 status code'''
         return {'message': error.message}, 400, {'My-Header': 'Value'}
-        
+
+You can also document the error:
+
+.. code-block:: python
+
+    @api.errorhandler(FakeException)
+    @api.marshal_with(error_fields, code=400)
+    @api.header('My-Header',  'Some description')
+    def handle_fake_exception_with_header(error):
+        '''This is a custom error'''
+        return {'message': error.message}, 400, {'My-Header': 'Value'}
+
+
+    @api.route('/test/')
+    class TestResource(Resource):
+        def get(self):
+            '''
+            Do something
+
+            :raises CustomException: In case of something
+            '''
+            pass
+
+In this example, the ``:raise:`` docstring will be automatically extracted
+and the response 400 will be documented properly.
+
 
 It also allows for overriding the default error handler when used wihtout parameter:
 

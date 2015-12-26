@@ -587,10 +587,12 @@ class SwaggerView(Resource):
 
 
 def mask_parse_error_handler(error):
+    '''When a mask can't be parsed'''
     return {'message': 'Mask parse error: {0}'.format(error)}, 400
 
 
 def mask_error_handler(error):
+    '''When any error occurs on mask'''
     return {'message': 'Mask error: {0}'.format(error)}, 400
 
 
