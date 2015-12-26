@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Current
--------
+0.8.6 (2015-12-26)
+------------------
 
 - Handle callable on API infos
 - Handle documentation on error handlers
