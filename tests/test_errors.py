@@ -170,6 +170,29 @@ class APITestCase(TestCase):
             })
             self.assertEqual(response.headers['Retry-After'], '120')
 
+    def test_errorhandler_for_httpexception(self):
+        api = restplus.Api(self.app)
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise BadRequest()
+
+        @api.errorhandler(BadRequest)
+        def handle_badrequest_exception(error):
+            return {'message': str(error), 'test': 'value'}, 400
+
+        with self.app.test_client() as client:
+            response = client.get('/test/')
+            self.assertEquals(response.status_code, 400)
+            self.assertEquals(response.content_type, 'application/json')
+
+            data = json.loads(response.data.decode('utf8'))
+            self.assertEqual(data, {
+                'message': '400: Bad Request',
+                'test': 'value',
+            })
+
     def test_default_errorhandler(self):
         api = restplus.Api(self.app)
 

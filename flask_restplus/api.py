@@ -461,16 +461,16 @@ class Api(restful.Api):
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
         headers = Headers()
-        if isinstance(e, HTTPException):
+        if e.__class__ in self._error_handlers:
+            handler = self._error_handlers[e.__class__]
+            result = handler(e)
+            default_data, code, headers = unpack(result, 500)
+        elif isinstance(e, HTTPException):
             code = e.code
             default_data = {
                 'message': getattr(e, 'description', HTTP_STATUS_CODES.get(code, ''))
             }
             headers = e.get_response().headers
-        elif e.__class__ in self._error_handlers:
-            handler = self._error_handlers[e.__class__]
-            result = handler(e)
-            default_data, code, headers = unpack(result, 500)
         elif self._default_error_handler:
             result = self._default_error_handler(e)
             default_data, code, headers = unpack(result, 500)
