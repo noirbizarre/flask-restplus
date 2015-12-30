@@ -80,10 +80,12 @@ class TestCase(unittest.TestCase):
         for key, value in original.items():
             self.app.config[key] = value
 
-    def get_json(self, url, status=200, **kwargs):
+    def get(self, url, **kwargs):
         with self.app.test_client() as client:
-            response = client.get(url, **kwargs)
+            return client.get(url, **kwargs)
 
+    def get_json(self, url, status=200, **kwargs):
+        response = self.get(url, **kwargs)
         self.assertEqual(response.status_code, status)
         self.assertEqual(response.content_type, 'application/json')
         return json.loads(response.data.decode('utf8'))

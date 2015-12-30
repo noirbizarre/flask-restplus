@@ -14,7 +14,7 @@ import flask_restplus as restplus
 from . import TestCase, Mock
 
 
-class APITestCase(TestCase):
+class ErrorsTest(TestCase):
     def test_abort_type(self):
         with self.assertRaises(HTTPException):
             restplus.abort(404)
