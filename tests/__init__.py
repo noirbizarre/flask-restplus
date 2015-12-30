@@ -84,6 +84,10 @@ class TestCase(unittest.TestCase):
         with self.app.test_client() as client:
             return client.get(url, **kwargs)
 
+    def post(self, url, **kwargs):
+        with self.app.test_client() as client:
+            return client.post(url, **kwargs)
+
     def get_json(self, url, status=200, **kwargs):
         response = self.get(url, **kwargs)
         self.assertEqual(response.status_code, status)

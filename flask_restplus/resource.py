@@ -24,7 +24,7 @@ class Resource(MethodView):
     representations = None
     method_decorators = []
 
-    def __init__(self, api, *args, **kwargs):
+    def __init__(self, api=None, *args, **kwargs):
         self.api = api
 
     def dispatch_request(self, *args, **kwargs):
