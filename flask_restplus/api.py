@@ -4,23 +4,31 @@ from __future__ import unicode_literals
 import copy
 import difflib
 import inspect
+import operator
 import re
 import six
 import sys
 
+from functools import wraps, partial
+from types import MethodType
+
 from flask import url_for, request, current_app
+from flask import make_response as original_flask_make_response
+from flask.helpers import _endpoint_from_view_func
 from flask.signals import got_request_exception
 
-import flask_restful as restful
+# import flask_restful as restful
 
 from jsonschema import RefResolver
 
 from werkzeug import cached_property
 from werkzeug.datastructures import Headers
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
+from werkzeug.wrappers import Response as ResponseBase
 
 from . import apidoc
+from ._compat import OrderedDict
 from .errors import abort
 from .marshalling import marshal, marshal_with
 from .model import Model
@@ -30,6 +38,7 @@ from .postman import PostmanCollectionV1
 from .resource import Resource
 from .swagger import Swagger
 from .utils import merge, default_id, camel_to_dash, unpack
+from .representations import output_json
 from .reqparse import RequestParser
 
 RE_RULES = re.compile('(<.*>)')
@@ -37,8 +46,10 @@ RE_RULES = re.compile('(<.*>)')
 # List headers that should never be handled by Flask-RESTPlus
 HEADERS_BLACKLIST = ('Content-Length',)
 
+DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
 
-class Api(restful.Api):
+
+class Api(object):
     '''
     The main entry point for the application.
     You need to initialize it with a Flask Application: ::
@@ -85,7 +96,10 @@ class Api(restful.Api):
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
-            tags=None, **kwargs):
+            tags=None, prefix='', url_part_order='bae',
+            default_mediatype='application/json', decorators=None,
+            catch_all_404s=False, serve_challenge_on_401=False,
+            **kwargs):
         self.version = version
         self.title = title or 'API'
         self.description = description
@@ -117,7 +131,25 @@ class Api(restful.Api):
             path='/'
         )
         self.add_namespace(self.default_namespace)
-        super(Api, self).__init__(app, **kwargs)
+
+        self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
+        self.urls = {}
+        self.prefix = prefix
+        self.default_mediatype = default_mediatype
+        self.decorators = decorators if decorators else []
+        self.catch_all_404s = catch_all_404s
+        self.serve_challenge_on_401 = serve_challenge_on_401
+        self.url_part_order = url_part_order
+        self.blueprint_setup = None
+        self.endpoints = set()
+        self.resources = []
+        self.app = None
+        self.blueprint = None
+
+        if app is not None:
+            self.app = app
+            self.init_app(app)
+        # super(Api, self).__init__(app, **kwargs)
 
     def init_app(self, app, **kwargs):
         '''
@@ -146,16 +178,52 @@ class Api(restful.Api):
         self.license_url = kwargs.get('license_url', self.license_url)
         self._add_specs = kwargs.get('add_specs', True)
 
-        super(Api, self).init_app(app)
+        # If app is a blueprint, defer the initialization
+        try:
+            app.record(self._deferred_blueprint_init)
+        # Flask.Blueprint has a 'record' attribute, Flask.Api does not
+        except AttributeError:
+            self._init_app(app)
+        else:
+            self.blueprint = app
 
     def _init_app(self, app):
+        '''
+        Perform initialization actions with the given :class:`flask.Flask` object.
+
+        :param flask.Flask app: The flask application object
+        '''
         self._register_specs(self.blueprint or app)
         self._register_doc(self.blueprint or app)
-        super(Api, self)._init_app(app)
+
+        app.handle_exception = partial(self.error_router, app.handle_exception)
+        app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+
+        if len(self.resources) > 0:
+            for resource, urls, kwargs in self.resources:
+                self._register_view(app, resource, *urls, **kwargs)
+
         self._register_apidoc(app)
         self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
         app.config.setdefault('RESTPLUS_MASK_HEADER', 'X-Fields')
         app.config.setdefault('RESTPLUS_MASK_SWAGGER', True)
+
+    def _complete_url(self, url_part, registration_prefix):
+        '''
+        This method is used to defer the construction of the final url in
+        the case that the Api is created with a Blueprint.
+
+        :param url_part: The part of the url the endpoint is registered with
+        :param registration_prefix: The part of the url contributed by the
+            blueprint.  Generally speaking, BlueprintSetupState.url_prefix
+        '''
+        # return url_part
+        parts = {
+            'b': registration_prefix,
+            'a': self.prefix,
+            'e': url_part
+        }
+        return ''.join(parts[key] for key in self.url_part_order if parts[key])
 
     def _register_apidoc(self, app):
         conf = app.extensions.setdefault('restplus', {})
@@ -178,6 +246,94 @@ class Api(restful.Api):
             # Register documentation before root if enabled
             app_or_blueprint.add_url_rule(self._doc, 'doc', self.render_doc)
         app_or_blueprint.add_url_rule('/', 'root', self.render_root)
+
+    def _register_view(self, app, resource, *urls, **kwargs):
+        endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
+        self.endpoints.add(endpoint)
+        resource_class_args = kwargs.pop('resource_class_args', ())
+        resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
+
+        # NOTE: 'view_functions' is cleaned up from Blueprint class in Flask 1.0
+        if endpoint in getattr(app, 'view_functions', {}):
+            previous_view_class = app.view_functions[endpoint].__dict__['view_class']
+
+            # if you override the endpoint with a different class, avoid the collision by raising an exception
+            if previous_view_class != resource:
+                raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
+
+        resource.mediatypes = self.mediatypes_method()  # Hacky
+        resource.endpoint = endpoint
+        resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
+            **resource_class_kwargs))
+
+        for decorator in self.decorators:
+            resource_func = decorator(resource_func)
+
+        for url in urls:
+            # If this Api has a blueprint
+            if self.blueprint:
+                # And this Api has been setup
+                if self.blueprint_setup:
+                    # Set the rule to a string directly, as the blueprint is already
+                    # set up.
+                    self.blueprint_setup.add_url_rule(url, view_func=resource_func, **kwargs)
+                    continue
+                else:
+                    # Set the rule to a function that expects the blueprint prefix
+                    # to construct the final url.  Allows deferment of url finalization
+                    # in the case that the associated Blueprint has not yet been
+                    # registered to an application, so we can wait for the registration
+                    # prefix
+                    rule = partial(self._complete_url, url)
+            else:
+                # If we've got no Blueprint, just build a url with no prefix
+                rule = self._complete_url(url, '')
+            # Add the url to the application or blueprint
+            app.add_url_rule(rule, view_func=resource_func, **kwargs)
+
+    def output(self, resource):
+        '''
+        Wraps a resource (as a flask view function),
+        for cases where the resource does not directly return a response object
+
+        :param resource: The resource as a flask view function
+        '''
+        @wraps(resource)
+        def wrapper(*args, **kwargs):
+            resp = resource(*args, **kwargs)
+            if isinstance(resp, ResponseBase):  # There may be a better way to test
+                return resp
+            data, code, headers = unpack(resp)
+            return self.make_response(data, code, headers=headers)
+        return wrapper
+
+    def make_response(self, data, *args, **kwargs):
+        '''
+        Looks up the representation transformer for the requested media
+        type, invoking the transformer to create a response object. This
+        defaults to default_mediatype if no transformer is found for the
+        requested mediatype. If default_mediatype is None, a 406 Not
+        Acceptable response will be sent as per RFC 2616 section 14.1
+
+        :param data: Python object containing response data to be transformed
+        '''
+        default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
+        mediatype = request.accept_mimetypes.best_match(
+            self.representations,
+            default=default_mediatype,
+        )
+        if mediatype is None:
+            raise NotAcceptable()
+        if mediatype in self.representations:
+            resp = self.representations[mediatype](data, *args, **kwargs)
+            resp.headers['Content-Type'] = mediatype
+            return resp
+        elif mediatype == 'text/plain':
+            resp = original_flask_make_response(str(data), *args, **kwargs)
+            resp.headers['Content-Type'] = 'text/plain'
+            return resp
+        else:
+            raise InternalServerError()
 
     def documentation(self, func):
         '''A decorator to specify a view funtion for the documentation'''
@@ -223,10 +379,26 @@ class Api(restful.Api):
 
     def add_resource(self, resource, *urls, **kwargs):
         '''
-        Register a Swagger API declaration for a given API Namespace
+        Register a Resource for a given API Namespace
 
         :param Resource resource: the resource ro register
+        :param str urls: one or more url routes to match for the resource,
+                         standard flask routing rules apply.
+                         Any url variables will be passed to the resource method as args.
         :param Namespace namespace: the namespace holdingg the resource
+        :param str endpoint: endpoint name (defaults to :meth:`Resource.__name__.lower`
+            Can be used to reference this route in :class:`fields.Url` fields
+        :param list|tuple resource_class_args: args to be forwarded to the constructor of the resource.
+        :param dict resource_class_kwargs: kwargs to be forwarded to the constructor of the resource.
+
+        Additional keyword arguments not specified above will be passed as-is
+        to :meth:`flask.Flask.add_url_rule`.
+
+        Examples::
+
+            api.add_resource(HelloWorld, '/', '/hello')
+            api.add_resource(Foo, '/foo', endpoint="foo")
+            api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
         '''
         namespace = kwargs.pop('namespace', None)
         if kwargs.pop('doc', True) and not namespace:
@@ -242,7 +414,10 @@ class Api(restful.Api):
         args.insert(0, self)
         kwargs['resource_class_args'] = args
 
-        super(Api, self).add_resource(resource, *urls, **kwargs)
+        if self.app is not None:
+            self._register_view(self.app, resource, *urls, **kwargs)
+        else:
+            self.resources.append((resource, urls, kwargs))
         return endpoint
 
     def add_namespace(self, ns):
@@ -450,6 +625,77 @@ class Api(restful.Api):
             self._default_error_handler = exception
             return exception
 
+    def owns_endpoint(self, endpoint):
+        '''
+        Tests if an endpoint name (not path) belongs to this Api.
+        Takes into account the Blueprint name part of the endpoint name.
+
+        :param str endpoint: The name of the endpoint being checked
+        :return: bool
+        '''
+
+        if self.blueprint:
+            if endpoint.startswith(self.blueprint.name):
+                endpoint = endpoint.split(self.blueprint.name + '.', 1)[-1]
+            else:
+                return False
+        return endpoint in self.endpoints
+
+    def _should_use_fr_error_handler(self):
+        '''
+        Determine if error should be handled with FR or default Flask
+
+        The goal is to return Flask error handlers for non-FR-related routes,
+        and FR errors (with the correct media type) for FR endpoints. This
+        method currently handles 404 and 405 errors.
+
+        :return: bool
+        '''
+        adapter = current_app.create_url_adapter(request)
+
+        try:
+            adapter.match()
+        except MethodNotAllowed as e:
+            # Check if the other HTTP methods at this url would hit the Api
+            valid_route_method = e.valid_methods[0]
+            rule, _ = adapter.match(method=valid_route_method, return_rule=True)
+            return self.owns_endpoint(rule.endpoint)
+        except NotFound:
+            return self.catch_all_404s
+        except:
+            # Werkzeug throws other kinds of exceptions, such as Redirect
+            pass
+
+    def _has_fr_route(self):
+        '''Encapsulating the rules for whether the request was to a Flask endpoint'''
+        # 404's, 405's, which might not have a url_rule
+        if self._should_use_fr_error_handler():
+            return True
+        # for all other errors, just check if FR dispatched the route
+        if not request.url_rule:
+            return False
+        return self.owns_endpoint(request.url_rule.endpoint)
+
+    def error_router(self, original_handler, e):
+        '''
+        This function decides whether the error occured in a flask-restful
+        endpoint or not. If it happened in a flask-restful endpoint, our
+        handler will be dispatched. If it happened in an unrelated view, the
+        app's original error handler will be dispatched.
+        In the event that the error occurred in a flask-restful endpoint but
+        the local handler can't resolve the situation, the router will fall
+        back onto the original_handler as last resort.
+
+        :param function original_handler: the original Flask error handler for the app
+        :param Exception e: the exception raised while handling the request
+        '''
+        if self._has_fr_route():
+            try:
+                return self.handle_error(e)
+            except Exception:
+                pass  # Fall through to original handler
+        return original_handler(e)
+
     def handle_error(self, e):
         '''
         Error handler for the API transforms a raised exception into a Flask response,
@@ -575,6 +821,116 @@ class Api(restful.Api):
         if not self._refresolver:
             self._refresolver = RefResolver.from_schema(self.__schema__)
         return self._refresolver
+
+    @staticmethod
+    def _blueprint_setup_add_url_rule_patch(blueprint_setup, rule, endpoint=None, view_func=None, **options):
+        '''
+        Method used to patch BlueprintSetupState.add_url_rule for setup
+        state instance corresponding to this Api instance.  Exists primarily
+        to enable _complete_url's function.
+
+        :param blueprint_setup: The BlueprintSetupState instance (self)
+        :param rule: A string or callable that takes a string and returns a
+            string(_complete_url) that is the url rule for the endpoint
+            being registered
+        :param endpoint: See BlueprintSetupState.add_url_rule
+        :param view_func: See BlueprintSetupState.add_url_rule
+        :param **options: See BlueprintSetupState.add_url_rule
+        '''
+
+        if callable(rule):
+            rule = rule(blueprint_setup.url_prefix)
+        elif blueprint_setup.url_prefix:
+            rule = blueprint_setup.url_prefix + rule
+        options.setdefault('subdomain', blueprint_setup.subdomain)
+        if endpoint is None:
+            endpoint = _endpoint_from_view_func(view_func)
+        defaults = blueprint_setup.url_defaults
+        if 'defaults' in options:
+            defaults = dict(defaults, **options.pop('defaults'))
+        blueprint_setup.app.add_url_rule(rule, '%s.%s' % (blueprint_setup.blueprint.name, endpoint),
+                                         view_func, defaults=defaults, **options)
+
+    def _deferred_blueprint_init(self, setup_state):
+        '''
+        Synchronize prefix between blueprint/api and registration options, then
+        perform initialization with setup_state.app :class:`flask.Flask` object.
+        When a :class:`flask_restful.Api` object is initialized with a blueprint,
+        this method is recorded on the blueprint to be run when the blueprint is later
+        registered to a :class:`flask.Flask` object.  This method also monkeypatches
+        BlueprintSetupState.add_url_rule with _blueprint_setup_add_url_rule_patch.
+
+        :param setup_state: The setup state object passed to deferred functions
+            during blueprint registration
+        :type setup_state: flask.blueprints.BlueprintSetupState
+
+        '''
+
+        self.blueprint_setup = setup_state
+        if setup_state.add_url_rule.__name__ != '_blueprint_setup_add_url_rule_patch':
+            setup_state._original_add_url_rule = setup_state.add_url_rule
+            setup_state.add_url_rule = MethodType(Api._blueprint_setup_add_url_rule_patch,
+                                                  setup_state)
+        if not setup_state.first_registration:
+            raise ValueError('flask-restplus blueprints can only be registered once.')
+        self._init_app(setup_state.app)
+
+    def mediatypes_method(self):
+        '''Return a method that returns a list of mediatypes'''
+        return lambda resource_cls: self.mediatypes() + [self.default_mediatype]
+
+    def mediatypes(self):
+        '''Returns a list of requested mediatypes sent in the Accept header'''
+        return [h for h, q in sorted(request.accept_mimetypes,
+                                     key=operator.itemgetter(1), reverse=True)]
+
+    def representation(self, mediatype):
+        '''
+        Allows additional representation transformers to be declared for the
+        api. Transformers are functions that must be decorated with this
+        method, passing the mediatype the transformer represents. Three
+        arguments are passed to the transformer:
+
+        * The data to be represented in the response body
+        * The http status code
+        * A dictionary of headers
+
+        The transformer should convert the data appropriately for the mediatype
+        and return a Flask response object.
+
+        Ex::
+
+            @api.representation('application/xml')
+            def xml(data, code, headers):
+                resp = make_response(convert_data_to_xml(data), code)
+                resp.headers.extend(headers)
+                return resp
+        '''
+        def wrapper(func):
+            self.representations[mediatype] = func
+            return func
+        return wrapper
+
+    def unauthorized(self, response):
+        '''Given a response, change it to ask for credentials'''
+
+        if self.serve_challenge_on_401:
+            realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
+            challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+
+            response.headers['WWW-Authenticate'] = challenge
+        return response
+
+    def url_for(self, resource, **values):
+        '''
+        Generates a URL to the given resource.
+
+        Works like :func:`flask.url_for`.
+        '''
+        endpoint = resource.endpoint
+        if self.blueprint:
+            endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
+        return url_for(endpoint, **values)
 
 
 class SwaggerView(Resource):

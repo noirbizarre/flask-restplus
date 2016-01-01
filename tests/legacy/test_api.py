@@ -550,21 +550,6 @@ class APITestCase(TestCase):
         app.add_url_rule.assert_called_with('/foo',
                                             view_func=api.output())
 
-    def test_resource_decorator(self):
-        app = Mock(flask.Flask)
-        app.view_functions = {}
-        app.extensions = {}
-        app.config = {}
-        api = restplus.Api(app)
-        api.output = Mock()
-
-        @api.resource('/foo', endpoint='bar')
-        class Foo(restplus.Resource):
-            pass
-
-        app.add_url_rule.assert_called_with('/foo',
-                                            view_func=api.output())
-
     def test_add_resource_kwargs(self):
         app = Mock(flask.Flask)
         app.view_functions = {}
