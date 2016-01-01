@@ -100,14 +100,6 @@ class APIWithBlueprintTestCase(TestCase):
         with self.app.test_request_context('/bp/api/hi'):
             self.assertEquals(request.endpoint, 'test.hello')
 
-    def test_url_part_order_aeb(self):
-        blueprint = Blueprint('test', __name__, url_prefix='/bp')
-        api = restplus.Api(blueprint, prefix='/api', url_part_order='aeb')
-        api.add_resource(HelloWorld, '/hi', endpoint='hello')
-        self.app.register_blueprint(blueprint)
-        with self.app.test_request_context('/api/hi/bp'):
-            self.assertEquals(request.endpoint, 'test.hello')
-
     def test_error_routing(self):
         blueprint = Blueprint('test', __name__)
         api = restplus.Api(blueprint)

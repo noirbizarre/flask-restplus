@@ -17,8 +17,6 @@ from flask import make_response as original_flask_make_response
 from flask.helpers import _endpoint_from_view_func
 from flask.signals import got_request_exception
 
-# import flask_restful as restful
-
 from jsonschema import RefResolver
 
 from werkzeug import cached_property
@@ -83,10 +81,6 @@ class Api(object):
     :param list decorators: Decorators to attach to every resource
     :param bool catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
-    :param url_part_order: A string that controls the order that the pieces
-        of the url are concatenated when the full url is constructed.  'b'
-        is the blueprint (or blueprint registration) prefix, 'a' is the api
-        prefix, and 'e' is the path component the endpoint is added with
     :param dict authorizations: A Swagger Authorizations declaration as dictionary
 
     '''
@@ -96,7 +90,7 @@ class Api(object):
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
-            tags=None, prefix='', url_part_order='bae',
+            tags=None, prefix='',
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False,
             **kwargs):
@@ -139,7 +133,6 @@ class Api(object):
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
         self.serve_challenge_on_401 = serve_challenge_on_401
-        self.url_part_order = url_part_order
         self.blueprint_setup = None
         self.endpoints = set()
         self.resources = []
@@ -217,13 +210,8 @@ class Api(object):
         :param registration_prefix: The part of the url contributed by the
             blueprint.  Generally speaking, BlueprintSetupState.url_prefix
         '''
-        # return url_part
-        parts = {
-            'b': registration_prefix,
-            'a': self.prefix,
-            'e': url_part
-        }
-        return ''.join(parts[key] for key in self.url_part_order if parts[key])
+        parts = (registration_prefix, self.prefix, url_part)
+        return ''.join(part for part in parts if part)
 
     def _register_apidoc(self, app):
         conf = app.extensions.setdefault('restplus', {})
