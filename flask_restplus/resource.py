@@ -59,7 +59,8 @@ class Resource(MethodView):
         '''Perform a payload validation on expected model if necessary'''
         if getattr(func, '__apidoc__', False) != False:
             model = func.__apidoc__.get('body')
-            validate = func.__apidoc__.get('validate', False)
+            validate = func.__apidoc__.get('validate', None)
+            validate = validate if validate is not None else self.api._validate
             if model and validate and hasattr(model, 'validate'):
                 # TODO: proper content negotiation
                 data = request.get_json()

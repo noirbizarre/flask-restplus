@@ -219,7 +219,7 @@ class Swagger(object):
         responses = self.register_errors()
 
         for ns in self.api.namespaces:
-            for resource, urls, kwargs in ns.resources.values():
+            for resource, urls, kwargs in ns.resources:
                 for url in urls:
                     paths[extract_path(url)] = self.serialize_resource(ns, resource, url)
 
@@ -318,7 +318,7 @@ class Swagger(object):
 
     def register_errors(self):
         responses = {}
-        for exception, handler in self.api._error_handlers.items():
+        for exception, handler in self.api.error_handlers.items():
             doc = parse_docstring(handler)
             response = {
                 'description': doc['summary']
@@ -443,7 +443,7 @@ class Swagger(object):
 
             if 'docstring' in d:
                 for name, description in d['docstring']['raises'].items():
-                    for exception, handler in self.api._error_handlers.items():
+                    for exception, handler in self.api.error_handlers.items():
                         error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
                         code = list(error_responses.keys())[0] if error_responses else None
                         if code and exception.__name__ == name:

@@ -35,7 +35,7 @@ from .namespace import Namespace
 from .postman import PostmanCollectionV1
 from .resource import Resource
 from .swagger import Swagger
-from .utils import merge, default_id, camel_to_dash, unpack
+from .utils import default_id, camel_to_dash, unpack
 from .representations import output_json
 from .reqparse import RequestParser
 
@@ -112,7 +112,7 @@ class Api(object):
         self._default_error_handler = None
         self.tags = tags or []
 
-        self._error_handlers = {
+        self.error_handlers = {
             ParseError: mask_parse_error_handler,
             MaskError: mask_error_handler,
         }
@@ -120,9 +120,11 @@ class Api(object):
         self.models = {}
         self._refresolver = None
         self.namespaces = []
-        self.default_namespace = Namespace(self, default, default_label,
+        self.default_namespace = Namespace(default, default_label,
             endpoint='{0}-declaration'.format(default),
-            path='/'
+            validate=validate,
+            api=self,
+            path='/',
         )
         self.add_namespace(self.default_namespace)
 
@@ -201,6 +203,12 @@ class Api(object):
         app.config.setdefault('RESTPLUS_MASK_HEADER', 'X-Fields')
         app.config.setdefault('RESTPLUS_MASK_SWAGGER', True)
 
+    def __getattr__(self, name):
+        try:
+            return getattr(self.default_namespace, name)
+        except AttributeError:
+            raise AttributeError('Api does not have {0} attribute'.format(name))
+
     def _complete_url(self, url_part, registration_prefix):
         '''
         This method is used to defer the construction of the final url in
@@ -221,13 +229,15 @@ class Api(object):
 
     def _register_specs(self, app_or_blueprint):
         if self._add_specs:
+            endpoint = str('specs')
             self._register_view(
                 app_or_blueprint,
                 SwaggerView,
                 '/swagger.json',
-                endpoint=str('specs'),
+                endpoint=endpoint,
                 resource_class_args=(self, )
             )
+            self.endpoints.add(endpoint)
 
     def _register_doc(self, app_or_blueprint):
         if self._add_specs and self._doc:
@@ -235,9 +245,21 @@ class Api(object):
             app_or_blueprint.add_url_rule(self._doc, 'doc', self.render_doc)
         app_or_blueprint.add_url_rule('/', 'root', self.render_root)
 
-    def _register_view(self, app, resource, *urls, **kwargs):
-        endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
+    def register_resource(self, namespace, resource, *urls, **kwargs):
+        endpoint = kwargs.pop('endpoint', None)
+        endpoint = str(endpoint or self.default_endpoint(resource, namespace))
+
+        kwargs['endpoint'] = endpoint
         self.endpoints.add(endpoint)
+
+        if self.app is not None:
+            self._register_view(self.app, resource, *urls, **kwargs)
+        else:
+            self.resources.append((resource, urls, kwargs))
+        return endpoint
+
+    def _register_view(self, app, resource, *urls, **kwargs):
+        endpoint = kwargs.pop('endpoint', None) or camel_to_dash(resource.__name__)
         resource_class_args = kwargs.pop('resource_class_args', ())
         resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
 
@@ -251,7 +273,7 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
-        resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
+        resource_func = self.output(resource.as_view(endpoint, self, *resource_class_args,
             **resource_class_kwargs))
 
         for decorator in self.decorators:
@@ -339,7 +361,7 @@ class Api(object):
             self.abort(404)
         return apidoc.ui_for(self)
 
-    def default_endpoint(self, resource, namespace=None):
+    def default_endpoint(self, resource, namespace):
         '''
         Provide a default endpoint for a resource on a given namespace.
 
@@ -348,69 +370,36 @@ class Api(object):
         Override this method specify a custom algoryhtm for default endpoint.
 
         :param Resource resource: the resource for which we want an endpoint
-        :param Namespace namespace: the namespace holdingg the resource
+        :param Namespace namespace: the namespace holding the resource
         :returns str: An endpoint name
         '''
         endpoint = camel_to_dash(resource.__name__)
-        namespace = namespace or self.default_namespace
         if namespace is not self.default_namespace:
             endpoint = '{ns.name}_{endpoint}'.format(ns=namespace, endpoint=endpoint)
-        if endpoint in namespace.resources:
+        if endpoint in self.endpoints:
             suffix = 2
             while True:
                 new_endpoint = '{base}_{suffix}'.format(base=endpoint, suffix=suffix)
-                if new_endpoint not in namespace.resources:
+                if new_endpoint not in self.endpoints:
                     endpoint = new_endpoint
                     break
                 suffix += 1
         return endpoint
 
-    def add_resource(self, resource, *urls, **kwargs):
-        '''
-        Register a Resource for a given API Namespace
-
-        :param Resource resource: the resource ro register
-        :param str urls: one or more url routes to match for the resource,
-                         standard flask routing rules apply.
-                         Any url variables will be passed to the resource method as args.
-        :param Namespace namespace: the namespace holdingg the resource
-        :param str endpoint: endpoint name (defaults to :meth:`Resource.__name__.lower`
-            Can be used to reference this route in :class:`fields.Url` fields
-        :param list|tuple resource_class_args: args to be forwarded to the constructor of the resource.
-        :param dict resource_class_kwargs: kwargs to be forwarded to the constructor of the resource.
-
-        Additional keyword arguments not specified above will be passed as-is
-        to :meth:`flask.Flask.add_url_rule`.
-
-        Examples::
-
-            api.add_resource(HelloWorld, '/', '/hello')
-            api.add_resource(Foo, '/foo', endpoint="foo")
-            api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
-        '''
-        namespace = kwargs.pop('namespace', None)
-        if kwargs.pop('doc', True) and not namespace:
-            return self.default_namespace.add_resource(resource, *urls, **kwargs)
-
-        endpoint = kwargs.pop('endpoint', None)
-        endpoint = str(endpoint or self.default_endpoint(resource, namespace))
-        kwargs['endpoint'] = endpoint
-
-        args = kwargs.pop('resource_class_args', [])
-        if isinstance(args, tuple):
-            args = list(args)
-        args.insert(0, self)
-        kwargs['resource_class_args'] = args
-
-        if self.app is not None:
-            self._register_view(self.app, resource, *urls, **kwargs)
-        else:
-            self.resources.append((resource, urls, kwargs))
-        return endpoint
-
     def add_namespace(self, ns):
         if ns not in self.namespaces:
             self.namespaces.append(ns)
+            if self not in ns.apis:
+                ns.apis.append(self)
+        # Register resources
+        for resource, urls, kwargs in ns.resources:
+            self.register_resource(ns, resource, *urls, **kwargs)
+        # Register models
+        for name, definition in ns.models.items():
+            self.models[name] = definition
+        # Register error handlers
+        for exception, handler in ns.error_handlers:
+            self.error_handlers[exception] = handler
 
     def namespace(self, *args, **kwargs):
         '''
@@ -418,33 +407,9 @@ class Api(object):
 
         :returns Namespace: a new namespace instance
         '''
-        ns = Namespace(self, *args, **kwargs)
+        ns = Namespace(*args, **kwargs)
         self.add_namespace(ns)
         return ns
-
-    def route(self, *urls, **kwargs):
-        '''
-        A decorator to route resources.
-        '''
-        def wrapper(cls):
-            doc = kwargs.pop('doc', None)
-            if doc is not None:
-                self._handle_api_doc(cls, doc)
-            self.add_resource(cls, *urls, **kwargs)
-            return cls
-        return wrapper
-
-    def _handle_api_doc(self, cls, doc):
-        if doc is False:
-            cls.__apidoc__ = False
-            return
-        unshortcut_params_description(doc)
-        for key in 'get', 'post', 'put', 'delete', 'options', 'head', 'patch':
-            if key in doc:
-                if doc[key] is False:
-                    continue
-                unshortcut_params_description(doc[key])
-        cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
 
     def endpoint(self, name):
         if self.blueprint:
@@ -457,7 +422,7 @@ class Api(object):
         '''
         The Swagger specifications absolute url (ie. `swagger.json`)
 
-        :returns str:
+        :rtype: str
         '''
         return url_for(self.endpoint('specs'), _external=True)
 
@@ -466,7 +431,7 @@ class Api(object):
         '''
         The API base absolute url
 
-        :returns str:
+        :rtype: str
         '''
         return url_for(self.endpoint('root'), _external=True)
 
@@ -475,7 +440,7 @@ class Api(object):
         '''
         The API path
 
-        :returns str:
+        :rtype: str
         '''
         return url_for(self.endpoint('root'))
 
@@ -490,122 +455,12 @@ class Api(object):
             self._schema = Swagger(self).as_dict()
         return self._schema
 
-    def doc(self, shortcut=None, **kwargs):
-        '''A decorator to add some api documentation to the decorated object'''
-        if isinstance(shortcut, six.text_type):
-            kwargs['id'] = shortcut
-        show = shortcut if isinstance(shortcut, bool) else True
-
-        def wrapper(documented):
-            self._handle_api_doc(documented, kwargs if show else False)
-            return documented
-        return wrapper
-
-    def hide(self, func):
-        '''A decorator to hide a resource or a method from specifications'''
-        return self.doc(False)(func)
-
-    def abort(self, *args, **kwargs):
-        '''
-        Properly abort the current request
-
-        See: :func:`~flask_restplus.errors.abort`
-        '''
-        abort(*args, **kwargs)
-
-    def model(self, name=None, model=None, mask=None, **kwargs):
-        '''
-        Register a model
-
-        Model can be either a dictionary or a fields. Raw subclass.
-        '''
-        model = Model(name, model, mask=mask)
-        model.__apidoc__.update(kwargs)
-        self.models[name] = model
-        return model
-
-    def extend(self, name, parent, fields):
-        '''
-        Extend a model (Duplicate all fields)
-        '''
-        if isinstance(parent, list):
-            model = Model(None, {})
-            for p in parent:
-                model.update(copy.deepcopy(p))
-            parent = model
-
-        model = parent.extend(name, fields)
-        self.models[name] = model
-        return model
-
-    def inherit(self, name, parent, fields):
-        '''
-        Inherit a modal (use the Swagger composition pattern aka. allOf)
-        '''
-        model = parent.inherit(name, fields)
-        self.models[name] = model
-        return model
-
-    def expect(self, *inputs, **kwargs):
-        '''
-        A decorator to Specify the expected input model
-
-        :param Model|Parse inputs: An expect model or request parser
-        :param bool validate: whether to perform validation or not
-
-        '''
-        params = {
-            'validate': kwargs.get('validate', None) or self._validate
-        }
-        for param in inputs:
-            if isinstance(param, (Model, list, tuple)):
-                params['body'] = param
-            elif isinstance(param, RequestParser):
-                params['parser'] = param
-        return self.doc(**params)
-
-    def parser(self):
-        '''Instanciate a :class:`~RequestParser`'''
-        return RequestParser()
-
-    def as_list(self, field):
-        '''Allow to specify nested lists for documentation'''
-        field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
-        return field
-
-    def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
-        '''
-        A decorator specifying the fields to use for serialization.
-
-        :param bool as_list: Indicate that the return type is a list (for the documentation)
-        :param int code: Optionnaly give the expected HTTP response code if its different from 200
-
-        '''
-        def wrapper(func):
-            doc = {
-                'responses': {
-                    code: (description, [fields]) if as_list else (description, fields)
-                },
-                '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
-            }
-            func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            return marshal_with(fields, **kwargs)(func)
-        return wrapper
-
-    def marshal_list_with(self, fields, **kwargs):
-        '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
-        return self.marshal_with(fields, True, **kwargs)
-
-    def marshal(self, *args, **kwargs):
-        '''A shortcut to the :func:`marshal` helper'''
-        return marshal(*args, **kwargs)
-
     def errorhandler(self, exception):
         '''A decorator to register an error handler for a given exception'''
         if inspect.isclass(exception) and issubclass(exception, Exception):
             # Register an error handler for a given exception
             def wrapper(func):
-                self._error_handlers[exception] = func
+                self.error_handlers[exception] = func
                 return func
             return wrapper
         else:
@@ -695,8 +550,8 @@ class Api(object):
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
         headers = Headers()
-        if e.__class__ in self._error_handlers:
-            handler = self._error_handlers[e.__class__]
+        if e.__class__ in self.error_handlers:
+            handler = self.error_handlers[e.__class__]
             result = handler(e)
             default_data, code, headers = unpack(result, 500)
         elif isinstance(e, HTTPException):
@@ -760,34 +615,6 @@ class Api(object):
                 ' ?',
             ))
         return message
-
-    def response(self, code, description, model=None, **kwargs):
-        '''
-        A decorator to specify one of the expected responses
-
-        :param int code: the HTTP status code
-        :param str description: a small description about the response
-        :param Model model: an optional response model
-
-        '''
-        return self.doc(responses={code: (description, model) if model else description})
-
-    def header(self, name, description=None, **kwargs):
-        '''
-        A decorator to specify one of the expected headers
-
-        :param str name: the HTTP header name
-        :param str description: a description about the header
-
-        '''
-        param = kwargs
-        param['in'] = 'header'
-        param['description'] = description
-        return self.doc(params={name: param})
-
-    def deprecated(self, func):
-        '''A decorator to mark a resource or a method as deprecated'''
-        return self.doc(deprecated=True)(func)
 
     def as_postman(self, urlvars=False, swagger=False):
         '''
@@ -938,10 +765,3 @@ def mask_parse_error_handler(error):
 def mask_error_handler(error):
     '''When any error occurs on mask'''
     return {'message': 'Mask error: {0}'.format(error)}, 400
-
-
-def unshortcut_params_description(data):
-    if 'params' in data:
-        for name, description in six.iteritems(data['params']):
-            if isinstance(description, six.string_types):
-                data['params'][name] = {'description': description}
