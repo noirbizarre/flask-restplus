@@ -5,7 +5,7 @@ Flask-Restplus support partial object fetching (aka. fields mask)
 by supplying a custom header in the request.
 
 By default the header is ``X-Fields``
-but it ca be changed with the ``RESTPLUS_MASK_HEADER`` parameter.
+but it can be changed with the ``RESTPLUS_MASK_HEADER`` parameter.
 
 Syntax
 ------

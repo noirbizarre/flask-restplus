@@ -1,0 +1,10 @@
+{% extends "alabaster/layout.html" %}
+
+{%- block extrahead %}
+{% if theme_favicons %}
+  {% for size, file in theme_favicons.items() %}
+  <link rel="icon" type="image/png" href="{{ pathto('_static/' ~ file, 1) }}" sizes="{{size}}x{{size}}">
+  {% endfor %}
+{% endif %}
+{{ super() }}
+{% endblock %}

@@ -1,0 +1,12 @@
+@import url("alabaster.css");
+
+.sphinxsidebar p.badge a {
+    border: none;
+}
+
+.sphinxsidebar hr.badges {
+    border: 0;
+    border-bottom: 1px dashed #aaa;
+    background: none;
+    /*width: 100%;*/
+}

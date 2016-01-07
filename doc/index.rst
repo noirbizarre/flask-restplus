@@ -33,21 +33,57 @@ or with easy_install:
 Documentation
 =============
 
+This part of the documentation will show you how to get started in using
+Flask-RESTPlus with Flask.
+
 .. toctree::
     :maxdepth: 2
 
+    installation
     quickstart
+    marshalling
+    parsing
+    errors
+    mask
+    swagger
+    postman
+    example
+
+Legacy
+======
+
+
+.. toctree::
+    :maxdepth: 2
+
     syntaxic_sugar
     documenting
     fields
-    mask
+    reqparse
     swaggerui
     export
     example
-    api
-    changelog
-    contributing
 
+
+API Reference
+-------------
+
+If you are looking for information on a specific function, class or
+method, this part of the documentation is for you.
+
+.. toctree::
+   :maxdepth: 2
+
+   api
+
+Additional Notes
+----------------
+
+.. toctree::
+   :maxdepth: 2
+
+   contributing
+   changelog
 
 
 Indices and tables

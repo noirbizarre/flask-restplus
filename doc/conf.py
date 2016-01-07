@@ -12,8 +12,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
+import alabaster
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -31,6 +32,9 @@ sys.path.insert(0, os.path.abspath('..'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
+    'alabaster',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -101,15 +105,56 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'restplus'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    'logo': 'logo-512.png',
+    'logo_name': True,
+    'touch_icon': 'apple-180.png',
+    'github_user': 'noirbizarre',
+    'github_repo': 'flask-restplus',
+    'github_banner': True,
+    'show_related': True,
+    'favicons': {
+        64: 'favicon-64.png',
+        128: 'favicon-128.png',
+        196: 'favicon-196.png',
+    },
+    'badges': [(
+        # Gitter.im
+        'https://badges.gitter.im/Join%20Chat.svg',
+        'https://gitter.im/noirbizarre/flask-restplus',
+        'Join the chat at https://gitter.im/noirbizarre/flask-restplus'
+    ), (
+        # Github Fork
+        'https://img.shields.io/github/forks/noirbizarre/flask-restplus.svg?style=social&label=Fork',
+        'https://github.com/noirbizarre/flask-restplus',
+        'Github repository',
+    ), (
+        # Github issues
+        'https://img.shields.io/github/issues-raw/noirbizarre/flask-restplus.svg',
+        'https://github.com/noirbizarre/flask-restplus/issues',
+        'Github repository',
+    ), (
+        # License
+        'https://img.shields.io/github/license/noirbizarre/flask-restplus.svg',
+        'https://github.com/noirbizarre/flask-restplus',
+        'License',
+    ), (
+        # PyPI
+        'https://img.shields.io/pypi/v/flask-restplus.svg',
+        'https://pypi.python.org/pypi/flask-restplus',
+        'Latest version on PyPI'
+    )]
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
+html_theme_path = [alabaster.get_path(), '_themes']
+
+html_context = {}
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -125,7 +170,7 @@ html_theme = 'default'
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+html_favicon = '_static/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -146,7 +191,16 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+    '**': [
+        'about.html',
+        'navigation.html',
+        'relations.html',
+        'searchbox.html',
+        'donate.html',
+        'badges.html',
+    ]
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -259,3 +313,10 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+
+intersphinx_mapping = {
+    'flask': ('http://flask.pocoo.org/docs/', None),
+    'python': ('http://docs.python.org/', None),
+    'werkzeug': ('http://werkzeug.pocoo.org/docs/', None),
+}

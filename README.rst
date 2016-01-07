@@ -50,88 +50,101 @@ With Flask-Restplus, you only import the api instance to route and document your
 .. code-block:: python
 
     from flask import Flask
-    from flask_restplus import Api, Resource, fields
+    from flask.ext.restplus import Api, Resource, fields
+    from werkzeug.contrib.fixers import ProxyFix
 
     app = Flask(__name__)
-    api = Api(app, version='1.0', title='Todo API',
-        description='A simple TODO API extracted from the original flask-restful example',
+    api = Api(app, version='1.0', title='TodoMVC API',
+        description='A simple TodoMVC API',
     )
 
     ns = api.namespace('todos', description='TODO operations')
 
-    TODOS = {
-        'todo1': {'task': 'build an API'},
-        'todo2': {'task': '?????'},
-        'todo3': {'task': 'profit!'},
-    }
-
     todo = api.model('Todo', {
+        'id': fields.Integer(readOnly=True, description='The task unique identifier'),
         'task': fields.String(required=True, description='The task details')
     })
 
-    listed_todo = api.model('ListedTodo', {
-        'id': fields.String(required=True, description='The todo ID'),
-        'todo': fields.Nested(todo, description='The Todo')
-    })
+
+    class TodoDAO(object):
+        def __init__(self):
+            self.counter = 0
+            self.todos = []
+
+        def get(self, id):
+            for todo in self.todos:
+                if todo['id'] == id:
+                    return todo
+            api.abort(404, "Todo {} doesn't exist".format(id))
+
+        def create(self, data):
+            todo = data
+            todo['id'] = self.counter = self.counter + 1
+            self.todos.append(todo)
+            return todo
+
+        def update(self, id, data):
+            todo = self.get(id)
+            todo.update(data)
+            return todo
+
+        def delete(self, id):
+            todo = self.get(id)
+            self.todos.remove(todo)
 
 
-    def abort_if_todo_doesnt_exist(todo_id):
-        if todo_id not in TODOS:
-            api.abort(404, "Todo {} doesn't exist".format(todo_id))
-
-    parser = api.parser()
-    parser.add_argument('task', type=str, required=True, help='The task details', location='form')
-
-
-    @ns.route('/<string:todo_id>')
-    @api.response(404, 'Todo not found')
-    @api.doc(params={'todo_id': 'The Todo ID'})
-    class Todo(Resource):
-        '''Show a single todo item and lets you delete them'''
-        @api.doc(description='todo_id should be in {0}'.format(', '.join(TODOS.keys())))
-        @api.marshal_with(todo)
-        def get(self, todo_id):
-            '''Fetch a given resource'''
-            abort_if_todo_doesnt_exist(todo_id)
-            return TODOS[todo_id]
-
-        @api.response(204, 'Todo deleted')
-        def delete(self, todo_id):
-            '''Delete a given resource'''
-            abort_if_todo_doesnt_exist(todo_id)
-            del TODOS[todo_id]
-            return '', 204
-
-        @api.doc(parser=parser)
-        @api.marshal_with(todo)
-        def put(self, todo_id):
-            '''Update a given resource'''
-            args = parser.parse_args()
-            task = {'task': args['task']}
-            TODOS[todo_id] = task
-            return task
+    DAO = TodoDAO()
+    DAO.create({'task': 'Build an API'})
+    DAO.create({'task': '?????'})
+    DAO.create({'task': 'profit!'})
 
 
     @ns.route('/')
     class TodoList(Resource):
         '''Shows a list of all todos, and lets you POST to add new tasks'''
-        @api.marshal_list_with(listed_todo)
+        @api.doc('list_todos')
+        @api.marshal_list_with(todo)
         def get(self):
-            '''List all todos'''
-            return [{'id': id, 'todo': todo} for id, todo in TODOS.items()]
+            '''List all tasks'''
+            return DAO.todos
 
-        @api.doc(parser=parser)
+        @api.doc('create_todo')
+        @api.expect(todo)
         @api.marshal_with(todo, code=201)
         def post(self):
-            '''Create a todo'''
-            args = parser.parse_args()
-            todo_id = 'todo%d' % (len(TODOS) + 1)
-            TODOS[todo_id] = {'task': args['task']}
-            return TODOS[todo_id], 201
+            '''Create a new task'''
+            return DAO.create(api.payload), 201
+
+
+    @ns.route('/<int:id>')
+    @api.response(404, 'Todo not found')
+    @api.doc(params={'id': 'The task identifier'})
+    class Todo(Resource):
+        '''Show a single todo item and lets you delete them'''
+        @api.doc('get_todo')
+        @api.marshal_with(todo)
+        def get(self, id):
+            '''Fetch a given resource'''
+            return DAO.get(id)
+
+        @api.doc('delete_todo')
+        @api.response(204, 'Todo deleted')
+        def delete(self, id):
+            '''Delete a task given its identifier'''
+            DAO.delete(id)
+            return '', 204
+
+        @api.expect(todo)
+        @api.marshal_with(todo)
+        def put(self, id):
+            '''Update a task given its identifier'''
+            return DAO.update(id, api.payload)
 
 
     if __name__ == '__main__':
         app.run(debug=True)
+
+
 
 
 Documentation

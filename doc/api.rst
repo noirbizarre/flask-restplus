@@ -1,3 +1,5 @@
+.. _api:
+
 API
 ===
 
@@ -9,6 +11,9 @@ Core
 .. autoclass:: Api
     :members:
     :inherited-members:
+
+.. autoclass:: Namespace
+    :members:
 
 
 .. autoclass:: Resource
@@ -71,7 +76,6 @@ Internals
 These are internal classes or helpers.
 Most of the time you shouldn't have to deal directly with them.
 
-.. autoclass:: flask_restplus.namespace.Namespace
 
 .. autoclass:: flask_restplus.model.Model
 

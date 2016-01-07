@@ -1,0 +1,7 @@
+<!--h3>Links</h3-->
+{% if theme_badges %}
+<hr class="badges" />
+{% for badge, target, alt in theme_badges %}
+<p class="badge"><a href="{{target}}"><img src="{{badge}}" alt="{{alt}}" /></a></p>
+{% endfor %}
+{% endif %}

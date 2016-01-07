@@ -1,17 +1,17 @@
 .. _fields:
 
-Fields
-======
+Marshalling
+===========
 
 .. currentmodule:: flask_restplus
 
 
 Flask-RESTPlus provides an easy way to control what data you actually render in
 your response or expect as in input payload.
-With the :mod:`fields` module, you can use whatever objects (ORM
-models/custom classes/etc.) you want in your resource. :mod:`fields` also lets you
-format and filter the response so you don't have to worry about exposing
-internal data structures.
+With the :mod:`~flask_restplus.fields` module, you can use whatever objects (ORM
+models/custom classes/etc.) you want in your resource.
+:mod:`~flask_restplus.fields` also lets you format and filter the response
+so you don't have to worry about exposing internal data structures.
 
 It's also very clear when looking at your code what data will be rendered and
 how it will be formatted.

@@ -49,7 +49,7 @@ exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about
 
 tests_require = ['nose', 'rednose', 'blinker', 'tzlocal']
 install_requires = ['Flask>=0.8', 'six>=1.3.0', 'jsonschema', 'pytz', 'aniso8601>=0.82']
-dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke']
+dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke', 'alabaster']
 
 
 if sys.version_info[0:2] < (2, 7):
