@@ -218,9 +218,8 @@ class Swagger(object):
         if doc is False:
             return False
         doc['name'] = resource.__name__
-        params = extract_path_params(url)
-        params.update(self.expected_params(doc))
-        params = merge(params, doc.get('params', {}))
+        params = merge(self.expected_params(doc), doc.get('params', {}))
+        params = merge(params, extract_path_params(url))
         doc['params'] = params
         for method in [m.lower() for m in resource.methods or []]:
             method_doc = doc.get(method, OrderedDict())

@@ -224,6 +224,19 @@ class Namespace(object):
             self.default_error_handler = exception
             return exception
 
+    def param(self, name, description=None, _in='query', **kwargs):
+        '''
+        A decorator to specify one of the expected parameters
+
+        :param str name: the parameter name
+        :param str description: a small description
+        :param str _in: the parameter location `(query|header|formData|body|cookie)`
+        '''
+        param = kwargs
+        param['in'] = _in
+        param['description'] = description
+        return self.doc(params={name: param})
+
     def response(self, code, description, model=None, **kwargs):
         '''
         A decorator to specify one of the expected responses
@@ -243,11 +256,7 @@ class Namespace(object):
         :param str description: a description about the header
 
         '''
-        param = kwargs
-        param['name'] = name
-        param['in'] = 'header'
-        param['description'] = description
-        return self.doc(params={name: param})
+        return self.param(name, description=description, _in='header', **kwargs)
 
     def deprecated(self, func):
         '''A decorator to mark a resource or a method as deprecated'''

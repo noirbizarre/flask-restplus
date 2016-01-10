@@ -118,6 +118,8 @@ html_theme_options = {
     'github_repo': 'flask-restplus',
     'github_banner': True,
     'show_related': True,
+    'page_width': '',
+    'sidebar_width': '260px',
     'favicons': {
         64: 'favicon-64.png',
         128: 'favicon-128.png',

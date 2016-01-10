@@ -127,7 +127,7 @@ You can try it like this:
     {"todo2": "Change my brakepads"}
 
 
-Or from python if you have the ``requests`` library installed:
+Or from python if you have the `Requests <http://docs.python-requests.org/>`_ library installed:
 
 .. code-block:: python
 
@@ -188,6 +188,12 @@ You can also match parts of the path as variables to your resource methods.
 .. code-block:: python
 
     api.add_resource(Todo, '/todo/<int:todo_id>', endpoint='todo_ep')
+
+    # or
+
+    @api.route('/todo/<int:todo_id>', endpoint='todo_ep')
+    class HelloWorld(Resource):
+        pass
 
 .. note ::
 

@@ -1,7 +1,7 @@
 .. _fields:
 
-Marshalling
-===========
+Response marshalling
+====================
 
 .. currentmodule:: flask_restplus
 

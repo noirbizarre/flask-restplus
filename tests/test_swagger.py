@@ -521,6 +521,28 @@ class SwaggerTests(ApiMixin, TestCase):
         self.assertEqual(parameter['required'], True)
         self.assertEqual(parameter['description'], 'An age')
 
+    def test_path_parameter_with_decorator_details(self):
+        api = self.build_api()
+
+        @api.route('/name/<int:age>/')
+        @api.param('age', 'An age')
+        class ByNameResource(restplus.Resource):
+            def get(self, age):
+                return {}
+
+        data = self.get_specs()
+        self.assertIn('/name/{age}/', data['paths'])
+
+        path = data['paths']['/name/{age}/']
+        self.assertEqual(len(path['parameters']), 1)
+
+        parameter = path['parameters'][0]
+        self.assertEqual(parameter['name'], 'age')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['in'], 'path')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['description'], 'An age')
+
     def test_expect_parser(self):
         api = self.build_api()
         parser = api.parser()
@@ -703,6 +725,27 @@ class SwaggerTests(ApiMixin, TestCase):
         self.assertEqual(parameter['name'], 'q')
         self.assertEqual(parameter['type'], 'string')
         self.assertEqual(parameter['in'], 'query')
+        self.assertEqual(parameter['description'], 'A query string')
+
+    def test_explicit_parameters_with_decorator(self):
+        api = self.build_api()
+
+        @api.route('/name/')
+        class ByNameResource(restplus.Resource):
+            @api.param('q', 'A query string', type='string', _in='formData')
+            def get(self, age):
+                return {}
+
+        data = self.get_specs()
+        self.assertIn('/name/', data['paths'])
+
+        op = data['paths']['/name/']['get']
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
+        self.assertEqual(parameter['name'], 'q')
+        self.assertEqual(parameter['type'], 'string')
+        self.assertEqual(parameter['in'], 'formData')
         self.assertEqual(parameter['description'], 'A query string')
 
     def test_class_explicit_parameters(self):
