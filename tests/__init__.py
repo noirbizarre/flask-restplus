@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 import json
+import warnings
+
 try:
     # Python 2.6
     import unittest2 as unittest
@@ -79,6 +81,16 @@ class TestCase(unittest.TestCase):
         # restore
         for key, value in original.items():
             self.app.config[key] = value
+
+    @contextmanager
+    def assert_warning(self, category=Warning):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            # Cause all warnings to always be triggered.
+            yield
+            self.assertGreaterEqual(len(w), 1, 'It should raise a warning')
+            warning = w[0]
+            self.assertEqual(warning.category, category, 'It should raise {0}'.format(category.__name__))
 
     def get(self, url, **kwargs):
         with self.app.test_client() as client:

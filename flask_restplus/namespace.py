@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 import copy
 import inspect
 import six
+import warnings
+
 
 from .errors import abort
 from .marshalling import marshal, marshal_with
@@ -21,8 +23,11 @@ class Namespace(object):
     :param str name: The namespace name
     :param str description: An optionale short description
     :param str path: An optional prefix path. If not provided, prefix is ``/+name``
+    :param list decorators: A list of decorators to apply to each resources
+    :param bool validate: Whether or not to perform validation on this namespace
+    :param Api api: an optional API to attache to the namespace
     '''
-    def __init__(self, name, description=None, endpoint=None, path=None, decorators=None, validate=None, **kwargs):
+    def __init__(self, name, description=None, path=None, decorators=None, validate=None, **kwargs):
         self.name = name
         self.description = description
         self.path = (path or ('/' + name)).rstrip('/')
@@ -32,7 +37,6 @@ class Namespace(object):
         self.models = {}
         self.urls = {}
         self.decorators = decorators if decorators else []
-        # self.endpoints = set()
         self.resources = []
         self.error_handlers = {}
         self.default_error_handler = None
@@ -84,11 +88,15 @@ class Namespace(object):
             cls.__apidoc__ = False
             return
         unshortcut_params_description(doc)
+        handle_deprecations(doc)
         for key in 'get', 'post', 'put', 'delete', 'options', 'head', 'patch':
             if key in doc:
                 if doc[key] is False:
                     continue
                 unshortcut_params_description(doc[key])
+                handle_deprecations(doc[key])
+                if 'expect' in doc[key] and not isinstance(doc[key]['expect'], (list, tuple)):
+                    doc[key]['expect'] = [doc[key]['expect']]
         cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
 
     def doc(self, shortcut=None, **kwargs):
@@ -158,14 +166,13 @@ class Namespace(object):
         :param bool validate: whether to perform validation or not
 
         '''
+        expect = []
         params = {
-            'validate': kwargs.get('validate', None) or self._validate
+            'validate': kwargs.get('validate', None) or self._validate,
+            'expect': expect
         }
         for param in inputs:
-            if isinstance(param, (Model, list, tuple)):
-                params['body'] = param
-            elif isinstance(param, RequestParser):
-                params['parser'] = param
+            expect.append(param)
         return self.doc(**params)
 
     def parser(self):
@@ -237,6 +244,7 @@ class Namespace(object):
 
         '''
         param = kwargs
+        param['name'] = name
         param['in'] = 'header'
         param['description'] = description
         return self.doc(params={name: param})
@@ -251,3 +259,12 @@ def unshortcut_params_description(data):
         for name, description in six.iteritems(data['params']):
             if isinstance(description, six.string_types):
                 data['params'][name] = {'description': description}
+
+
+def handle_deprecations(doc):
+    if 'parser' in doc:
+        warnings.warn('The parser attribute is deprecated, use expect instead', DeprecationWarning, stacklevel=2)
+        doc['expect'] = doc.get('expect', []) + [doc.pop('parser')]
+    if 'body' in doc:
+        warnings.warn('The body attribute is deprecated, use expect instead', DeprecationWarning, stacklevel=2)
+        doc['expect'] = doc.get('expect', []) + [doc.pop('body')]

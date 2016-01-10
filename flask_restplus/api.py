@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import copy
 import difflib
 import inspect
 import operator
 import re
-import six
 import sys
 
 from functools import wraps, partial
@@ -27,9 +25,6 @@ from werkzeug.wrappers import Response as ResponseBase
 
 from . import apidoc
 from ._compat import OrderedDict
-from .errors import abort
-from .marshalling import marshal, marshal_with
-from .model import Model
 from .mask import ParseError, MaskError
 from .namespace import Namespace
 from .postman import PostmanCollectionV1
@@ -37,7 +32,6 @@ from .resource import Resource
 from .swagger import Swagger
 from .utils import default_id, camel_to_dash, unpack
 from .representations import output_json
-from .reqparse import RequestParser
 
 RE_RULES = re.compile('(<.*>)')
 
@@ -269,7 +263,8 @@ class Api(object):
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
             if previous_view_class != resource:
-                raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
+                msg = 'This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__)
+                raise ValueError(msg)
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint

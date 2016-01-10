@@ -5,6 +5,8 @@ from flask import request
 from flask.views import MethodView
 from werkzeug.wrappers import Response
 
+from .model import Model
+
 from .utils import unpack
 
 
@@ -58,10 +60,13 @@ class Resource(MethodView):
     def validate_payload(self, func):
         '''Perform a payload validation on expected model if necessary'''
         if getattr(func, '__apidoc__', False) != False:
-            model = func.__apidoc__.get('body')
-            validate = func.__apidoc__.get('validate', None)
+            doc = func.__apidoc__
+            validate = doc.get('validate', None)
             validate = validate if validate is not None else self.api._validate
-            if model and validate and hasattr(model, 'validate'):
-                # TODO: proper content negotiation
-                data = request.get_json()
-                model.validate(data, self.api.refresolver)
+            if validate:
+                for expect in doc.get('expect', []):
+                    # TODO: handle third party handlers
+                    if isinstance(expect, Model):
+                        # TODO: proper content negotiation
+                        data = request.get_json()
+                        expect.validate(data, self.api.refresolver)

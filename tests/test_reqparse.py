@@ -10,6 +10,7 @@ from werkzeug.wrappers import Request
 from werkzeug.datastructures import FileStorage, MultiDict
 
 from flask_restplus import Api, Model, fields
+from flask_restplus.errors import SpecsError
 from flask_restplus.reqparse import Argument, RequestParser, ParseResult
 
 from . import TestCase, Mock, patch
@@ -840,3 +841,183 @@ class ArgumentTest(TestCase):
         # Default
         arg = Argument('foo', choices=['bar', 'baz'])
         self.assertEqual(True, arg.case_sensitive)
+
+
+class RequestParserSchemaTest(TestCase):
+    def test_empty_parser(self):
+        parser = RequestParser()
+        self.assertEqual(parser.__schema__, [])
+
+    def test_primitive_types(self):
+        parser = RequestParser()
+        parser.add_argument('int', type=int, help='Some integer')
+        parser.add_argument('str', type=str, help='Some string')
+        self.assertEqual(parser.__schema__, [{
+            'name': 'int',
+            'type': 'integer',
+            'in': 'query',
+            'description': 'Some integer',
+        }, {
+            'name': 'str',
+            'type': 'string',
+            'in': 'query',
+            'description': 'Some string',
+        }])
+
+    def test_unknown_type(self):
+        parser = RequestParser()
+        unknown = lambda v: v
+        parser.add_argument('unknown', type=unknown)
+        self.assertEqual(parser.__schema__, [{
+            'name': 'unknown',
+            'type': 'string',
+            'in': 'query',
+        }])
+
+    def test_required(self):
+        parser = RequestParser()
+        parser.add_argument('int', type=int, required=True)
+        self.assertEqual(parser.__schema__, [{
+            'name': 'int',
+            'type': 'integer',
+            'in': 'query',
+            'required': True,
+        }])
+
+    def test_default(self):
+        parser = RequestParser()
+        parser.add_argument('int', type=int, default=5)
+        self.assertEqual(parser.__schema__, [{
+            'name': 'int',
+            'type': 'integer',
+            'in': 'query',
+            'default': 5,
+        }])
+
+    def test_choices(self):
+        parser = RequestParser()
+        parser.add_argument('string', type=str, choices=['a', 'b'])
+        self.assertEqual(parser.__schema__, [{
+            'name': 'string',
+            'type': 'string',
+            'in': 'query',
+            'enum': ['a', 'b'],
+            'collectionFormat': 'multi',
+        }])
+
+    def test_location(self):
+        parser = RequestParser()
+        parser.add_argument('default', type=int)
+        parser.add_argument('in_values', type=int, location='values')
+        parser.add_argument('in_query', type=int, location='args')
+        parser.add_argument('in_headers', type=int, location='headers')
+        parser.add_argument('in_cookie', type=int, location='cookie')
+        self.assertEqual(parser.__schema__, [{
+            'name': 'default',
+            'type': 'integer',
+            'in': 'query',
+        }, {
+            'name': 'in_values',
+            'type': 'integer',
+            'in': 'query',
+        }, {
+            'name': 'in_query',
+            'type': 'integer',
+            'in': 'query',
+        }, {
+            'name': 'in_headers',
+            'type': 'integer',
+            'in': 'header',
+        }])
+
+    def test_location_json(self):
+        parser = RequestParser()
+        parser.add_argument('in_json', type=str, location='json')
+        self.assertEqual(parser.__schema__, [{
+            'name': 'in_json',
+            'type': 'string',
+            'in': 'body',
+        }])
+
+    def test_location_form(self):
+        parser = RequestParser()
+        parser.add_argument('in_form', type=int, location='form')
+        self.assertEqual(parser.__schema__, [{
+            'name': 'in_form',
+            'type': 'integer',
+            'in': 'formData',
+        }])
+
+    def test_location_files(self):
+        parser = RequestParser()
+        parser.add_argument('in_files', type=FileStorage, location='files')
+        self.assertEqual(parser.__schema__, [{
+            'name': 'in_files',
+            'type': 'file',
+            'in': 'formData',
+        }])
+
+    def test_form_and_body_location(self):
+        parser = RequestParser()
+        parser.add_argument('default', type=int)
+        parser.add_argument('in_form', type=int, location='form')
+        parser.add_argument('in_json', type=str, location='json')
+        with self.assertRaises(SpecsError) as cm:
+            parser.__schema__
+
+        self.assertEqual(cm.exception.msg, "Can't use formData and body at the same time")
+
+    def test_files_and_body_location(self):
+        parser = RequestParser()
+        parser.add_argument('default', type=int)
+        parser.add_argument('in_files', type=FileStorage, location='files')
+        parser.add_argument('in_json', type=str, location='json')
+        with self.assertRaises(SpecsError) as cm:
+            parser.__schema__
+
+        self.assertEqual(cm.exception.msg, "Can't use formData and body at the same time")
+
+    def test_models(self):
+        # app = Flask(__name__)
+        # api = Api(app)
+        todo_fields = Model('Todo', {
+            'task': fields.String(required=True, description='The task details')
+        })
+        parser = RequestParser()
+        parser.add_argument('todo', type=todo_fields)
+        self.assertEqual(parser.__schema__, [{
+            'name': 'todo',
+            'type': 'Todo',
+            'in': 'body',
+        }])
+
+    def test_lists(self):
+        parser = RequestParser()
+        parser.add_argument('int', type=int, action='append')
+        self.assertEqual(parser.__schema__, [{
+            'name': 'int',
+            'in': 'query',
+            'items': True,
+            'type': 'array',
+            'collectionFormat': 'multi',
+            'items': {'type': 'integer'}
+        }])
+
+    def test_schema_interface(self):
+        def custom(value):
+            pass
+
+        custom.__schema__ = {
+            'type': 'string',
+            'format': 'custom-format',
+        }
+
+        parser = RequestParser()
+        parser.add_argument('custom', type=custom)
+
+        self.assertDataEqual(parser.__schema__, [{
+            'name': 'custom',
+            'in': 'query',
+            'type': 'string',
+            'format': 'custom-format',
+        }])

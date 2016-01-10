@@ -188,7 +188,7 @@ class PostmanTestCase(TestCase):
 
         @api.route('/test/')
         class Test(restplus.Resource):
-            @api.doc(parser=parser)
+            @api.expect(parser)
             def get(self):
                 pass
 
@@ -210,7 +210,7 @@ class PostmanTestCase(TestCase):
 
         @api.route('/test/')
         class Test(restplus.Resource):
-            @api.doc(parser=parser)
+            @api.expect(parser)
             def get(self):
                 pass
 
@@ -267,13 +267,15 @@ class PostmanTestCase(TestCase):
 
         @api.route('/form/')
         class TestForm(restplus.Resource):
-            @api.doc('form', parser=form_parser)
+            @api.doc('form')
+            @api.expect(form_parser)
             def post(self):
                 pass
 
         @api.route('/file/')
         class TestFile(restplus.Resource):
-            @api.doc('file', parser=file_parser)
+            @api.doc('file')
+            @api.expect(file_parser)
             def post(self):
                 pass
 

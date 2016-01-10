@@ -24,9 +24,10 @@ DEFAULT_VARS = {
 
 class Request(object):
     '''Wraps a Swagger operation into a Postman Request'''
-    def __init__(self, collection, path, method, operation):
+    def __init__(self, collection, path, params, method, operation):
         self.collection = collection
         self.path = path
+        self.params = params
         self.method = method.upper()
         self.operation = operation
 
@@ -95,11 +96,11 @@ class Request(object):
         url = self.url
         path_vars = {}
         url_vars = {}
-        params = self.operation.get('parameters')
+        params = dict((p['name'], p) for p in self.params)
+        params.update(dict((p['name'], p) for p in self.operation.get('parameters', [])))
         if not params:
             return url, None
-        for param in params:
-            name = param['name']
+        for name, param in params.items():
             if param['in'] == 'path':
                 url = url.replace('{%s}' % name, ':%s' % name)
                 path_vars[name] = DEFAULT_VARS.get(param['type'], '')
@@ -156,14 +157,17 @@ class PostmanCollectionV1(object):
     def requests(self):
         if self.swagger:
             # First request is Swagger specifications
-            yield Request(self, '/swagger.json', 'get', {
+            yield Request(self, '/swagger.json', {}, 'get', {
                 'operationId': 'Swagger specifications',
                 'summary': 'The API Swagger specifications as JSON',
             })
         # Then iter over API paths and methods
         for path, operations in self.api.__schema__['paths'].items():
+            path_params = operations.get('parameters', [])
+
             for method, operation in operations.items():
-                yield Request(self, path, method, operation)
+                if method != 'parameters':
+                    yield Request(self, path, path_params, method, operation)
 
     @property
     def folders(self):

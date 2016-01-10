@@ -1,36 +1,39 @@
 Changelog
 =========
 
+.. currentmodule:: flask_restplus
+
 Current
 -------
 
-- Nothing yet
+- Make :class:`Namespace` behave like :class:`~flask.Blueprint` for :class:`~flask.Flask`.
+- Deprecated ``parser`` and ``body`` parameters for ``expect`` in :meth:`~Namespace.doc` decorator.
 
 0.8.6 (2015-12-26)
 ------------------
 
 - Handle callable on API infos
 - Handle documentation on error handlers
-- Drop/merge flask_restful `flask_restful.RequestParser`
-- Handle :class:`~flask_restplus.reqparse.RequestParser` into :meth:`~flask_restplus.Api.expect` decorator
-- Handle schema for :mod:`~flask_restplus.inputs` parsers
+- Drop/merge flask_restful ``flask_restful.RequestParser``
+- Handle :class:`~reqparse.RequestParser` into :meth:`~Api.expect` decorator
+- Handle schema for :mod:`~inputs` parsers
 - Added some inputs:
-    - :class:`~flask_restplus.inputs.email`
-    - :func:`~flask_restplus.inputs.ip`
-    - :func:`~flask_restplus.inputs.ipv4`
-    - :func:`~flask_restplus.inputs.ipv6`
+    - :class:`~inputs.email`
+    - :func:`~inputs.ip`
+    - :func:`~inputs.ipv4`
+    - :func:`~inputs.ipv6`
 
 
 0.8.5 (2015-12-12)
 ------------------
 
-- Handle mask on :class:`~flask_restplus.fields.Polymorph` field
+- Handle mask on :class:`~fields.Polymorph` field
 - Handle mask on inherited models
 - Replace `flask_restful.abort` by :func:`flask_restplus.errors.abort`
 - Replace `flask_restful.unpack` by :func:`flask_restplus.utils.unpack`
 - **Breaking changes**:
-    - Renamed ``ApiModel`` into :class:`~flask_restplus.model.Model`
-    - Renamed ``ApiNamespace`` into :class:`~flask_restplus.namespace.Namespace`
+    - Renamed ``ApiModel`` into :class:`Model`
+    - Renamed ``ApiNamespace`` into :class:`Namespace`
 
 
 0.8.4 (2015-12-07)
@@ -38,15 +41,15 @@ Current
 
 - Drop/merge `flask_restful.Resource` resolving a recursion problem
 - Allow any `callable` as field `default`, `min`, `max`...
-- Added :class:`~flask_restplus.fields.Date` field
+- Added :class:`~fields.Date` field
 - Improve error handling for inconsistent masks
 - Handle model level default mask
 - support colons and dashes in mask field names
 - **Breaking changes**:
    - Renamed `exceptions` module into `errors`
-   - Renamed `RestException` into :class:`~flask_restplus.errors.RestError`
-   - Renamed `MarshallingException` into :class:`~flask_restplus.fields.MarshallingError`
-   - :class:`~flask_restplus.fields.DateTime` field always output datetime
+   - Renamed `RestException` into :class:`~errors.RestError`
+   - Renamed `MarshallingException` into :class:`~fields.MarshallingError`
+   - :class:`~fields.DateTime` field always output datetime
 
 0.8.3 (2015-12-05)
 ------------------

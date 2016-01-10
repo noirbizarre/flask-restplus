@@ -11,7 +11,7 @@ import flask_restplus as restplus
 from . import TestCase
 
 
-class SwaggerTestCase(TestCase):
+class ApiMixin(object):
     def build_api(self, **kwargs):
         bpkwargs = {}
         if 'prefix' in kwargs:
@@ -23,6 +23,8 @@ class SwaggerTestCase(TestCase):
         self.app.register_blueprint(blueprint)
         return api
 
+
+class SwaggerTests(ApiMixin, TestCase):
     def test_specs_endpoint(self):
         api = restplus.Api()
         api.init_app(self.app)
@@ -465,10 +467,10 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs()
         self.assertIn('/id/{id}/', data['paths'])
 
-        op = data['paths']['/id/{id}/']['get']
-        self.assertEqual(len(op['parameters']), 1)
+        path = data['paths']['/id/{id}/']
+        self.assertEqual(len(path['parameters']), 1)
 
-        parameter = op['parameters'][0]
+        parameter = path['parameters'][0]
         self.assertEqual(parameter['name'], 'id')
         self.assertEqual(parameter['type'], 'string')
         self.assertEqual(parameter['in'], 'path')
@@ -485,10 +487,10 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs()
         self.assertIn('/name/{age}/', data['paths'])
 
-        op = data['paths']['/name/{age}/']['get']
-        self.assertEqual(len(op['parameters']), 1)
+        path = data['paths']['/name/{age}/']
+        self.assertEqual(len(path['parameters']), 1)
 
-        parameter = op['parameters'][0]
+        parameter = path['parameters'][0]
         self.assertEqual(parameter['name'], 'age')
         self.assertEqual(parameter['type'], 'integer')
         self.assertEqual(parameter['in'], 'path')
@@ -497,51 +499,29 @@ class SwaggerTestCase(TestCase):
     def test_path_parameter_with_explicit_details(self):
         api = self.build_api()
 
-        @api.route('/name/<int:age>/', endpoint='by-name')
-        class ByNameResource(restplus.Resource):
-            @api.doc(params={
+        @api.route('/name/<int:age>/', endpoint='by-name', doc={
+            'params': {
                 'age': {'description': 'An age'}
-            })
+            }
+        })
+        class ByNameResource(restplus.Resource):
             def get(self, age):
                 return {}
 
         data = self.get_specs()
         self.assertIn('/name/{age}/', data['paths'])
 
-        op = data['paths']['/name/{age}/']['get']
-        self.assertEqual(len(op['parameters']), 1)
+        path = data['paths']['/name/{age}/']
+        self.assertEqual(len(path['parameters']), 1)
 
-        parameter = op['parameters'][0]
+        parameter = path['parameters'][0]
         self.assertEqual(parameter['name'], 'age')
         self.assertEqual(parameter['type'], 'integer')
         self.assertEqual(parameter['in'], 'path')
         self.assertEqual(parameter['required'], True)
         self.assertEqual(parameter['description'], 'An age')
 
-    def test_parser_parameters(self):
-        api = self.build_api()
-        parser = api.parser()
-        parser.add_argument('param', type=int, help='Some param')
-
-        @api.route('/with-parser/', endpoint='with-parser')
-        class WithParserResource(restplus.Resource):
-            @api.doc(parser=parser)
-            def get(self):
-                return {}
-
-        data = self.get_specs()
-        self.assertIn('/with-parser/', data['paths'])
-
-        op = data['paths']['/with-parser/']['get']
-        self.assertEqual(len(op['parameters']), 1)
-
-        parameter = op['parameters'][0]
-        self.assertEqual(parameter['name'], 'param')
-        self.assertEqual(parameter['type'], 'integer')
-        self.assertEqual(parameter['in'], 'query')
-        self.assertEqual(parameter['description'], 'Some param')
-
-    def test_parser_from_expect(self):
+    def test_expect_parser(self):
         api = self.build_api()
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param')
@@ -564,13 +544,13 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['in'], 'query')
         self.assertEqual(parameter['description'], 'Some param')
 
-    def test_parser_parameters_on_class(self):
+    def test_expect_parser_on_class(self):
         api = self.build_api()
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param')
 
         @api.route('/with-parser/', endpoint='with-parser')
-        @api.doc(parser=parser)
+        @api.expect(parser)
         class WithParserResource(restplus.Resource):
             def get(self):
                 return {}
@@ -578,10 +558,10 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs()
         self.assertIn('/with-parser/', data['paths'])
 
-        op = data['paths']['/with-parser/']['get']
-        self.assertEqual(len(op['parameters']), 1)
+        path = data['paths']['/with-parser/']
+        self.assertEqual(len(path['parameters']), 1)
 
-        parameter = op['parameters'][0]
+        parameter = path['parameters'][0]
         self.assertEqual(parameter['name'], 'param')
         self.assertEqual(parameter['type'], 'integer')
         self.assertEqual(parameter['in'], 'query')
@@ -593,7 +573,7 @@ class SwaggerTestCase(TestCase):
         parser.add_argument('param', type=int, help='Some param')
 
         @api.route('/with-parser/', endpoint='with-parser')
-        @api.doc(get={'parser': parser})
+        @api.doc(get={'expect': parser})
         class WithParserResource(restplus.Resource):
             def get(self):
                 return {}
@@ -623,7 +603,8 @@ class SwaggerTestCase(TestCase):
 
         @api.route('/with-parser/', endpoint='with-parser')
         class WithParserResource(restplus.Resource):
-            @api.doc(parser=parser, params={'param': {'description': 'New description'}})
+            @api.expect(parser)
+            @api.doc(params={'param': {'description': 'New description'}})
             def get(self):
                 return {}
 
@@ -646,7 +627,7 @@ class SwaggerTestCase(TestCase):
 
         @api.route('/with-parser/', endpoint='with-parser')
         class WithParserResource(restplus.Resource):
-            @api.doc(parser=parser)
+            @api.expect(parser)
             def get(self):
                 return {}
 
@@ -671,7 +652,7 @@ class SwaggerTestCase(TestCase):
 
         @api.route('/with-parser/', endpoint='with-parser')
         class WithParserResource(restplus.Resource):
-            @api.doc(parser=parser)
+            @api.expect(parser)
             def get(self):
                 return {}
 
@@ -706,18 +687,19 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs()
         self.assertIn('/name/{age}/', data['paths'])
 
-        op = data['paths']['/name/{age}/']['get']
-        self.assertEqual(len(op['parameters']), 2)
+        path = data['paths']['/name/{age}/']
+        self.assertEqual(len(path['parameters']), 1)
 
-        by_name = dict((p['name'], p) for p in op['parameters'])
-
-        parameter = by_name['age']
+        parameter = path['parameters'][0]
         self.assertEqual(parameter['name'], 'age')
         self.assertEqual(parameter['type'], 'integer')
         self.assertEqual(parameter['in'], 'path')
         self.assertEqual(parameter['required'], True)
 
-        parameter = by_name['q']
+        op = path['get']
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
         self.assertEqual(parameter['name'], 'q')
         self.assertEqual(parameter['type'], 'string')
         self.assertEqual(parameter['in'], 'query')
@@ -742,10 +724,10 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs()
         self.assertIn('/name/{age}/', data['paths'])
 
-        op = data['paths']['/name/{age}/']['get']
-        self.assertEqual(len(op['parameters']), 2)
+        path = data['paths']['/name/{age}/']
+        self.assertEqual(len(path['parameters']), 2)
 
-        by_name = dict((p['name'], p) for p in op['parameters'])
+        by_name = dict((p['name'], p) for p in path['parameters'])
 
         parameter = by_name['age']
         self.assertEqual(parameter['name'], 'age')
@@ -782,10 +764,10 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs()
         self.assertIn('/name/{age}/', data['paths'])
 
-        op = data['paths']['/name/{age}/']['get']
-        self.assertEqual(len(op['parameters']), 2)
+        path = data['paths']['/name/{age}/']
+        self.assertEqual(len(path['parameters']), 2)
 
-        by_name = dict((p['name'], p) for p in op['parameters'])
+        by_name = dict((p['name'], p) for p in path['parameters'])
 
         parameter = by_name['age']
         self.assertEqual(parameter['name'], 'age')
@@ -795,6 +777,15 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['description'], 'An age')
 
         parameter = by_name['q']
+        self.assertEqual(parameter['name'], 'q')
+        self.assertEqual(parameter['type'], 'string')
+        self.assertEqual(parameter['in'], 'query')
+        self.assertEqual(parameter['description'], 'Overriden description')
+
+        op = data['paths']['/name/{age}/']['get']
+        self.assertEqual(len(op['parameters']), 1)
+
+        parameter = op['parameters'][0]
         self.assertEqual(parameter['name'], 'q')
         self.assertEqual(parameter['type'], 'string')
         self.assertEqual(parameter['in'], 'query')
@@ -830,7 +821,17 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs()
         self.assertIn('/name/{age}/', data['paths'])
 
-        op = data['paths']['/name/{age}/']['get']
+        path = data['paths']['/name/{age}/']
+        self.assertEqual(len(path['parameters']), 1)
+
+        parameter = path['parameters'][0]
+        self.assertEqual(parameter['name'], 'age')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['in'], 'path')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['description'], 'An age')
+
+        op = path['get']
         self.assertEqual(len(op['parameters']), 2)
 
         by_name = dict((p['name'], p) for p in op['parameters'])
@@ -848,15 +849,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['in'], 'query')
         self.assertEqual(parameter['description'], 'A query string')
 
-        op_post = op = data['paths']['/name/{age}/']['post']
-        self.assertEqual(len(op_post['parameters']), 1)
-
-        parameter = op_post['parameters'][0]
-        self.assertEqual(parameter['name'], 'age')
-        self.assertEqual(parameter['type'], 'integer')
-        self.assertEqual(parameter['in'], 'path')
-        self.assertEqual(parameter['required'], True)
-        self.assertEqual(parameter['description'], 'An age')
+        self.assertNotIn('parameters', path['post'])
 
     def test_explicit_parameters_desription_shortcut(self):
         api = self.build_api()
@@ -882,7 +875,16 @@ class SwaggerTestCase(TestCase):
         data = self.get_specs()
         self.assertIn('/name/{age}/', data['paths'])
 
-        op = data['paths']['/name/{age}/']['get']
+        path = data['paths']['/name/{age}/']
+        self.assertEqual(len(path['parameters']), 1)
+        parameter = path['parameters'][0]
+        self.assertEqual(parameter['name'], 'age')
+        self.assertEqual(parameter['type'], 'integer')
+        self.assertEqual(parameter['in'], 'path')
+        self.assertEqual(parameter['required'], True)
+        self.assertEqual(parameter['description'], 'An age')
+
+        op = path['get']
         self.assertEqual(len(op['parameters']), 2)
 
         by_name = dict((p['name'], p) for p in op['parameters'])
@@ -900,15 +902,7 @@ class SwaggerTestCase(TestCase):
         self.assertEqual(parameter['in'], 'query')
         self.assertEqual(parameter['description'], 'A query string')
 
-        op_post = op = data['paths']['/name/{age}/']['post']
-        self.assertEqual(len(op_post['parameters']), 1)
-
-        parameter = op_post['parameters'][0]
-        self.assertEqual(parameter['name'], 'age')
-        self.assertEqual(parameter['type'], 'integer')
-        self.assertEqual(parameter['in'], 'path')
-        self.assertEqual(parameter['required'], True)
-        self.assertEqual(parameter['description'], 'An age')
+        self.assertNotIn('parameters', path['post'])
 
     def test_explicit_parameters_native_types(self):
         api = self.build_api()
@@ -2032,10 +2026,10 @@ class SwaggerTestCase(TestCase):
             }]
         })
 
-    def test_body_model(self):
+    def test_expect_model(self):
         api = self.build_api()
 
-        fields = api.model('Person', {
+        person = api.model('Person', {
             'name': restplus.fields.String,
             'age': restplus.fields.Integer,
             'birthdate': restplus.fields.DateTime,
@@ -2043,7 +2037,7 @@ class SwaggerTestCase(TestCase):
 
         @api.route('/model-as-dict/')
         class ModelAsDict(restplus.Resource):
-            @api.doc(model='Person', body=fields)
+            @api.expect(person)
             def post(self):
                 return {}
 
@@ -2067,8 +2061,6 @@ class SwaggerTestCase(TestCase):
         })
 
         op = data['paths']['/model-as-dict/']['post']
-        self.assertEqual(op['responses']['200']['schema']['$ref'], '#/definitions/Person')
-
         self.assertEqual(len(op['parameters']), 1)
 
         parameter = op['parameters'][0]
@@ -2221,13 +2213,15 @@ class SwaggerTestCase(TestCase):
         op = data['paths']['/with-parser/']['get']
         self.assertEqual(len(op['parameters']), 2)
 
-        parameter = op['parameters'][0]
+        parameters = dict((p['in'], p) for p in op['parameters'])
+
+        parameter = parameters['query']
         self.assertEqual(parameter['name'], 'param')
         self.assertEqual(parameter['type'], 'integer')
         self.assertEqual(parameter['in'], 'query')
         self.assertEqual(parameter['description'], 'Some param')
 
-        parameter = op['parameters'][1]
+        parameter = parameters['body']
         self.assertEqual(parameter, {
             'name': 'payload',
             'in': 'body',
@@ -2237,12 +2231,12 @@ class SwaggerTestCase(TestCase):
             }
         })
 
-    def test_body_primitive_list(self):
+    def test_expect_primitive_list(self):
         api = self.build_api()
 
         @api.route('/model-list/')
         class ModelAsDict(restplus.Resource):
-            @api.doc(body=[restplus.fields.String])
+            @api.expect([restplus.fields.String])
             def post(self):
                 return {}
 
@@ -2271,7 +2265,7 @@ class SwaggerTestCase(TestCase):
 
         @api.route('/model-list/')
         class ModelAsDict(restplus.Resource):
-            @api.doc(body=[fields])
+            @api.expect([fields])
             def post(self):
                 return {}
 
@@ -2307,10 +2301,10 @@ class SwaggerTestCase(TestCase):
             }
         })
 
-    def test_body_model_as_tuple(self):
+    def test_expect_model_with_description(self):
         api = self.build_api()
 
-        fields = api.model('Person', {
+        person = api.model('Person', {
             'name': restplus.fields.String,
             'age': restplus.fields.Integer,
             'birthdate': restplus.fields.DateTime,
@@ -2318,7 +2312,7 @@ class SwaggerTestCase(TestCase):
 
         @api.route('/model-as-dict/')
         class ModelAsDict(restplus.Resource):
-            @api.doc(model='Person', body=(fields, 'Body description'))
+            @api.expect((person, 'Body description'))
             def post(self):
                 return {}
 
@@ -2342,8 +2336,6 @@ class SwaggerTestCase(TestCase):
         })
 
         op = data['paths']['/model-as-dict/']['post']
-        self.assertEqual(op['responses']['200']['schema']['$ref'], '#/definitions/Person')
-
         self.assertEqual(len(op['parameters']), 1)
 
         parameter = op['parameters'][0]
@@ -2720,3 +2712,61 @@ class SwaggerTestCase(TestCase):
         post_operation = data['paths']['/test/']['post']
         self.assertIn('deprecated', post_operation)
         self.assertTrue(post_operation['deprecated'])
+
+
+class SwaggerDeprecatedTest(ApiMixin, TestCase):
+    def test_doc_parser_parameters(self):
+        api = self.build_api()
+        parser = api.parser()
+        parser.add_argument('param', type=int, help='Some param')
+
+        with self.assert_warning(DeprecationWarning):
+            @api.route('/with-parser/')
+            class WithParserResource(restplus.Resource):
+                @api.doc(parser=parser)
+                def get(self):
+                    return {}
+
+        self.assertNotIn('parser', WithParserResource.get.__apidoc__)
+        self.assertIn('expect', WithParserResource.get.__apidoc__)
+        doc_parser = WithParserResource.get.__apidoc__['expect'][0]
+        self.assertEqual(doc_parser.__schema__, parser.__schema__)
+
+    def test_doc_method_parser_on_class(self):
+        api = self.build_api()
+        parser = api.parser()
+        parser.add_argument('param', type=int, help='Some param')
+
+        with self.assert_warning(DeprecationWarning):
+            @api.route('/with-parser/')
+            @api.doc(get={'parser': parser})
+            class WithParserResource(restplus.Resource):
+                def get(self):
+                    return {}
+
+                def post(self):
+                    return {}
+
+        self.assertNotIn('parser', WithParserResource.__apidoc__['get'])
+        self.assertIn('expect', WithParserResource.__apidoc__['get'])
+        doc_parser = WithParserResource.__apidoc__['get']['expect'][0]
+        self.assertEqual(doc_parser.__schema__, parser.__schema__)
+
+    def test_doc_body_as_tuple(self):
+        api = self.build_api()
+
+        fields = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        with self.assert_warning(DeprecationWarning):
+            @api.route('/model-as-dict/')
+            class ModelAsDict(restplus.Resource):
+                @api.doc(body=(fields, 'Body description'))
+                def post(self):
+                    return {}
+
+        self.assertNotIn('body', ModelAsDict.post.__apidoc__)
+        self.assertEqual(ModelAsDict.post.__apidoc__['expect'], [(fields, 'Body description')])

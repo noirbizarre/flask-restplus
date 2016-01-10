@@ -14,6 +14,7 @@ from ._compat import OrderedDict
 from . import fields
 from .errors import SpecsError
 from .model import Model
+from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 
 
@@ -23,17 +24,6 @@ PATH_TYPES = {
     'float': 'number',
     'string': 'string',
     None: 'string',
-}
-
-
-#: Maps Flask-Restful RequestParser locations to Swagger ones
-LOCATIONS = {
-    'args': 'query',
-    'form': 'formData',
-    'headers': 'header',
-    'json': 'body',
-    'values': 'query',
-    'files': 'formData',
 }
 
 
@@ -95,55 +85,9 @@ def extract_path_params(path):
     return params
 
 
-def parser_to_params(parser):
-    '''Extract Swagger parameters from a RequestParser'''
-    params = OrderedDict()
-    locations = set()
-    for arg in parser.args:
-        if arg.location == 'cookie':
-            continue
-        param = {'in': LOCATIONS.get(arg.location, 'query')}
-        _handle_arg_type(arg, param)
-        if arg.required:
-            param['required'] = True
-        if arg.help:
-            param['description'] = arg.help
-        if arg.default:
-            param['default'] = arg.default
-        if arg.action == 'append':
-            param['items'] = {'type': param['type']}
-            param['type'] = 'array'
-            param['collectionFormat'] = 'multi'
-        if arg.choices:
-            param['enum'] = arg.choices
-            param['collectionFormat'] = 'multi'
-        # if param['in'] == 'body':
-        #     params['body'] = param
-        # else:
-        params[arg.name] = param
-        locations.add(param['in'])
-    if 'body' in locations and 'formData' in locations:
-        raise SpecsError("Can't use formData and body at the same time")
-    return params
-
-
-def _handle_arg_type(arg, param):
-    if isinstance(arg.type, Hashable) and arg.type in PY_TYPES:
-        param['type'] = PY_TYPES[arg.type]
-    elif hasattr(arg.type, '__apidoc__'):
-        param['type'] = arg.type.__apidoc__['name']
-        param['in'] = 'body'
-    elif hasattr(arg.type, '__schema__'):
-        param.update(arg.type.__schema__)
-    elif arg.location == 'files':
-        param['type'] = 'file'
-    else:
-        param['type'] = 'string'
-
-
 def _param_to_header(param):
-    if 'in' in param:
-        del param['in']
+    param.pop('in', None)
+    param.pop('name', None)
 
     typedef = param.get('type', 'string')
     if isinstance(typedef, Hashable) and typedef in PY_TYPES:
@@ -274,7 +218,10 @@ class Swagger(object):
         if doc is False:
             return False
         doc['name'] = resource.__name__
-        doc['params'] = self.merge_params(extract_path_params(url), doc)
+        params = extract_path_params(url)
+        params.update(self.expected_params(doc))
+        params = merge(params, doc.get('params', {}))
+        doc['params'] = params
         for method in [m.lower() for m in resource.methods or []]:
             method_doc = doc.get(method, OrderedDict())
             method_impl = getattr(resource, method)
@@ -285,35 +232,47 @@ class Swagger(object):
             method_doc = merge(method_doc, getattr(method_impl, '__apidoc__', OrderedDict()))
             if method_doc is not False:
                 method_doc['docstring'] = parse_docstring(method_impl)
-                method_doc['params'] = self.merge_params(OrderedDict(), method_doc)
+                method_params = self.expected_params(method_doc)
+                method_params = merge(method_params, method_doc.get('params', {}))
+                inherited_params = dict((k, v) for k, v in iteritems(params) if k in method_params)
+                method_doc['params'] = merge(inherited_params, method_params)
             doc[method] = method_doc
         return doc
 
-    def merge_params(self, params, doc):
-        if 'params' not in doc and 'parser' not in doc and 'body' not in doc:
+    def expected_params(self, doc):
+        params = {}
+        if 'expect' not in doc:
             return params
 
-        if 'parser' in doc:
-            params = merge(params, parser_to_params(doc['parser']))
-
-        if 'params' in doc:
-            params = merge(params, doc['params'])
-
-        if 'body' in doc:
-            if isinstance(doc['body'], (list, tuple)) and len(doc['body']) == 2:
-                model, description = doc['body']
-            else:
-                model, description = doc['body'], None
-            params = merge(params, {
-                'payload': not_none({
+        for expect in doc.get('expect', []):
+            if isinstance(expect, RequestParser):
+                parser_params = dict((p['name'], p) for p in expect.__schema__)
+                params.update(parser_params)
+            elif isinstance(expect, Model):
+                params['payload'] = not_none({
                     'name': 'payload',
                     'required': True,
                     'in': 'body',
-                    'schema': self.serialize_schema(model),
-                    'description': description
+                    'schema': self.serialize_schema(expect),
                 })
-            })
-
+            elif isinstance(expect, (list, tuple)):
+                if len(expect) == 2:
+                    # this is (payload, description) shortcut
+                    model, description = expect
+                    params['payload'] = not_none({
+                        'name': 'payload',
+                        'required': True,
+                        'in': 'body',
+                        'schema': self.serialize_schema(model),
+                        'description': description
+                    })
+                else:
+                    params['payload'] = not_none({
+                        'name': 'payload',
+                        'required': True,
+                        'in': 'body',
+                        'schema': self.serialize_schema(expect),
+                    })
         return params
 
     def register_errors(self):
@@ -339,13 +298,15 @@ class Swagger(object):
         doc = self.extract_resource_doc(resource, url)
         if doc is False:
             return
-        operations = {}
+        path = {
+            'parameters': self.parameters_for(doc) or None
+        }
         for method in [m.lower() for m in resource.methods or []]:
             if doc[method] is False:
                 continue
-            operations[method] = self.serialize_operation(doc, method)
-            operations[method]['tags'] = [ns.name]
-        return operations
+            path[method] = self.serialize_operation(doc, method)
+            path[method]['tags'] = [ns.name]
+        return not_none(path)
 
     def serialize_operation(self, doc, method):
         operation = {
@@ -353,7 +314,7 @@ class Swagger(object):
             'summary': doc[method]['docstring']['summary'],
             'description': self.description_for(doc, method) or None,
             'operationId': self.operation_id_for(doc, method),
-            'parameters': self.parameters_for(doc, method) or None,
+            'parameters': self.parameters_for(doc[method]) or None,
             'security': self.security_for(doc, method),
         }
         # Handle deprecated annotation
@@ -383,9 +344,9 @@ class Swagger(object):
         '''Extract the operation id'''
         return doc[method]['id'] if 'id' in doc[method] else self.api.default_id(doc['name'], method)
 
-    def parameters_for(self, doc, method):
+    def parameters_for(self, doc):
         params = []
-        for name, param in iteritems(merge(doc['params'], doc[method]['params'])):
+        for name, param in iteritems(doc['params']):
             param['name'] = name
             if 'type' not in param and 'schema' not in param:
                 param['type'] = 'string'
@@ -405,7 +366,7 @@ class Swagger(object):
             params.append(param)
 
         # Handle fields mask
-        mask = doc.get('__mask__') or doc[method].get('__mask__')
+        mask = doc.get('__mask__')
         if (mask and current_app.config['RESTPLUS_MASK_SWAGGER']):
             param = {
                 'name': current_app.config['RESTPLUS_MASK_HEADER'],

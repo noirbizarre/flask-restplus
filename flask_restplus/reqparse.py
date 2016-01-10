@@ -4,13 +4,14 @@ from __future__ import unicode_literals
 import decimal
 import six
 
+from collections import Hashable
 from copy import deepcopy
 from flask import current_app, request
 
 from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
 
-from .errors import abort
+from .errors import abort, SpecsError
 from .marshalling import marshal
 from .model import Model
 
@@ -36,6 +37,24 @@ _friendly_location = {
     'headers': 'the HTTP headers',
     'cookies': 'the request\'s cookies',
     'files': 'an uploaded file',
+}
+
+#: Maps Flask-Restful RequestParser locations to Swagger ones
+LOCATIONS = {
+    'args': 'query',
+    'form': 'formData',
+    'headers': 'header',
+    'json': 'body',
+    'values': 'query',
+    'files': 'formData',
+}
+
+#: Maps Pyton primitives types to Swagger ones
+PY_TYPES = {
+    int: 'integer',
+    str: 'string',
+    bool: 'boolean',
+    None: 'void'
 }
 
 text_type = lambda x: six.text_type(x)
@@ -236,6 +255,30 @@ class Argument(object):
             return results[0], _found
         return results, _found
 
+    @property
+    def __schema__(self):
+        if self.location == 'cookie':
+            return
+        param = {
+            'name': self.name,
+            'in': LOCATIONS.get(self.location, 'query')
+        }
+        _handle_arg_type(self, param)
+        if self.required:
+            param['required'] = True
+        if self.help:
+            param['description'] = self.help
+        if self.default:
+            param['default'] = self.default
+        if self.action == 'append':
+            param['items'] = {'type': param['type']}
+            param['type'] = 'array'
+            param['collectionFormat'] = 'multi'
+        if self.choices:
+            param['enum'] = self.choices
+            param['collectionFormat'] = 'multi'
+        return param
+
 
 class RequestParser(object):
     '''
@@ -296,7 +339,7 @@ class RequestParser(object):
         if req is None:
             req = request
 
-        namespace = self.result_class()
+        result = self.result_class()
 
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
@@ -308,7 +351,7 @@ class RequestParser(object):
                 errors.update(found)
                 found = None
             if found or arg.store_missing:
-                namespace[arg.dest or arg.name] = value
+                result[arg.dest or arg.name] = value
         if errors:
             abort(400, message=errors)
 
@@ -317,7 +360,7 @@ class RequestParser(object):
             msg = 'Unknown arguments: {0}'.format(arguments)
             raise exceptions.BadRequest(msg)
 
-        return namespace
+        return result
 
     def copy(self):
         '''Creates a copy of this RequestParser with the same set of arguments'''
@@ -344,3 +387,30 @@ class RequestParser(object):
                 del self.args[index]
                 break
         return self
+
+    @property
+    def __schema__(self):
+        params = []
+        locations = set()
+        for arg in self.args:
+            param = arg.__schema__
+            if param:
+                params.append(param)
+                locations.add(param['in'])
+        if 'body' in locations and 'formData' in locations:
+            raise SpecsError("Can't use formData and body at the same time")
+        return params
+
+
+def _handle_arg_type(arg, param):
+    if isinstance(arg.type, Hashable) and arg.type in PY_TYPES:
+        param['type'] = PY_TYPES[arg.type]
+    elif hasattr(arg.type, '__apidoc__'):
+        param['type'] = arg.type.__apidoc__['name']
+        param['in'] = 'body'
+    elif hasattr(arg.type, '__schema__'):
+        param.update(arg.type.__schema__)
+    elif arg.location == 'files':
+        param['type'] = 'file'
+    else:
+        param['type'] = 'string'
