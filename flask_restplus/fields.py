@@ -153,7 +153,11 @@ class Raw(object):
             default = self._v('default')
             return self.format(default) if default else default
 
-        data = self.format(value)
+        try:
+            data = self.format(value)
+        except MarshallingError as e:
+            msg = 'Unable to marshal field "{0}" value "{1}": {2}'.format(key, value, str(e))
+            raise MarshallingError(msg)
         return self.mask.apply(data) if self.mask else data
 
     def _v(self, key):
