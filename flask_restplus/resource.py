@@ -57,7 +57,7 @@ class Resource(MethodView):
 
     def validate_payload(self, func):
         '''Perform a payload validation on expected model if necessary'''
-        if hasattr(func, '__apidoc__'):
+        if getattr(func, '__apidoc__', False) != False:
             model = func.__apidoc__.get('body')
             validate = func.__apidoc__.get('validate', False)
             if model and validate and hasattr(model, 'validate'):
