@@ -47,6 +47,7 @@ Flask-RESTPlus with Flask.
     mask
     swagger
     postman
+    scaling
     example
 
 Legacy
