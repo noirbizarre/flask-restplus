@@ -2619,6 +2619,10 @@ class SwaggerTestCase(TestCase):
         for path in '/test/', '/test2/', '/test3/':
             self.assertNotIn(path, data['paths'])
 
+            with self.app.test_client() as client:
+                resp = client.get(path)
+                self.assertEqual(resp.status_code, 200)
+
     def test_hidden_resource_from_namespace(self):
         api = self.build_api()
         ns = api.namespace('ns')
@@ -2633,6 +2637,10 @@ class SwaggerTestCase(TestCase):
 
         data = self.get_specs()
         self.assertNotIn('/ns/test/', data['paths'])
+
+        with self.app.test_client() as client:
+            resp = client.get('/ns/test/')
+            self.assertEqual(resp.status_code, 200)
 
     def test_hidden_methods(self):
         api = self.build_api()
@@ -2668,6 +2676,11 @@ class SwaggerTestCase(TestCase):
         self.assertIn('get', path)
         self.assertNotIn('post', path)
         self.assertNotIn('put', path)
+
+        for method in 'GET', 'POST', 'PUT':
+            with self.app.test_client() as client:
+                resp = client.open('/test/', method=method)
+                self.assertEqual(resp.status_code, 200)
 
     def test_deprecated_resource(self):
         api = self.build_api()
