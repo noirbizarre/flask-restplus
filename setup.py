@@ -19,9 +19,13 @@ PYPI_RST_FILTERS = (
     (r'\s+:alt: .*', ''),
     # Replace Python crossreferences by simple monospace
     (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`~(?:\w+\.)*(\w+)`', r'``\1``'),
-    (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`(.+)`', r'``\1``'),
+    (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`([^`]+)`', r'``\1``'),
     # replace doc references
     (r':doc:`(.+) <(.*)>`', r'`\1 <http://flask-restplus.readthedocs.org/en/stable\2.html>`_'),
+    # replace issues references
+    (r':issue:`(.+)`', r'`#\1 <https://github.com/noirbizarre/flask-restplus/issues/\1>`_'),
+    # Drop unrecognized currentmodule
+    (r'\.\. currentmodule:: .*', ''),
 )
 
 
@@ -49,7 +53,7 @@ exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about
 
 tests_require = ['nose', 'rednose', 'blinker', 'tzlocal']
 install_requires = ['Flask>=0.8', 'six>=1.3.0', 'jsonschema', 'pytz', 'aniso8601>=0.82']
-dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke', 'alabaster']
+dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke', 'alabaster', 'sphinx_issues']
 
 
 if sys.version_info[0:2] < (2, 7):
