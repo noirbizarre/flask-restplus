@@ -12,7 +12,6 @@ from flask import current_app
 from ._compat import OrderedDict
 
 from . import fields
-from .errors import SpecsError
 from .model import Model
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted

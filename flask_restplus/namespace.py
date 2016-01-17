@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import copy
 import inspect
 import six
 import warnings
-
 
 from .errors import abort
 from .marshalling import marshal, marshal_with

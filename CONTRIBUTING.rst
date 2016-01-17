@@ -40,7 +40,7 @@ You need to install some dependencies to develop on flask-restplus:
 
 .. code-block:: console
 
-    $ pip install -e .[test,dev]
+    $ pip install -e .[dev]
 
 An Invoke ``tasks.py`` is provided to simplify the common tasks:
 
@@ -74,6 +74,14 @@ You also need to ensure your code is compliant with the flask-restplus coding st
 
     $ inv qa
 
+To ensure everything is fine before commiting, you can launch the all in one command:
+
+.. code-block:: console
+
+    $ inv qa tox
+
+It will ensure the code meet the coding conventions, runs on every version on python
+and the documentation is properly generating.
 
 .. _official flask-restplus repository: https://github.com/noirbizarre/flask-restplus
 .. _official bugtracker: https://github.com/noirbizarre/flask-restplus/issues

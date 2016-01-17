@@ -59,7 +59,7 @@ class Resource(MethodView):
 
     def validate_payload(self, func):
         '''Perform a payload validation on expected model if necessary'''
-        if getattr(func, '__apidoc__', False) != False:
+        if getattr(func, '__apidoc__', False) is not False:
             doc = func.__apidoc__
             validate = doc.get('validate', None)
             validate = validate if validate is not None else self.api._validate

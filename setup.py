@@ -53,7 +53,8 @@ exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about
 
 tests_require = ['nose', 'rednose', 'blinker', 'tzlocal']
 install_requires = ['Flask>=0.8', 'six>=1.3.0', 'jsonschema', 'pytz', 'aniso8601>=0.82']
-dev_requires = ['flake8', 'sphinx', 'minibench', 'tox', 'invoke', 'alabaster', 'sphinx_issues']
+doc_require = ['sphinx', 'alabaster', 'sphinx_issues']
+dev_requires = ['flake8', 'minibench', 'tox', 'invoke'] + tests_require + doc_require
 
 
 if sys.version_info[0:2] < (2, 7):
@@ -79,6 +80,7 @@ setup(
     tests_require=tests_require,
     extras_require={
         'test': tests_require,
+        'doc': doc_require,
         'dev': dev_requires,
     },
     license='MIT',
