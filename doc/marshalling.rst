@@ -8,9 +8,9 @@ Response marshalling
 
 Flask-RESTPlus provides an easy way to control what data you actually render in
 your response or expect as in input payload.
-With the :mod:`~flask_restplus.fields` module, you can use whatever objects (ORM
+With the :mod:`~.fields` module, you can use whatever objects (ORM
 models/custom classes/etc.) you want in your resource.
-:mod:`~flask_restplus.fields` also lets you format and filter the response
+:mod:`~.fields` also lets you format and filter the response
 so you don't have to worry about exposing internal data structures.
 
 It's also very clear when looking at your code what data will be rendered and
@@ -154,7 +154,7 @@ This is also a good example of how to add data to your response that's not actua
 
     model = {
         'name': fields.String,
-        # todo_resource is the endpoint name when you called api.add_resource()
+        # todo_resource is the endpoint name when you called api.route()
         'uri': fields.Url('todo_resource'),
         'random': RandomNumber,
     }
@@ -216,8 +216,8 @@ You can also unmarshal fields as lists ::
 
 .. _nested-field:
 
-Advanced : Nested Field
------------------------
+Nested Field
+------------
 
 While nesting fields using dicts can turn a flat data object into a nested
 response, you can use :class:`~fields.Nested` to unmarshal nested data
@@ -268,3 +268,139 @@ Use :class:`~fields.Nested` with :class:`~fields.List` to marshal lists of more 
     user_list_fields = api.model('UserList', {
         'users': fields.List(fields.Nested(user_fields)),
     })
+
+
+The ``api.model()`` factory
+----------------------------
+
+The :meth:`~Namespace.model` factory allows you to instanciate
+and register models to your :class:`API` or :class:`Namespace`.
+
+.. code-block:: python
+
+    my_fields = api.model('MyModel', {
+        'name': fields.String,
+        'age': fields.Integer(min=0)
+    })
+
+    # Equivalent to
+    my_fields = Model('MyModel', {
+        'name': fields.String,
+        'age': fields.Integer(min=0)
+    })
+    api.models[my_fields.name] = my_fields
+
+
+Duplicating with ``clone``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :meth:`Model.extend` method allows you to instanciate an augmented model.
+It saves you duplicating all fields.
+
+.. code-block:: python
+
+    parent = Model('Parent', {
+        'name': fields.String
+    })
+
+    child = parent.extend('Child', {
+        'age': fields.Integer
+    })
+
+The :meth:`Api/Namespace.clone <~Namespace.clone>` also register it on the API.
+
+.. code-block:: python
+
+    parent = api.model('Parent', {
+        'name': fields.String
+    })
+
+    child = api.extend('Child', parent, {
+        'age': fields.Integer
+    })
+
+
+Polymorphism with ``api.inherit``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :meth:`Model.inherit` method allows to extend a model in the "Swagger way"
+and to start handling polymorphism.
+
+.. code-block:: python
+
+    parent = api.model('Parent', {
+        'name': fields.String,
+        'class': fields.String(discriminator=True)
+    })
+
+    child = api.inherit('Child', parent, {
+        'extra': fields.String
+    })
+
+The :meth:`Api/Namespace.clone <~Namespace.clone>` will register both the parent and the child
+in the Swagger models definitions.
+
+.. code-block:: python
+
+    parent = Model('Parent', {
+        'name': fields.String,
+        'class': fields.String(discriminator=True)
+    })
+
+    child = parent.inherit('Child', {
+        'extra': fields.String
+    })
+
+
+The ``class`` field in this example will be populated with the serialized model name
+only if the property does not exists in the serialized object.
+
+The :class:`~fields.Polymorph` field allows you to specify a mapping between Python classes
+and fields specifications.
+
+.. code-block:: python
+
+    mapping = {
+        Child1: child1_fields,
+        Child2: child2_fields,
+    }
+
+    fields = api.model('Thing', {
+        owner: fields.Polymorph(mapping)
+    })
+
+
+Custom fields
+-------------
+
+Custom output fields let you perform your own output formatting without having
+to modify your internal objects directly.
+All you have to do is subclass :class:`~fields.Raw` and implement the :meth:`~fields.Raw.format` method:
+
+.. code-block:: python
+
+    class AllCapsString(fields.Raw):
+        def format(self, value):
+            return value.upper()
+
+
+    # example usage
+    fields = {
+        'name': fields.String,
+        'all_caps_name': AllCapsString(attribute=name),
+    }
+
+You can also use the :attr:`__schema_format__`, ``__schema_type__`` and
+``__schema_example__`` to specify the produced types and examples:
+
+.. code-block:: python
+
+    class MyIntField(fields.Integer):
+        __schema_format__ = 'int64'
+
+    class MySpecialField(fields.Raw):
+        __schema_type__ = 'some-type'
+        __schema_format__ = 'some-format'
+
+    class MyVerySpecialField(fields.Raw):
+        __schema_example__ = 'hello, world'

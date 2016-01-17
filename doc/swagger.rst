@@ -32,55 +32,13 @@ You can document a class or a method.
             api.abort(403)
 
 
-Documenting with the ``@api.model()`` decorator
------------------------------------------------
+Automatically documented models
+-------------------------------
 
-The ``@api.model`` decorator allows you to declare the models that your API can serialize.
+All models instanciated with :meth:`~Namespace.model`, :meth:`~Namespace.clone` and :meth:`~Namespace.inherit`
+will be automatically documented in your swagger specifications
 
-You can also extend fields and use the ``__schema_format__``, ``__schema_type__`` and
-``__schema_example__`` to specify the produced types and examples:
-
-.. code-block:: python
-
-    my_fields = api.model('MyModel', {
-        'name': fields.String,
-        'age': fields.Integer(min=0)
-    })
-
-    class MyIntField(fields.Integer):
-        __schema_format__ = 'int64'
-
-    class MySpecialField(fields.Raw):
-        __schema_type__ = 'some-type'
-        __schema_format__ = 'some-format'
-
-    class MyVerySpecialField(fields.Raw):
-        __schema_example__ = 'hello, world'
-
-
-Duplicating with ``api.extend``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The ``api.extend`` method allows you to register an augmented model.
-It saves you duplicating all fields.
-
-.. code-block:: python
-
-    parent = api.model('Parent', {
-        'name': fields.String
-    })
-
-    child = api.extend('Child', parent, {
-        'age': fields.Integer
-    })
-
-
-Polymorphism with ``api.inherit``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The ``api.inherit`` method allows to extend a model in the "Swagger way"
-and to start handling polymorphism.
-It will register both the parent and the child in the Swagger models definitions.
+The :meth:`~Namespace.inherit` will register both the parent and the child in the Swagger models definitions.
 
 .. code-block:: python
 
@@ -116,28 +74,11 @@ Will produce the following Swagger definitions:
         ]
     }
 
-The ``class`` field in this example will be populated with the serialized model name
-only if the property does not exists in the serialized object.
 
-The ``Polymorph`` field allows you to specify a mapping between Python classes
-and fields specifications.
+The ``@api.marshal_with()`` decorator
+-------------------------------------
 
-.. code-block:: python
-
-    mapping = {
-        Child1: child1_fields,
-        Child2: child2_fields,
-    }
-
-    fields = api.model('Thing', {
-        owner: fields.Polymorph(mapping)
-    })
-
-
-Documenting with the ``@api.marshal_with()`` decorator
-------------------------------------------------------
-
-This decorator works like the Flask-Restful ``marshal_with`` decorator
+This decorator works like the raw :func:`marshal_with` decorator
 with the difference that it documents the methods.
 The optional parameter ``code`` allows you to specify the expected HTTP status code (200 by default).
 The optional parameter ``as_list`` allows you to specify whether or not the objects are returned as a list.
@@ -159,7 +100,7 @@ The optional parameter ``as_list`` allows you to specify whether or not the obje
             return create_object(), 201
 
 
-The ``@api.marshal_list_with()`` decorator is strictly equivalent to ``Api.marshal_with(fields, as_list=True)``.
+The :meth:`Api.marshal_list_with` decorator is strictly equivalent to :meth:`Api.marshal_with(fields, as_list=True)`.
 
 .. code-block:: python
 
@@ -178,11 +119,10 @@ The ``@api.marshal_list_with()`` decorator is strictly equivalent to ``Api.marsh
             return create_object()
 
 
-Documenting with the ``@api.expect()`` decorator
-------------------------------------------------
+The ``@api.expect()`` decorator
+-------------------------------
 
-The ``@api.expect()`` decorator allows you to specify the expected input fields
-and is a shortcut for ``@api.doc(body=<fields>)``.
+The ``@api.expect()`` decorator allows you to specify the expected input fields.
 It accepts an optional boolean parameter ``validate`` defining wether or not the payload should be validated.
 The validation behavior can be customized globally by either
 setting the ``RESTPLUS_VALIDATE`` configuration to True
@@ -382,8 +322,8 @@ At least, you can specify a default response sent without knowing the response c
             pass
 
 
-Documenting with the ``@api.route()`` decorator
------------------------------------------------
+The ``@api.route()`` decorator
+------------------------------
 
 You can provide class-wide documentation by using the ``Api.route()``'s' ``doc`` parameter.
 It accept the same attribute/syntax than the ``Api.doc()`` decorator.
@@ -411,7 +351,7 @@ By example, these two declaration are equivalents:
 Documenting the fields
 ----------------------
 
-Every Flask-Restplus fields accepts additional but optional arguments used to document the field:
+Every Flask-Restplus fields accepts optional arguments used to document the field:
 
 - ``required``: a boolean indicating if the field is always set (*default*: ``False``)
 - ``description``: some details about the field (*default*: ``None``)

@@ -11,6 +11,7 @@ Current
 - Deprecated :meth:`Model.extend` in favor of :meth:`Model.clone`
 - Added the :meth:`~Namespace.param` decorator
 - Honour method restrictions in Swagger documentation (:issue:`93`)
+- Improved documentation
 
 0.8.6 (2015-12-26)
 ------------------
