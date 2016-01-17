@@ -1815,7 +1815,7 @@ class SwaggerTests(ApiMixin, TestCase):
             'birthdate': restplus.fields.DateTime,
         })
 
-        child = api.extend('Child', parent, {
+        child = api.clone('Child', parent, {
             'extra': restplus.fields.String,
         })
 

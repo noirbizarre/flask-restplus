@@ -672,20 +672,20 @@ class Polymorph(Nested):
         else:
             return marshal(value, candidates[0].resolved, mask=self.mask)
 
-    def resolve_ancestor(self, fields):
+    def resolve_ancestor(self, models):
         '''
-        Resolve the common ancestor for all fields.
+        Resolve the common ancestor for all models.
 
         Assume there is only one common ancestor.
         '''
-        trees = [set(f.tree) for f in fields]
-        candidates = set.intersection(*trees)
+        ancestors = [m.ancestors for m in models]
+        candidates = set.intersection(*ancestors)
         if len(candidates) != 1:
-            field_names = [f.name for f in fields]
+            field_names = [f.name for f in models]
             raise ValueError('Unable to determine the common ancestor for: ' + ', '.join(field_names))
 
         parent_name = candidates.pop()
-        return fields[0].get_parent(parent_name)
+        return models[0].get_parent(parent_name)
 
     def clone(self, mask=None):
         data = self.__dict__.copy()

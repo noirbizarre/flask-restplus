@@ -6,8 +6,9 @@ Changelog
 Current
 -------
 
-- Make :class:`Namespace` behave like :class:`~flask.Blueprint` for :class:`~flask.Flask`.
-- Deprecated ``parser`` and ``body`` parameters for ``expect`` in :meth:`~Namespace.doc` decorator.
+- Make :class:`Namespace` behave like :class:`~flask.Blueprint` for :class:`~flask.Flask`
+- Deprecated ``parser`` and ``body`` parameters for ``expect`` in :meth:`~Namespace.doc` decorator
+- Deprecated :meth:`Model.extend` in favor of :meth:`Model.clone`
 - Added the :meth:`~Namespace.param` decorator
 - Honour method restrictions in Swagger documentation (:issue:`93`)
 

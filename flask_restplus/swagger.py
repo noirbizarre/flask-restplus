@@ -455,8 +455,8 @@ class Swagger(object):
         specs = self.api.models[name]
         self._registered_models[name] = specs
         if isinstance(specs, Model):
-            if specs.__parent__:
-                self.register_model(specs.__parent__)
+            for parent in specs.__parents__:
+                self.register_model(parent)
             for field in itervalues(specs):
                 self.register_field(field)
         return ref(model)

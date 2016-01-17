@@ -132,7 +132,7 @@ class Namespace(object):
         '''
         Register a model
 
-        Model can be either a dictionary or a fields. Raw subclass.
+        .. seealso:: :class:`Model`
         '''
         model = Model(name, model, mask=mask)
         model.__apidoc__.update(kwargs)
@@ -141,21 +141,36 @@ class Namespace(object):
     def extend(self, name, parent, fields):
         '''
         Extend a model (Duplicate all fields)
+
+        :deprecated: since 0.9. Use :meth:`clone` instead
         '''
         if isinstance(parent, list):
-            model = Model(None, {})
-            for p in parent:
-                model.update(copy.deepcopy(p))
-            parent = model
-
-        model = parent.extend(name, fields)
+            parents = parent + [fields]
+            model = Model.extend(name, *parents)
+        else:
+            model = Model.extend(name, parent, fields)
         return self.add_model(name, model)
 
-    def inherit(self, name, parent, fields):
+    def clone(self, name, *specs):
+        '''
+        Clone a model (Duplicate all fields)
+
+        :param str name: the resulting model name
+        :param specs: a list of models from which to clone the fields
+
+        .. seealso:: :meth:`Model.clone`
+
+        '''
+        model = Model.clone(name, *specs)
+        return self.add_model(name, model)
+
+    def inherit(self, name, *specs):
         '''
         Inherit a modal (use the Swagger composition pattern aka. allOf)
+
+        .. seealso:: :meth:`Model.inherit`
         '''
-        model = parent.inherit(name, fields)
+        model = Model.inherit(name, *specs)
         return self.add_model(name, model)
 
     def expect(self, *inputs, **kwargs):
