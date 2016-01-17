@@ -77,7 +77,8 @@ These are internal classes or helpers.
 Most of the time you shouldn't have to deal directly with them.
 
 
-.. autoclass:: flask_restplus.model.Model
+.. autoclass:: flask_restplus.Model
+    :members:
 
 .. autoclass:: flask_restplus.api.SwaggerView
 

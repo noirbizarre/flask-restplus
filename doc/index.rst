@@ -50,21 +50,6 @@ Flask-RESTPlus with Flask.
     scaling
     example
 
-Legacy
-======
-
-
-.. toctree::
-    :maxdepth: 2
-
-    syntaxic_sugar
-    documenting
-    fields
-    reqparse
-    swaggerui
-    export
-    example
-
 
 API Reference
 -------------
