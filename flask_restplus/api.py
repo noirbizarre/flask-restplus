@@ -76,6 +76,8 @@ class Api(object):
     :param bool catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
     :param dict authorizations: A Swagger Authorizations declaration as dictionary
+    :param bool serve_challenge_on_401: Serve basic authentication challenge with 401
+        responses (default 'False')
 
     '''
 
