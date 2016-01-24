@@ -237,7 +237,7 @@ class Api(object):
         if self._add_specs and self._doc:
             # Register documentation before root if enabled
             app_or_blueprint.add_url_rule(self._doc, 'doc', self.render_doc)
-        app_or_blueprint.add_url_rule('/', 'root', self.render_root)
+        app_or_blueprint.add_url_rule(self.prefix or '/', 'root', self.render_root)
 
     def register_resource(self, namespace, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None)
