@@ -835,6 +835,19 @@ setting (``none``, ``list`` or ``full``):
 
     api = Api(app)
 
+Latest version of Swagger UI added an optionnal JSON editor
+which can be enabled with with the ``config.SWAGGER_UI_JSONEDITOR``:
+
+.. code-block:: python
+
+    from flask import Flask
+    from flask_restplus import Api
+
+    app = Flask(__name__)
+    app.config.SWAGGER_UI_JSONEDITOR = True
+
+    api = Api(app)
+
 
 If you need a custom UI,
 you can register a custom view function with the :meth:`~Api.documentation` decorator.

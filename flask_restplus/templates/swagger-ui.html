@@ -28,6 +28,7 @@
                 onFailure: function(data) {
                     log("Unable to Load SwaggerUI");
                 },
+                jsonEditor: {{ config.SWAGGER_UI_JSONEDITOR | default(False) | string | lower }},
                 docExpansion: "{{ config.SWAGGER_UI_DOC_EXPANSION | default('none') }}"
             });
             window.swaggerUi.load();

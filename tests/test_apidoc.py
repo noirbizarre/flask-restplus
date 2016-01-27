@@ -75,6 +75,26 @@ class APIDocTestCase(TestCase):
                 response = client.get(url_for('doc'))
                 self.assertIn('docExpansion: "full"', str(response.data))
 
+    def test_apidoc_doc_jsoneditor_parameter(self):
+        restplus.Api(self.app)
+
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('doc'))
+                self.assertIn('jsonEditor: false', str(response.data))
+
+        self.app.config['SWAGGER_UI_JSONEDITOR'] = False
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('doc'))
+                self.assertIn('jsonEditor: false', str(response.data))
+
+        self.app.config['SWAGGER_UI_JSONEDITOR'] = True
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('doc'))
+                self.assertIn('jsonEditor: true', str(response.data))
+
     def test_apidoc_doc_minified(self):
         restplus.Api(self.app)
 
