@@ -152,6 +152,8 @@ class Argument(object):
             return self.type(value, self.name, op)
         except TypeError:
             try:
+                if self.type == bool:
+                    return value.lower() == 'true'
                 if self.type is decimal.Decimal:
                     return self.type(str(value), self.name)
                 else:
