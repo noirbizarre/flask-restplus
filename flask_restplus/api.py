@@ -424,6 +424,15 @@ class Api(object):
         return url_for(self.endpoint('specs'), _external=True)
 
     @property
+    def specs_path(self):
+        '''
+        The Swagger specifications path
+
+        :rtype: str
+        '''
+        return url_for(self.endpoint('specs'))
+
+    @property
     def base_url(self):
         '''
         The API base absolute url
