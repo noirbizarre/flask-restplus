@@ -108,6 +108,14 @@ class APIDocTestCase(TestCase):
                 self.assertEquals(response.status_code, 200)
                 self.assertEquals(response.content_type, 'text/html; charset=utf-8')
 
+    def test_custom_api_prefix(self):
+        prefix = '/api'
+        api = restplus.Api(self.app, prefix=prefix)
+        api.namespace('resource')
+        with self.context():
+            root_url = url_for('root')
+            self.assertEqual(root_url, prefix)
+
     def test_custom_apidoc_page(self):
         api = restplus.Api(self.app, version='1.0')
         content = 'My Custom API Doc'
