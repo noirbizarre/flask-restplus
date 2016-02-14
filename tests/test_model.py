@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from flask_restplus import fields, Model
 
+import copy
+
 from . import TestCase
 
 
@@ -13,6 +15,28 @@ class ModelTestCase(TestCase):
             'age': fields.Integer,
             'birthdate': fields.DateTime,
         })
+
+        self.assertEqual(model.__schema__, {
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                }
+            }
+        })
+
+    def test_model_as_ordered_dict(self):
+        model = Model('Person', [
+            ('name', fields.String),
+            ('age', fields.Integer),
+            ('birthdate', fields.DateTime),
+        ])
 
         self.assertEqual(model.__schema__, {
             'properties': {
@@ -225,6 +249,32 @@ class ModelTestCase(TestCase):
             'discriminator': 'name',
             'required': ['name']
         })
+
+    def test_model_deepcopy(self):
+        parent = Model('Person', {
+            'name': fields.String,
+            'age': fields.Integer(description="foo"),
+        })
+
+        child = parent.inherit('Child', {
+            'extra': fields.String,
+        })
+
+        parent_copy = copy.deepcopy(parent)
+
+        self.assertEqual(parent_copy["age"].description, "foo")
+
+        parent_copy["age"].description = "bar"
+
+        self.assertEqual(parent["age"].description, "foo")
+        self.assertEqual(parent_copy["age"].description, "bar")
+
+        child = parent.inherit('Child', {
+            'extra': fields.String,
+        })
+
+        child_copy = copy.deepcopy(child)
+        self.assertEqual(child_copy.__parents__[0], parent)
 
     def test_clone_from_instance(self):
         parent = Model('Parent', {

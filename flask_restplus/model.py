@@ -15,6 +15,7 @@ from .errors import abort
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
 
+from ._compat import OrderedDict
 from .utils import not_none
 
 
@@ -27,9 +28,9 @@ def instance(cls):
     return cls
 
 
-class Model(dict, MutableMapping):
+class Model(OrderedDict, MutableMapping):
     '''
-    A thin wrapper on dict to store API doc metadata.
+    A thin wrapper on ordereddict to store API doc metadata.
 
     :param str name: The model public name
     :param str mask: an optional default model mask
@@ -189,6 +190,11 @@ class Model(dict, MutableMapping):
             path.append(name)
         key = '.'.join(str(p) for p in path)
         return key, error.message
+
+    def __deepcopy__(self, memo):
+        obj = self.__class__(self.name, [(key, copy.deepcopy(value, memo)) for key, value in self.items()], mask=self.__mask__)
+        obj.__parents__ = self.__parents__
+        return obj
 
     def __unicode__(self):
         return 'Model({name},{{{fields}}})'.format(name=self.name, fields=','.join(self.keys()))
