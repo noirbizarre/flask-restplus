@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.9.0 (2016-02-22)
+------------------
 
 - Make :class:`Namespace` behave like :class:`~flask.Blueprint` for :class:`~flask.Flask`
 - Deprecated ``parser`` and ``body`` parameters for ``expect`` in :meth:`~Namespace.doc` decorator
