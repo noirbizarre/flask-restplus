@@ -116,13 +116,12 @@ class Api(object):
         self.models = {}
         self._refresolver = None
         self.namespaces = []
-        self.default_namespace = Namespace(default, default_label,
+        self.default_namespace = self.namespace(default, default_label,
             endpoint='{0}-declaration'.format(default),
             validate=validate,
             api=self,
             path='/',
         )
-        self.add_namespace(self.default_namespace)
 
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
