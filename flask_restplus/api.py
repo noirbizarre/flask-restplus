@@ -395,7 +395,7 @@ class Api(object):
         for name, definition in ns.models.items():
             self.models[name] = definition
         # Register error handlers
-        for exception, handler in ns.error_handlers:
+        for exception, handler in ns.error_handlers.items():
             self.error_handlers[exception] = handler
 
     def namespace(self, *args, **kwargs):
