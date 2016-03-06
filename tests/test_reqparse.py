@@ -39,25 +39,14 @@ class ReqParseTestCase(TestCase):
             self.assertEqual(args['todo'], {'task': 'aaa'})
 
     @patch('flask_restplus.reqparse.abort')
-    def test_help_with_error_msg(self, abort):
+    def test_help(self, abort):
         parser = RequestParser()
-        parser.add_argument('foo', choices=('one', 'two'), help='Bad choice: {error_msg}')
+        parser.add_argument('foo', choices=('one', 'two'), help='Bad choice.')
         req = Mock(['values'])
         req.values = MultiDict([('foo', 'three')])
         with self.app.app_context():
             parser.parse_args(req)
-        expected = {'foo': 'Bad choice: three is not a valid choice'}
-        abort.assert_called_with(400, 'Input payload validation failed', errors=expected)
-
-    @patch('flask_restplus.reqparse.abort')
-    def test_help_no_error_msg(self, abort):
-        parser = RequestParser()
-        parser.add_argument('foo', choices=['one', 'two'], help='Please select a valid choice')
-        req = Mock(['values'])
-        req.values = MultiDict([('foo', 'three')])
-        with self.app.app_context():
-            parser.parse_args(req)
-        expected = {'foo': 'Please select a valid choice'}
+        expected = {'foo': 'Bad choice. The value \'three\' is not a valid choice for \'foo\'.'}
         abort.assert_called_with(400, 'Input payload validation failed', errors=expected)
 
     @patch('flask_restplus.reqparse.abort', side_effect=BadRequest('Bad Request'))
@@ -69,7 +58,7 @@ class ReqParseTestCase(TestCase):
         with self.app.app_context():
             with self.assertRaises(BadRequest):
                 parser.parse_args(req)
-        expected = {'foo': 'three is not a valid choice'}
+        expected = {'foo': 'The value \'three\' is not a valid choice for \'foo\'.'}
         abort.assert_called_with(400, 'Input payload validation failed', errors=expected)
 
     def test_viewargs(self):

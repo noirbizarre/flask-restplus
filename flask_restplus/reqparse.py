@@ -169,8 +169,9 @@ class Argument(object):
             dict with the name of the argument and the error message to be
             bundled
         '''
+        help_str = '{0}'.format(self.help) if self.help else ''
         error_str = six.text_type(error)
-        error_msg = self.help.format(error_msg=error_str) if self.help else error_str
+        error_msg = ' '.join([help_str, error_str]) if help_str else error_str
         errors = {self.name: error_msg}
 
         if bundle_errors:
@@ -222,7 +223,7 @@ class Argument(object):
                         return self.handle_validation_error(error, bundle_errors)
 
                     if self.choices and value not in self.choices:
-                        msg = '{0} is not a valid choice'.format(value)
+                        msg = 'The value \'{0}\' is not a valid choice for \'{1}\'.'.format(value, name)
                         if bundle_errors:
                             return self.handle_validation_error(msg, bundle_errors)
                         self.handle_validation_error(msg, bundle_errors)
