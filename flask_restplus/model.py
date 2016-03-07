@@ -97,7 +97,7 @@ class Model(OrderedDict, MutableMapping):
 
     @cached_property
     def __schema__(self):
-        properties = {}
+        properties = OrderedDict()
         required = set()
         discriminator = None
         for name, field in iteritems(self):
@@ -158,7 +158,7 @@ class Model(OrderedDict, MutableMapping):
         :param str name: The new model name
         :param dict parents: The new model extra fields
         '''
-        fields = {}
+        fields = OrderedDict()
         for parent in parents:
             fields.update(copy.deepcopy(parent))
         return cls(name, fields)
