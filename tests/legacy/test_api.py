@@ -304,7 +304,7 @@ class APITestCase(TestCase):
         api = restplus.Api(self.app)
         self.assertEqual(api.urls, {})
         self.assertEqual(api.prefix, '')
-        self.assertEqual(api.default_mediatype, 'application/json')
+        self.assertEqual(api.default_mediatype, 'application/json; charset=utf-8')
 
     def test_api_delayed_initialization(self):
         api = restplus.Api()
@@ -362,7 +362,7 @@ class APITestCase(TestCase):
 
         resp = self.get("/api")
         assert_equals(resp.status_code, 404)
-        assert_equals('application/json', resp.headers['Content-Type'])
+        assert_equals('application/json; charset=utf-8', resp.headers['Content-Type'])
         data = loads(resp.data.decode())
         assert_true('message' in data)
 
@@ -473,7 +473,7 @@ class APITestCase(TestCase):
             'Accept': 'application/xml; q=.5'
         }):
             self.assertEqual(api.mediatypes_method()(Mock()),
-                             ['application/xml', 'application/json'])
+                             ['application/xml', 'application/json; charset=utf-8'])
 
     def test_media_types_q(self):
         api = restplus.Api(self.app)
