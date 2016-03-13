@@ -136,6 +136,15 @@ class Namespace(object):
         model.__apidoc__.update(kwargs)
         return self.add_model(name, model)
 
+    def schema_model(self, name=None, schema=None):
+        '''
+        Register a model
+
+        .. seealso:: :class:`Model`
+        '''
+        model = SchemaModel(name, schema)
+        return self.add_model(name, model)
+
     def extend(self, name, parent, fields):
         '''
         Extend a model (Duplicate all fields)
@@ -175,7 +184,7 @@ class Namespace(object):
         '''
         A decorator to Specify the expected input model
 
-        :param Model|Parse inputs: An expect model or request parser
+        :param ModelBase|Parse inputs: An expect model or request parser
         :param bool validate: whether to perform validation or not
 
         '''
@@ -256,7 +265,7 @@ class Namespace(object):
 
         :param int code: the HTTP status code
         :param str description: a small description about the response
-        :param Model model: an optional response model
+        :param ModelBase model: an optional response model
 
         '''
         return self.doc(responses={code: (description, model) if model else description})

@@ -5,7 +5,7 @@ from flask import request
 from flask.views import MethodView
 from werkzeug.wrappers import Response
 
-from .model import Model
+from .model import ModelBase
 
 from .utils import unpack
 
@@ -66,7 +66,7 @@ class Resource(MethodView):
             if validate:
                 for expect in doc.get('expect', []):
                     # TODO: handle third party handlers
-                    if isinstance(expect, Model):
+                    if isinstance(expect, ModelBase):
                         # TODO: proper content negotiation
                         data = request.get_json()
                         expect.validate(data, self.api.refresolver)
