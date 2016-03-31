@@ -417,11 +417,11 @@ class Api(object):
     @property
     def specs_url(self):
         '''
-        The Swagger specifications absolute url (ie. `swagger.json`)
+        The Swagger specifications relative url (ie. `swagger.json`)
 
         :rtype: str
         '''
-        return url_for(self.endpoint('specs'), _external=True)
+        return url_for(self.endpoint('specs'), _external=False)
 
     @property
     def base_url(self):
