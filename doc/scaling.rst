@@ -6,7 +6,7 @@ Scaling your project
 .. currentmodule:: flask_restplus
 
 This page covers building a slightly more complex Flask-RESTPlus app that will
-cover out some best practices when setting up a real-world Flask-RESTful-based API.
+cover out some best practices when setting up a real-world Flask-RESTPlus-based API.
 The :ref:`quickstart` section is great for getting started with your first Flask-RESTplus app,
 so if you're new to Flask-RESTPlus you'd be better off checking that out first.
 

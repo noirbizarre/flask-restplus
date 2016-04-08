@@ -56,7 +56,7 @@ class Model(dict, MutableMapping):
     @cached_property
     def resolved(self):
         '''
-        Resolve real fields before submitting them to upstream restful marshal
+        Resolve real fields before submitting them to marshal
         '''
         # Duplicate fields
         resolved = copy.deepcopy(self)

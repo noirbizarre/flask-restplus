@@ -1806,7 +1806,7 @@ class SwaggerTests(ApiMixin, TestCase):
 
         self.get_specs(status=500)
 
-    def test_extend(self):
+    def test_clone(self):
         api = self.build_api()
 
         parent = api.model('Person', {
