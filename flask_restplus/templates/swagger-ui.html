@@ -13,13 +13,13 @@
                 supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
                 onComplete: function(swaggerApi, swaggerUi){
                     if(typeof initOAuth == "function") {
-                        /*
-                        initOAuth({
-                            clientId: "your-client-id",
-                            realm: "your-realms",
-                            appName: "your-app-name"
-                        });
-                        */
+                        {% if config.SWAGGER_UI_OAUTH_CLIENT_ID -%}
+                            initOAuth({
+                                clientId: "{{ config.SWAGGER_UI_OAUTH_CLIENT_ID }}",
+                                realm: "{{ config.SWAGGER_UI_OAUTH_REALM }}",
+                                appName: "{{ config.SWAGGER_UI_OAUTH_APP_NAME }}"
+                            });
+                        {%- endif %}
                     }
                     $('pre code').each(function(i, e) {
                         hljs.highlightBlock(e)
