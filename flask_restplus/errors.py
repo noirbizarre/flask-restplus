@@ -22,7 +22,7 @@ def abort(code=500, message=None, **kwargs):
 
     :param int code: The associated HTTP status code
     :param str message: An optional details message
-    :param kwargs: Any additionnal data to pass to the error payload
+    :param kwargs: Any additional data to pass to the error payload
     :raise HTTPException:
     '''
     try:
