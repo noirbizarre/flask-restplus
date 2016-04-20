@@ -301,4 +301,4 @@ See the :mod:`fields` guide for a complete list.
 Full example
 ------------
 
-See the :doc:`example` section for fully functionnal example.
+See the :doc:`example` section for fully functional example.

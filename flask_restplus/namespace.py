@@ -204,7 +204,7 @@ class Namespace(object):
         A decorator specifying the fields to use for serialization.
 
         :param bool as_list: Indicate that the return type is a list (for the documentation)
-        :param int code: Optionnaly give the expected HTTP response code if its different from 200
+        :param int code: Optionally give the expected HTTP response code if its different from 200
 
         '''
         def wrapper(func):
