@@ -26,7 +26,8 @@ class ModelTestCase(TestCase):
                     'type': 'string',
                     'format': 'date-time'
                 }
-            }
+            },
+            'type': 'object'
         })
 
     def test_model_as_nested_dict(self):
@@ -57,7 +58,8 @@ class ModelTestCase(TestCase):
                 'address': {
                     '$ref': '#/definitions/Address',
                 }
-            }
+            },
+            'type': 'object'
         })
 
         self.assertEqual(address.__schema__, {
@@ -65,7 +67,8 @@ class ModelTestCase(TestCase):
                 'road': {
                     'type': 'string'
                 },
-            }
+            },
+            'type': 'object'
         })
 
     def test_model_as_dict_with_list(self):
@@ -89,7 +92,8 @@ class ModelTestCase(TestCase):
                         'type': 'string'
                     }
                 }
-            }
+            },
+            'type': 'object'
         })
 
     def test_model_as_nested_dict_with_list(self):
@@ -123,7 +127,8 @@ class ModelTestCase(TestCase):
                         '$ref': '#/definitions/Address',
                     }
                 }
-            }
+            },
+            'type': 'object'
         })
 
         self.assertEqual(address.__schema__, {
@@ -131,7 +136,8 @@ class ModelTestCase(TestCase):
                 'road': {
                     'type': 'string'
                 },
-            }
+            },
+            'type': 'object'
         })
 
     def test_model_with_required(self):
@@ -154,7 +160,8 @@ class ModelTestCase(TestCase):
                     'format': 'date-time'
                 }
             },
-            'required': ['birthdate', 'name']
+            'required': ['birthdate', 'name'],
+            'type': 'object'
         })
 
     def test_model_as_nested_dict_and_required(self):
@@ -185,7 +192,8 @@ class ModelTestCase(TestCase):
                 'address': {
                     '$ref': '#/definitions/Address',
                 }
-            }
+            },
+            'type': 'object'
         })
 
         self.assertEqual(address.__schema__, {
@@ -193,7 +201,8 @@ class ModelTestCase(TestCase):
                 'road': {
                     'type': 'string'
                 },
-            }
+            },
+            'type': 'object'
         })
 
     def test_model_with_discriminator(self):
@@ -208,7 +217,8 @@ class ModelTestCase(TestCase):
                 'age': {'type': 'integer'},
             },
             'discriminator': 'name',
-            'required': ['name']
+            'required': ['name'],
+            'type': 'object'
         })
 
     def test_model_with_discriminator_override_require(self):
@@ -223,7 +233,8 @@ class ModelTestCase(TestCase):
                 'age': {'type': 'integer'},
             },
             'discriminator': 'name',
-            'required': ['name']
+            'required': ['name'],
+            'type': 'object'
         })
 
     def test_clone_from_instance(self):
@@ -252,7 +263,8 @@ class ModelTestCase(TestCase):
                 'extra': {
                     'type': 'string'
                 }
-            }
+            },
+            'type': 'object'
         })
 
     def test_clone_from_class(self):
@@ -281,7 +293,8 @@ class ModelTestCase(TestCase):
                 'extra': {
                     'type': 'string'
                 }
-            }
+            },
+            'type': 'object'
         })
 
     def test_clone_from_instance_with_multiple_parents(self):
@@ -317,7 +330,8 @@ class ModelTestCase(TestCase):
                 'extra': {
                     'type': 'string'
                 }
-            }
+            },
+            'type': 'object'
         })
 
     def test_clone_from_class_with_multiple_parents(self):
@@ -353,7 +367,8 @@ class ModelTestCase(TestCase):
                 'extra': {
                     'type': 'string'
                 }
-            }
+            },
+            'type': 'object'
         })
 
     def test_inherit_from_instance(self):
@@ -370,7 +385,8 @@ class ModelTestCase(TestCase):
             'properties': {
                 'name': {'type': 'string'},
                 'age': {'type': 'integer'},
-            }
+            },
+            'type': 'object'
         })
         self.assertEqual(child.__schema__, {
             'allOf': [
@@ -378,7 +394,8 @@ class ModelTestCase(TestCase):
                 {
                     'properties': {
                         'extra': {'type': 'string'}
-                    }
+                    },
+                    'type': 'object'
                 }
             ]
         })
@@ -397,7 +414,8 @@ class ModelTestCase(TestCase):
             'properties': {
                 'name': {'type': 'string'},
                 'age': {'type': 'integer'},
-            }
+            },
+            'type': 'object'
         })
         self.assertEqual(child.__schema__, {
             'allOf': [
@@ -405,7 +423,8 @@ class ModelTestCase(TestCase):
                 {
                     'properties': {
                         'extra': {'type': 'string'}
-                    }
+                    },
+                    'type': 'object'
                 }
             ]
         })
@@ -431,7 +450,8 @@ class ModelTestCase(TestCase):
                 {
                     'properties': {
                         'extra': {'type': 'string'}
-                    }
+                    },
+                    'type': 'object'
                 }
             ]
         })
@@ -457,7 +477,8 @@ class ModelTestCase(TestCase):
                 {
                     'properties': {
                         'extra': {'type': 'string'}
-                    }
+                    },
+                    'type': 'object'
                 }
             ]
         })
@@ -513,7 +534,8 @@ class ModelTestCase(TestCase):
         self.assertEqual(output.__schema__, {
             'properties': {
                 'child': {'$ref': '#/definitions/Person'},
-            }
+            },
+            'type': 'object'
         })
 
 
@@ -545,5 +567,6 @@ class ModelDeprecattionsTest(TestCase):
                 'extra': {
                     'type': 'string'
                 }
-            }
+            },
+            'type': 'object'
         })
