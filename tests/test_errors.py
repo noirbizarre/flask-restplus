@@ -210,13 +210,12 @@ class ErrorsTest(TestCase):
         def handle_custom_exception(error):
             return {'message': str(error), 'test': 'value'}, 400
 
-
         api.add_namespace(ns)
 
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 400)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data, {
