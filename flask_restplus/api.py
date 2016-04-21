@@ -65,6 +65,7 @@ class Api(object):
     :param str contact: A contact email for the API (used in Swagger documentation)
     :param str license: The license associated to the API (used in Swagger documentation)
     :param str license_url: The license page URL (used in Swagger documentation)
+    :param str host: The host that the api is running on.  Not always the localhost, thought it is the default.
     :param str endpoint: The API base endpoint (default to 'api).
     :param str default: The default namespace base name (default to 'default')
     :param str default_label: The default namespace label (used in Swagger documentation)
@@ -84,7 +85,7 @@ class Api(object):
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,
-            terms_url=None, license=None, license_url=None,
+            terms_url=None, license=None, license_url=None, host=None,
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
@@ -101,6 +102,7 @@ class Api(object):
         self.contact_url = contact_url
         self.license = license
         self.license_url = license_url
+        self.host=host
         self.authorizations = authorizations
         self.security = security
         self.default_id = default_id
@@ -159,7 +161,7 @@ class Api(object):
         :param str contact: A contact email for the API (used in Swagger documentation)
         :param str license: The license associated to the API (used in Swagger documentation)
         :param str license_url: The license page URL (used in Swagger documentation)
-
+        :param str host: The host that the api is running on.  Not always the localhost, thought it is the default.
         '''
         self.title = kwargs.get('title', self.title)
         self.description = kwargs.get('description', self.description)
@@ -169,6 +171,7 @@ class Api(object):
         self.contact_email = kwargs.get('contact_email', self.contact_email)
         self.license = kwargs.get('license', self.license)
         self.license_url = kwargs.get('license_url', self.license_url)
+        self.host = kwargs.get('host', self.host)
         self._add_specs = kwargs.get('add_specs', True)
 
         # If app is a blueprint, defer the initialization
