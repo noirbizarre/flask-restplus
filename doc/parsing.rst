@@ -120,7 +120,12 @@ to specify alternate locations to pull the values from. Any variable on the
 .. note ::
 
     Only use ``type=list`` when ``location='json'``. `See this issue for more
-    details <https://github.com/flask-restplus/flask-restplus/issues/380>`_
+    details <https://github.com/flask-restful/flask-restful/issues/380>`_
+
+.. note ::
+
+    Using ``location='form'`` is way to both validate form data and document you form fields.
+
 
 Multiple Locations
 ------------------

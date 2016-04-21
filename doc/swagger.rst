@@ -528,6 +528,11 @@ Models can also be specified with a :class:`~flask_restplus.reqparse.RequestPars
                 def get(self):
                     data = api.payload
 
+.. note::
+
+    Using :class:`~flask_restplus.reqparse.RequestParser` is prefered over the ``api.param()`` decorator
+    to document form fields as it also perform validation.
+
 Headers
 ~~~~~~~
 
