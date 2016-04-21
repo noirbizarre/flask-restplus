@@ -103,7 +103,7 @@ class TestCase(unittest.TestCase):
     def get_json(self, url, status=200, **kwargs):
         response = self.get(url, **kwargs)
         self.assertEqual(response.status_code, status)
-        self.assertEqual(response.content_type, 'application/json; charset=utf-8')
+        self.assertEqual(response.content_type, 'application/json')
         return json.loads(response.data.decode('utf8'))
 
     def get_specs(self, prefix='', status=200, **kwargs):

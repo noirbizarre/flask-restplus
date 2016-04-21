@@ -38,7 +38,7 @@ RE_RULES = re.compile('(<.*>)')
 # List headers that should never be handled by Flask-RESTPlus
 HEADERS_BLACKLIST = ('Content-Length',)
 
-DEFAULT_REPRESENTATIONS = [('application/json; charset=utf-8', output_json)]
+DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
 
 
 class Api(object):
@@ -87,7 +87,7 @@ class Api(object):
             authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
             tags=None, prefix='',
-            default_mediatype='application/json; charset=utf-8', decorators=None,
+            default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False,
             **kwargs):
         self.version = version

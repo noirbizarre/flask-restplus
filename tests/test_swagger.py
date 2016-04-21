@@ -32,7 +32,7 @@ class SwaggerTests(ApiMixin, TestCase):
         data = self.get_specs('')
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
-        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
+        self.assertEqual(data['produces'], ['application/json'])
         self.assertEqual(data['consumes'], ['application/json'])
         self.assertEqual(data['paths'], {})
         self.assertIn('info', data)
@@ -43,7 +43,7 @@ class SwaggerTests(ApiMixin, TestCase):
         data = self.get_specs('/api')
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/api')
-        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
+        self.assertEqual(data['produces'], ['application/json'])
         self.assertEqual(data['consumes'], ['application/json'])
         self.assertEqual(data['paths'], {})
         self.assertIn('info', data)
@@ -58,7 +58,7 @@ class SwaggerTests(ApiMixin, TestCase):
 
         data = self.get_specs()
         self.assertEqual(len(data['produces']), 2)
-        self.assertIn('application/json; charset=utf-8', data['produces'])
+        self.assertIn('application/json', data['produces'])
         self.assertIn('application/xml', data['produces'])
 
     def test_specs_endpoint_info(self):
@@ -77,7 +77,7 @@ class SwaggerTests(ApiMixin, TestCase):
         data = self.get_specs()
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
-        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
+        self.assertEqual(data['produces'], ['application/json'])
         self.assertEqual(data['paths'], {})
 
         self.assertIn('info', data)
@@ -112,7 +112,7 @@ class SwaggerTests(ApiMixin, TestCase):
 
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
-        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
+        self.assertEqual(data['produces'], ['application/json'])
         self.assertEqual(data['paths'], {})
 
         self.assertIn('info', data)
@@ -146,7 +146,7 @@ class SwaggerTests(ApiMixin, TestCase):
         data = self.get_specs()
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
-        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
+        self.assertEqual(data['produces'], ['application/json'])
         self.assertEqual(data['paths'], {})
 
         self.assertIn('info', data)

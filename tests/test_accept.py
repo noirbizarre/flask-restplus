@@ -18,15 +18,15 @@ class ErrorsTest(TestCase):
 
         res = self.get('/test/', headers=[('Accept', 'application/json')])
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.content_type, 'application/json; charset=utf-8')
+        self.assertEqual(res.content_type, 'application/json')
 
     def test_accept_no_default_match_acceptable(self):
         api = restplus.Api(self.app, default_mediatype=None)
         api.add_resource(Foo, '/test/')
 
-        res = self.get('/test/', headers=[('Accept', 'application/json; charset=utf-8')])
+        res = self.get('/test/', headers=[('Accept', 'application/json')])
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.content_type, 'application/json; charset=utf-8')
+        self.assertEqual(res.content_type, 'application/json')
 
     def test_accept_default_override_accept(self):
         api = restplus.Api(self.app)
@@ -34,7 +34,7 @@ class ErrorsTest(TestCase):
 
         res = self.get('/test/', headers=[('Accept', 'text/plain')])
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.content_type, 'application/json; charset=utf-8')
+        self.assertEqual(res.content_type, 'application/json')
 
     def test_accept_default_any_pick_first(self):
         api = restplus.Api(self.app)
@@ -48,7 +48,7 @@ class ErrorsTest(TestCase):
 
         res = self.get('/test/', headers=[('Accept', '*/*')])
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.content_type, 'application/json; charset=utf-8')
+        self.assertEqual(res.content_type, 'application/json')
 
     def test_accept_no_default_no_match_not_acceptable(self):
         api = restplus.Api(self.app, default_mediatype=None)
@@ -56,7 +56,7 @@ class ErrorsTest(TestCase):
 
         res = self.get('/test/', headers=[('Accept', 'text/plain')])
         self.assertEqual(res.status_code, 406)
-        self.assertEqual(res.content_type, 'application/json; charset=utf-8')
+        self.assertEqual(res.content_type, 'application/json')
 
     def test_accept_no_default_custom_repr_match(self):
         api = restplus.Api(self.app, default_mediatype=None)
@@ -99,7 +99,7 @@ class ErrorsTest(TestCase):
 
         res = self.get('/test/', headers=[('Accept', 'application/json; q=0')])
         self.assertEqual(res.status_code, 406)
-        self.assertEqual(res.content_type, 'application/json; charset=utf-8')
+        self.assertEqual(res.content_type, 'application/json')
 
     def test_accept_no_default_accept_highest_quality_of_two(self):
         api = restplus.Api(self.app, default_mediatype=None)

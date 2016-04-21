@@ -947,7 +947,7 @@ class MaskAPI(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/', headers={'X-Fields': 'name{,missing}'})
             self.assertEqual(response.status_code, 400)
-            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
+            self.assertEquals(response.content_type, 'application/json')
 
 
 class SwaggerMaskHeaderTest(TestCase):
