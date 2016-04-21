@@ -45,7 +45,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 403)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertIn('message', data)
@@ -61,7 +61,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 403)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data['message'], 'A message')
@@ -79,7 +79,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 403)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertIn('message', data)
@@ -95,7 +95,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 500)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertIn('message', data)
@@ -113,7 +113,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 500)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertIn('message', data)
@@ -136,7 +136,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 400)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data, {
@@ -162,7 +162,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 503)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data, {
@@ -185,7 +185,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 400)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data, {
@@ -210,13 +210,12 @@ class ErrorsTest(TestCase):
         def handle_custom_exception(error):
             return {'message': str(error), 'test': 'value'}, 400
 
-
         api.add_namespace(ns)
 
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 400)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data, {
@@ -235,7 +234,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 500)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertIn('message', data)
@@ -255,7 +254,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/api/test/')
             self.assertEquals(response.status_code, 500)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertIn('message', data)
@@ -275,7 +274,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 500)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data, {
@@ -298,7 +297,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 503)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data, {
@@ -326,7 +325,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get('/test/')
             self.assertEquals(response.status_code, 400)
-            self.assertEquals(response.content_type, 'application/json')
+            self.assertEquals(response.content_type, 'application/json; charset=utf-8')
 
             data = json.loads(response.data.decode('utf8'))
             self.assertEqual(data, {
@@ -345,7 +344,7 @@ class ErrorsTest(TestCase):
         with self.app.test_client() as client:
             response = client.get("/api")
             self.assertEquals(response.status_code, 404)
-            self.assertEquals(response.headers['Content-Type'], 'application/json')
+            self.assertEquals(response.headers['Content-Type'], 'application/json; charset=utf-8')
             data = json.loads(response.data.decode())
             self.assertIn('message', data)
 

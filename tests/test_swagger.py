@@ -32,7 +32,7 @@ class SwaggerTests(ApiMixin, TestCase):
         data = self.get_specs('')
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
-        self.assertEqual(data['produces'], ['application/json'])
+        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
         self.assertEqual(data['consumes'], ['application/json'])
         self.assertEqual(data['paths'], {})
         self.assertIn('info', data)
@@ -43,7 +43,7 @@ class SwaggerTests(ApiMixin, TestCase):
         data = self.get_specs('/api')
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/api')
-        self.assertEqual(data['produces'], ['application/json'])
+        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
         self.assertEqual(data['consumes'], ['application/json'])
         self.assertEqual(data['paths'], {})
         self.assertIn('info', data)
@@ -58,7 +58,7 @@ class SwaggerTests(ApiMixin, TestCase):
 
         data = self.get_specs()
         self.assertEqual(len(data['produces']), 2)
-        self.assertIn('application/json', data['produces'])
+        self.assertIn('application/json; charset=utf-8', data['produces'])
         self.assertIn('application/xml', data['produces'])
 
     def test_specs_endpoint_info(self):
@@ -77,7 +77,7 @@ class SwaggerTests(ApiMixin, TestCase):
         data = self.get_specs()
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
-        self.assertEqual(data['produces'], ['application/json'])
+        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
         self.assertEqual(data['paths'], {})
 
         self.assertIn('info', data)
@@ -112,7 +112,7 @@ class SwaggerTests(ApiMixin, TestCase):
 
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
-        self.assertEqual(data['produces'], ['application/json'])
+        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
         self.assertEqual(data['paths'], {})
 
         self.assertIn('info', data)
@@ -146,7 +146,7 @@ class SwaggerTests(ApiMixin, TestCase):
         data = self.get_specs()
         self.assertEqual(data['swagger'], '2.0')
         self.assertEqual(data['basePath'], '/')
-        self.assertEqual(data['produces'], ['application/json'])
+        self.assertEqual(data['produces'], ['application/json; charset=utf-8'])
         self.assertEqual(data['paths'], {})
 
         self.assertIn('info', data)
@@ -1372,7 +1372,8 @@ class SwaggerTests(ApiMixin, TestCase):
                 'road': {
                     'type': 'string'
                 },
-            }
+            },
+            'type': 'object'
         })
 
         path = data['paths']['/model-as-dict/']
@@ -1500,7 +1501,8 @@ class SwaggerTests(ApiMixin, TestCase):
                     'type': 'string',
                     'format': 'date-time'
                 }
-            }
+            },
+            'type': 'object'
         })
 
         path = data['paths']['/model-as-dict/']
@@ -1599,7 +1601,8 @@ class SwaggerTests(ApiMixin, TestCase):
                         'type': 'string'
                     }
                 }
-            }
+            },
+            'type': 'object'
         })
 
         path = data['paths']['/model-with-list/']
@@ -1765,7 +1768,8 @@ class SwaggerTests(ApiMixin, TestCase):
                 'age': {'type': 'integer'},
             },
             'discriminator': 'name',
-            'required': ['name']
+            'required': ['name'],
+            'type': 'object'
         })
 
     def test_model_with_discriminator_override_require(self):
@@ -1792,7 +1796,8 @@ class SwaggerTests(ApiMixin, TestCase):
                 'age': {'type': 'integer'},
             },
             'discriminator': 'name',
-            'required': ['name']
+            'required': ['name'],
+            'type': 'object'
         })
 
     def test_model_not_found(self):
@@ -1874,7 +1879,8 @@ class SwaggerTests(ApiMixin, TestCase):
             'properties': {
                 'name': {'type': 'string'},
                 'age': {'type': 'integer'},
-            }
+            },
+            'type': 'object'
         })
         self.assertEqual(data['definitions']['Child'], {
             'allOf': [{
@@ -1882,7 +1888,8 @@ class SwaggerTests(ApiMixin, TestCase):
             }, {
                 'properties': {
                     'extra': {'type': 'string'}
-                }
+                },
+                'type': 'object'
             }]
         })
 
@@ -2100,7 +2107,8 @@ class SwaggerTests(ApiMixin, TestCase):
                     'type': 'string',
                     'format': 'date-time'
                 }
-            }
+            },
+            'type': 'object'
         })
 
         op = data['paths']['/model-as-dict/']['post']
@@ -2149,7 +2157,8 @@ class SwaggerTests(ApiMixin, TestCase):
                     'type': 'string',
                     'format': 'date-time'
                 }
-            }
+            },
+            'type': 'object'
         })
 
         op = data['paths']['/model-as-dict/']['post']
@@ -2199,7 +2208,8 @@ class SwaggerTests(ApiMixin, TestCase):
                     'type': 'string',
                     'format': 'date-time'
                 }
-            }
+            },
+            'type': 'object'
         })
 
         op = data['paths']['/model-list/']['post']
@@ -2248,7 +2258,8 @@ class SwaggerTests(ApiMixin, TestCase):
                     'type': 'string',
                     'format': 'date-time'
                 }
-            }
+            },
+            'type': 'object'
         })
 
         self.assertIn('/with-parser/', data['paths'])
@@ -2328,7 +2339,8 @@ class SwaggerTests(ApiMixin, TestCase):
                     'type': 'string',
                     'format': 'date-time'
                 }
-            }
+            },
+            'type': 'object'
         })
 
         op = data['paths']['/model-list/']['post']
@@ -2375,7 +2387,8 @@ class SwaggerTests(ApiMixin, TestCase):
                     'type': 'string',
                     'format': 'date-time'
                 }
-            }
+            },
+            'type': 'object'
         })
 
         op = data['paths']['/model-as-dict/']['post']

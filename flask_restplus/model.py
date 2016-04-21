@@ -112,6 +112,7 @@ class Model(dict, MutableMapping):
             'properties': properties,
             'discriminator': discriminator,
             'x-mask': str(self.__mask__) if self.__mask__ else None,
+            'type': 'object',
         })
 
         if self.__parents__:

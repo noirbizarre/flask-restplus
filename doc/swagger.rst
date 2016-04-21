@@ -446,14 +446,24 @@ If the resource is attached to the root API, it will receive the default namespa
 Method parameters
 ~~~~~~~~~~~~~~~~~
 
-Parameters from the URL path are documented automatically.  You can provide additional information using the ``params`` keyword argument of the ``api.doc()`` decorator:
+Parameters from the URL path are documented automatically.
+You can provide additional information using the ``params`` keyword argument of the ``api.doc()`` decorator:
 
 .. code-block:: python
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
     @api.doc(params={'id': 'An ID'})
-        class MyResource(Resource):
-            @api.doc(model=fields)
+    class MyResource(Resource):
+        pass
+
+or by using the ``api.param`` shortcut decorator:
+
+.. code-block:: python
+
+    @api.route('/my-resource/<id>', endpoint='my-resource')
+    @api.param('id', 'An ID')
+    class MyResource(Resource):
+        pass
 
 
 Input and output models
@@ -503,7 +513,7 @@ Models can also be specified with a :class:`~flask_restplus.reqparse.RequestPars
 
     @api.route('/with-parser/', endpoint='with-parser')
     class WithParserResource(restplus.Resource):
-        @api.doc(parser=parser)
+        @api.expect(parser)
         def get(self):
             return {}
 
@@ -517,6 +527,11 @@ Models can also be specified with a :class:`~flask_restplus.reqparse.RequestPars
             class MyResource(Resource):
                 def get(self):
                     data = api.payload
+
+.. note::
+
+    Using :class:`~flask_restplus.reqparse.RequestParser` is prefered over the ``api.param()`` decorator
+    to document form fields as it also perform validation.
 
 Headers
 ~~~~~~~
@@ -546,7 +561,7 @@ For example, these two declarations are equivalent:
 .. code-block:: python
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
-    @api.doc(params={'id': 'An ID'})
+    @api.params('id', 'An ID')
     class MyResource(Resource):
         def get(self, id):
             return {}
@@ -557,9 +572,9 @@ For example, these two declarations are equivalent:
 .. code-block:: python
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
-    @api.doc(params={'id': 'Class-wide description'})
+    @api.param('id', 'Class-wide description')
     class MyResource(Resource):
-        @api.doc(params={'id': 'An ID'})
+        @api.param('id', 'An ID')
         def get(self, id):
             return {}
 
@@ -569,7 +584,7 @@ The following example will produce the same documentation as the two previous ex
 .. code-block:: python
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
-    @api.doc(params={'id': 'Class-wide description'})
+    @api.params('id', 'Class-wide description')
     @api.doc(get={'params': {'id': 'An ID'}})
     class MyResource(Resource):
         def get(self, id):

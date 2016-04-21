@@ -11,6 +11,8 @@ def output_json(data, code, headers=None):
 
     settings = current_app.config.get('RESTPLUS_JSON', {})
 
+    settings.setdefault('ensure_ascii', False)
+
     # If we're in debug mode, and the indent is not set, we set it to a
     # reasonable value here.  Note that this won't override any existing value
     # that was set.  We also set the "sort_keys" value.

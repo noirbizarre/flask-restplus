@@ -35,7 +35,7 @@ class APIWithBlueprintTestCase(TestCase):
         self.app.register_blueprint(blueprint)
         self.assertEquals(api.urls, {})
         self.assertEquals(api.prefix, '')
-        self.assertEquals(api.default_mediatype, 'application/json')
+        self.assertEquals(api.default_mediatype, 'application/json; charset=utf-8')
 
     def test_api_delayed_initialization(self):
         blueprint = Blueprint('test', __name__)
