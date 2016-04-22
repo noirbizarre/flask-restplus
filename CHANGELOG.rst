@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.9.2 (2016-04-22)
+------------------
 
 - Same version but a PyPI bug force reupload.
 
