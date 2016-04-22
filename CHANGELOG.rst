@@ -6,7 +6,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Same version but a PyPI bug force reupload.
 
 0.9.1 (2016-04-22)
 ------------------
