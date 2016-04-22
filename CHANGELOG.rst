@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.9.1 (2016-04-22)
+------------------
 
 - Added some Swagger-UI Oauth configurations:
     - `SWAGGER_UI_OAUTH_CLIENT_ID`
