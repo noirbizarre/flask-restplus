@@ -39,7 +39,7 @@ class APITestCase(TestCase):
         with self.app.test_request_context('/foo'):
             response = api.unauthorized(response)
         self.assertEqual(response.headers['WWW-Authenticate'],
-                         'Basic realm="flask-restful"')
+                         'Basic realm="flask-restplus"')
 
     def test_unauthorized_custom_realm(self):
         self.app.config['HTTP_BASIC_AUTH_REALM'] = 'Foo'
@@ -68,7 +68,7 @@ class APITestCase(TestCase):
             resp = api.handle_error(exception)
             self.assertEqual(resp.status_code, 401)
             self.assertEqual(resp.headers['WWW-Authenticate'],
-                             'Basic realm="flask-restful"')
+                             'Basic realm="flask-restplus"')
 
     def test_handle_error_401_sends_challege_configured_realm(self):
         self.app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
@@ -444,7 +444,7 @@ class APITestCase(TestCase):
             }) + "\n")
 
     def test_error_router_falls_back_to_original(self):
-        """Verify that if an exception occurs in the Flask-RESTful error handler,
+        """Verify that if an exception occurs in the Flask-RESTPlus error handler,
         the error_router will call the original flask error handler instead.
         """
         api = restplus.Api(self.app)
@@ -779,9 +779,9 @@ class APITestCase(TestCase):
 
     def test_read_json_settings_from_config(self):
         class TestConfig(object):
-            RESTFUL_JSON = {'indent': 2,
-                            'sort_keys': True,
-                            'separators': (', ', ': ')}
+            RESTPLUS_JSON = {'indent': 2,
+                             'sort_keys': True,
+                             'separators': (', ', ': ')}
 
         self.app.config.from_object(TestConfig)
         api = restplus.Api(self.app)
@@ -805,7 +805,7 @@ class APITestCase(TestCase):
                 return 'cabbage'
 
         class TestConfig(object):
-            RESTFUL_JSON = {'cls': CabageEncoder}
+            RESTPLUS_JSON = {'cls': CabageEncoder}
 
         self.app.config.from_object(TestConfig)
         api = restplus.Api(self.app)

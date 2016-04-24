@@ -5,6 +5,8 @@ import inspect
 import six
 import warnings
 
+from flask.views import http_method_funcs
+
 from .errors import abort
 from .marshalling import marshal, marshal_with
 from .model import Model
@@ -87,14 +89,14 @@ class Namespace(object):
             return
         unshortcut_params_description(doc)
         handle_deprecations(doc)
-        for key in 'get', 'post', 'put', 'delete', 'options', 'head', 'patch':
-            if key in doc:
-                if doc[key] is False:
+        for http_method in http_method_funcs:
+            if http_method in doc:
+                if doc[http_method] is False:
                     continue
-                unshortcut_params_description(doc[key])
-                handle_deprecations(doc[key])
-                if 'expect' in doc[key] and not isinstance(doc[key]['expect'], (list, tuple)):
-                    doc[key]['expect'] = [doc[key]['expect']]
+                unshortcut_params_description(doc[http_method])
+                handle_deprecations(doc[http_method])
+                if 'expect' in doc[http_method] and not isinstance(doc[http_method]['expect'], (list, tuple)):
+                    doc[http_method]['expect'] = [doc[http_method]['expect']]
         cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
 
     def doc(self, shortcut=None, **kwargs):
@@ -211,7 +213,7 @@ class Namespace(object):
         A decorator specifying the fields to use for serialization.
 
         :param bool as_list: Indicate that the return type is a list (for the documentation)
-        :param int code: Optionnaly give the expected HTTP response code if its different from 200
+        :param int code: Optionally give the expected HTTP response code if its different from 200
 
         '''
         def wrapper(func):

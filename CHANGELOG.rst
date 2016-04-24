@@ -8,6 +8,24 @@ Current
 
 - Nothing yet
 
+0.9.2 (2016-04-22)
+------------------
+
+- Same version but a PyPI bug force reupload.
+
+0.9.1 (2016-04-22)
+------------------
+
+- Added some Swagger-UI Oauth configurations:
+    - `SWAGGER_UI_OAUTH_CLIENT_ID`
+    - `SWAGGER_UI_OAUTH_REALM`
+    - `SWAGGER_UI_OAUTH_APP_NAME`
+- Expose ``type: object`` in Swagger schemas (:issue:`157`)
+- Fix an issue with error handlers (:issue:`141`)
+- Fix an issue with Postman export when using OAuth (:issue:`151`)
+- Miscellenaous code and documentation fixes
+- Remove last flask-restful references (unless needed) and add missing attributions
+
 0.9.0 (2016-02-22)
 ------------------
 

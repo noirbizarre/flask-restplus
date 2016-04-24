@@ -15,6 +15,7 @@ from .errors import abort
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
 
+from .utils import not_none
 
 RE_REQUIRED = re.compile(r'u?\'(?P<name>.*)\' is a required property', re.I | re.U)
 
@@ -149,18 +150,37 @@ class Model(ModelBase, dict, MutableMapping):
         return resolved
 
     @cached_property
-    def schema(self):
-        schema = {}
+    def __schema__(self):
+        properties = {}
+        required = set()
+        discriminator = None
         for name, field in iteritems(self):
             field = instance(field)
-            schema['properties'][name] = field.__schema__
+            properties[name] = field.__schema__
             if field.required:
-                schema.setdefault('required', set()).add(name)
+                required.add(name)
             if getattr(field, 'discriminator', False):
-                schema['discriminator'] = name
-        if self.__mask__:
-            schema['x-mask'] = str(self.__mask__)
-        return schema
+                discriminator = name
+
+        schema = not_none({
+            'required': sorted(list(required)) or None,
+            'properties': properties,
+            'discriminator': discriminator,
+            'x-mask': str(self.__mask__) if self.__mask__ else None,
+            'type': 'object',
+        })
+
+        if self.__parents__:
+            refs = [
+                {'$ref': '#/definitions/{0}'.format(parent.name)}
+                for parent in self.__parents__
+                ]
+
+            return {
+                'allOf': refs + [schema]
+            }
+        else:
+            return schema
 
     def extend(self, name, fields):
         '''

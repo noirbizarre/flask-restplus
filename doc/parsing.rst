@@ -120,7 +120,12 @@ to specify alternate locations to pull the values from. Any variable on the
 .. note ::
 
     Only use ``type=list`` when ``location='json'``. `See this issue for more
-    details <https://github.com/flask-restplus/flask-restplus/issues/380>`_
+    details <https://github.com/flask-restful/flask-restful/issues/380>`_
+
+.. note ::
+
+    Using ``location='form'`` is way to both validate form data and document you form fields.
+
 
 Multiple Locations
 ------------------
@@ -166,6 +171,33 @@ with :meth:`~reqparse.RequestParser.remove_argument`. For example: ::
 
     parser_copy.remove_argument('foo')
     # parser_copy no longer has 'foo' argument
+
+File Upload
+-----------
+
+To handle file upload with the :class:`~reqparse.RequestParser`,
+you need to use the `files` location
+and to set the type to :class:`~werkzeug.datastructures.FileStorage`.
+
+.. code-block:: python
+
+    from werkzeug.datastructures import FileStorage
+
+    upload_parser = api.parser()
+    upload_parser.add_argument('file', location='files',
+                               type=FileStorage, required=True)
+
+
+    @api.route('/upload/')
+    @api.expect(upload_parser)
+    class Upload(Resource):
+        def post(self):
+            uploaded_file = args['file']  # This is FileStorage instance
+            url = do_something_with_file(uploaded_file)
+            return {'url': url}, 201
+
+See the `dedicated Flask documentation section <http://flask.pocoo.org/docs/0.10/patterns/fileuploads/>`_.
+
 
 Error Handling
 --------------

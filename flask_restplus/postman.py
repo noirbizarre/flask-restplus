@@ -179,7 +179,7 @@ class PostmanCollectionV1(object):
         return dict(
             (name, secdef['name'])
             for name, secdef in self.api.__schema__.get('securityDefinitions').items()
-            if secdef['in'] == 'header' and secdef['type'] == 'apiKey'
+            if secdef.get('in') == 'header' and secdef.get('type') == 'apiKey'
         )
 
     def as_dict(self, urlvars=False):

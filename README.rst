@@ -18,7 +18,12 @@ Flask RestPlus
    :alt: Join the chat at https://gitter.im/noirbizarre/flask-restplus
    :target: https://gitter.im/noirbizarre/flask-restplus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-Flask-RestPlus provides syntaxic sugar, helpers and automatically generated `Swagger`_ documentation on top of `Flask-Restful`_.
+Flask-RESTPlus is an extension for `Flask`_ that adds support for quickly building REST APIs.
+Flask-RESTPlus encourages best practices with minimal setup.
+If you are familiar with Flask, Flask-RESTPlus should be easy to pick up.
+It provides a coherent collection of decorators and tools to describe your API
+and expose its documentation properly using `Swagger`_.
+
 
 Compatibility
 =============
@@ -152,5 +157,5 @@ Documentation
 The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs.org/en/latest/>`_
 
 
+.. _Flask: http://flask.pocoo.org/
 .. _Swagger: http://swagger.io/
-.. _Flask-Restful: http://flask-restful.readthedocs.org/en/latest/

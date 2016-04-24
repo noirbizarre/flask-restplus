@@ -38,6 +38,9 @@ coverage.xml
 # Translations
 *.mo
 
+# Atom
+*.cson
+
 # Mr Developer
 .mr.developer.cfg
 .project
