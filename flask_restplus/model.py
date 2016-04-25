@@ -128,7 +128,7 @@ class Model(ModelBase, dict, MutableMapping):
     @cached_property
     def resolved(self):
         '''
-        Resolve real fields before submitting them to upstream restful marshal
+        Resolve real fields before submitting them to marshal
         '''
         # Duplicate fields
         resolved = copy.deepcopy(self)
@@ -150,7 +150,7 @@ class Model(ModelBase, dict, MutableMapping):
 
     @cached_property
     def schema(self):
-        schema = {}
+        schema = {'type': 'object'}
         for name, field in iteritems(self):
             field = instance(field)
             schema['properties'][name] = field.__schema__

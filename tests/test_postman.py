@@ -348,6 +348,32 @@ class PostmanTestCase(TestCase):
 
         self.assertEqual(headers['X-API'], '')
 
+    def test_oauth_security_headers(self):
+        api = restplus.Api(self.app, security='oauth', authorizations={
+            'oauth': {
+                'type': 'oauth2',
+                'authorizationUrl': 'https://somewhere.com/oauth/authorize',
+                'flow': 'implicit',
+                'scopes': {
+                    'read': 'Can read',
+                    'write': 'Can write'
+                }
+            }
+        })
+
+        @api.route('/test/')
+        class Test(restplus.Resource):
+            def get(self):
+                pass
+
+        data = api.as_postman()
+
+        validate(data, schema)
+        # request = data['requests'][0]
+        # headers = dict(r.split(':') for r in request['headers'].splitlines())
+        #
+        # self.assertEqual(headers['X-API'], '')
+
     def test_export_with_swagger(self):
         api = restplus.Api(self.app)
 

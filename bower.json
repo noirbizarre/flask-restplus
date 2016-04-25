@@ -2,13 +2,15 @@
   "name": "flask-restplus",
   "version": "0.1.0",
   "authors": [
-    "Axeh Haustant <axel@data.gouv.fr>"
+    "Axel Haustant <axel@data.gouv.fr>"
   ],
-  "description": "Helpers, syntaxic sugar and Swagger documentation for Flask-Restful",
+  "description": "Fully featured framework for fast, easy and documented API development with Flask",
   "keywords": [
     "flask",
     "swagger",
-    "flask-restful"
+    "flask-restplus",
+    "api",
+    "REST"
   ],
   "license": "MIT",
   "private": true,
@@ -16,7 +18,7 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "./flask_restul_doc/static/bower/",
+    "./flask_restplus/static/bower/",
     "test",
     "tests"
   ],

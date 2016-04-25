@@ -146,7 +146,7 @@ Or from python if you have the `Requests <http://docs.python-requests.org/>`_ li
 Flask-RESTPlus understands multiple kinds of return values from view methods.
 Similar to Flask, you can return any iterable and it will be converted into a response,
 including raw Flask response objects.
-Flask-RESTful also support setting the response code and response headers using multiple return values,
+Flask-RESTPlus also support setting the response code and response headers using multiple return values,
 as shown below:
 
 .. code-block:: python
@@ -301,4 +301,4 @@ See the :mod:`fields` guide for a complete list.
 Full example
 ------------
 
-See the :doc:`example` section for fully functionnal example.
+See the :doc:`example` section for fully functional example.

@@ -6,18 +6,15 @@ Swagger documentation
 
 .. currentmodule:: flask_restplus
 
-A Swagger API documentation is automatically generated and available on your API root
-but you need to provide some details with the :meth:`@api.doc() <Api.doc>` decorator.
+Swagger API documentation is automatically generated and available from your API's root URL.  You can configure the documentation using the :meth:`@api.doc() <Api.doc>` decorator.
 
 
 Documenting with the ``@api.doc()`` decorator
 ---------------------------------------------
 
-This decorator allows you specify some details about your API.
-They will be used in the Swagger API declarations.
+The ``api.doc()`` decorator allows you to include additional information in the documentation.
 
-You can document a class or a method.
-
+You can document a class or a method:
 
 .. code-block:: python
 
@@ -35,10 +32,10 @@ You can document a class or a method.
 Automatically documented models
 -------------------------------
 
-All models instanciated with :meth:`~Namespace.model`, :meth:`~Namespace.clone` and :meth:`~Namespace.inherit`
-will be automatically documented in your swagger specifications
+All models instantiated with :meth:`~Namespace.model`, :meth:`~Namespace.clone` and :meth:`~Namespace.inherit`
+will be automatically documented in your Swagger specifications.
 
-The :meth:`~Namespace.inherit` will register both the parent and the child in the Swagger models definitions.
+The :meth:`~Namespace.inherit` method will register both the parent and the child in the Swagger models definitions:
 
 .. code-block:: python
 
@@ -51,7 +48,7 @@ The :meth:`~Namespace.inherit` will register both the parent and the child in th
         'extra': fields.String
     })
 
-Will produce the following Swagger definitions:
+The above configuration will produce these Swagger definitions:
 
 .. code-block:: json
 
@@ -123,12 +120,14 @@ The ``@api.expect()`` decorator
 -------------------------------
 
 The ``@api.expect()`` decorator allows you to specify the expected input fields.
-It accepts an optional boolean parameter ``validate`` defining wether or not the payload should be validated.
-The validation behavior can be customized globally by either
-setting the ``RESTPLUS_VALIDATE`` configuration to True
+It accepts an optional boolean parameter ``validate`` indicating whether the payload should be validated.
+The validation behavior can be customized globally either
+by setting the ``RESTPLUS_VALIDATE`` configuration to ``True``
 or passing ``validate=True`` to the API constructor.
 
-The following syntaxes are equivalents:
+The following examples are equivalent:
+
+* Using the ``@api.expect()`` decorator:
 
 .. code-block:: python
 
@@ -142,6 +141,8 @@ The following syntaxes are equivalents:
         def get(self):
             pass
 
+* Using the ``api.doc()`` decorator:
+
 .. code-block:: python
 
     resource_fields = api.model('Resource', {
@@ -154,7 +155,8 @@ The following syntaxes are equivalents:
         def get(self):
             pass
 
-It allows you specify lists as expected input too:
+
+You can specify lists as the expected input:
 
 .. code-block:: python
 
@@ -169,7 +171,7 @@ It allows you specify lists as expected input too:
             pass
 
 
-Or a :exc:`~flask_restplus.reqparse.RequestParser`:
+You can use :exc:`~flask_restplus.reqparse.RequestParser` to define the expected input:
 
 .. code-block:: python
 
@@ -185,7 +187,7 @@ Or a :exc:`~flask_restplus.reqparse.RequestParser`:
             return {}
 
 
-An exemple of on-demand validation:
+Validation can be enabled or disabled on a particular endpoint:
 
 .. code-block:: python
 
@@ -206,7 +208,7 @@ An exemple of on-demand validation:
             pass
 
 
-An exemple of application-wide validation by config:
+An example of application-wide validation by config:
 
 .. code-block:: python
 
@@ -231,7 +233,7 @@ An exemple of application-wide validation by config:
             pass
 
 
-An exemple of application-wide validation by constructor:
+An example of application-wide validation by constructor:
 
 .. code-block:: python
 
@@ -260,7 +262,7 @@ Documenting with the ``@api.response()`` decorator
 The ``@api.response()`` decorator allows you to document the known responses
 and is a shortcut for ``@api.doc(responses='...')``.
 
-The following synatxes are equivalents:
+The following two definitions are equivalent:
 
 .. code-block:: python
 
@@ -281,7 +283,7 @@ The following synatxes are equivalents:
         def get(self):
             pass
 
-You can optionally specify a response model as third argument:
+You can optionally specify a response model as the third argument:
 
 
 .. code-block:: python
@@ -296,7 +298,7 @@ You can optionally specify a response model as third argument:
         def get(self):
             pass
 
-If you use the ``@api.marshal_with()`` decorator, it automatically document the response:
+The ``@api.marshal_with()`` decorator automatically documents the response:
 
 .. code-block:: python
 
@@ -311,7 +313,7 @@ If you use the ``@api.marshal_with()`` decorator, it automatically document the 
         def post(self):
             pass
 
-At least, you can specify a default response sent without knowing the response code
+You can specify a default response sent without knowing the response code:
 
 .. code-block:: python
 
@@ -325,11 +327,12 @@ At least, you can specify a default response sent without knowing the response c
 The ``@api.route()`` decorator
 ------------------------------
 
-You can provide class-wide documentation by using the ``Api.route()``'s' ``doc`` parameter.
-It accept the same attribute/syntax than the ``Api.doc()`` decorator.
+You can provide class-wide documentation using the ``doc`` parameter of ``Api.route()``. This parameter accepts the same values as the ``Api.doc()`` decorator.
 
-By example, these two declaration are equivalents:
+For example, these two declarations are equivalent:
 
+
+* Using ``@api.doc()``:
 
 .. code-block:: python
 
@@ -339,6 +342,8 @@ By example, these two declaration are equivalents:
         def get(self, id):
             return {}
 
+
+* Using ``@api.route()``:
 
 .. code-block:: python
 
@@ -351,31 +356,28 @@ By example, these two declaration are equivalents:
 Documenting the fields
 ----------------------
 
-Every Flask-Restplus fields accepts optional arguments used to document the field:
+Every Flask-Restplus field accepts optional arguments used to document the field:
 
 - ``required``: a boolean indicating if the field is always set (*default*: ``False``)
 - ``description``: some details about the field (*default*: ``None``)
 - ``example``: an example to use when displaying (*default*: ``None``)
 
-There is also field specific attributes.
+There are also field-specific attributes:
 
-The ``String`` field accept the following optional arguments:
+* The ``String`` field accepts the following optional arguments:
+    - ``enum``: an array restricting the authorized values.
+    - ``min_length``: the minimum length expected.
+    - ``max_length``: the maximum length expected.
+    - ``pattern``: a RegExp pattern used to validate the string.
 
-- ``enum``: an array restricting the authorized values.
-- ``min_length``: the minimum length expected
-- ``max_length``: the maximum length expected
-- ``pattern``: a RegExp pattern the string need to validate
+* The ``Integer``, ``Float`` and ``Arbitrary`` fields accept the following optional arguments:
+    - ``min``: restrict the minimum accepted value.
+    - ``max``: restrict the maximum accepted value.
+    - ``exclusiveMin``: if ``True``, minimum value is not in allowed interval.
+    - ``exclusiveMax``: if ``True``, maximum value is not in allowed interval.
+    - ``multiple``: specify that the number must be a multiple of this value.
 
-The ``Integer``, ``Float`` and ``Arbitrary`` fields accept the following optional arguments:
-
-- ``min``: restrict the minimum accepted value.
-- ``max``: restrict the maximum accepted value.
-- ``exclusiveMin``: if ``True``, minimum value is not in allowed interval.
-- ``exclusiveMax``: if ``True``, maximum value is not in allowed interval.
-- ``multiple``: specify that the number must be a multiple of this value.
-
-The ``DateTime`` field also accept the ``min``, ``max`, ``exclusiveMin`` and ``exclusiveMax``
-optional arguments but they should be date or datetime (either as ISO strings or native objects).
+* The ``DateTime`` field accepts the ``min``, ``max``, ``exclusiveMin`` and ``exclusiveMax`` optional arguments.  These should be dates or datetimes (either ISO strings or native objects).
 
 .. code-block:: python
 
@@ -392,9 +394,9 @@ Documenting the methods
 Each resource will be documented as a Swagger path.
 
 Each resource method (``get``, ``post``, ``put``, ``delete``, ``path``, ``options``, ``head``)
-will be documented as a swagger operation.
+will be documented as a Swagger operation.
 
-You can specify the Swagger unique ``operationId`` with the ``id`` documentation.
+You can specify a unique Swagger ``operationId`` with the ``id`` keyword argument:
 
 .. code-block:: python
 
@@ -414,18 +416,18 @@ You can also use the first argument for the same purpose:
         def get(self):
             return {}
 
-If not specified, a default operationId is provided with the following pattern::
+If not specified, a default ``operationId`` is provided with the following pattern::
 
     {{verb}}_{{resource class name | camelCase2dashes }}
 
-In the previous example, the default generated operationId will be ``get_my_resource``
+In the previous example, the default generated ``operationId`` would be ``get_my_resource``.
 
 
-You can override the default operationId generator by giving a callable as ``default_id`` parameter to your API.
-This callable will receive two positional arguments:
+You can override the default ``operationId`` generator by providing a callable for the ``default_id`` parameter.
+This callable accepts two positional arguments:
 
- - the resource class name
- - this lower cased HTTP method
+* The resource class name
+* The HTTP method (lower-case)
 
 .. code-block:: python
 
@@ -434,7 +436,7 @@ This callable will receive two positional arguments:
 
     api = Api(app, default_id=default_id)
 
-In the previous example, the generated operationId will be ``getMyResource``
+In the previous example, the generated ``operationId`` would be ``getMyResource``.
 
 
 Each operation will automatically receive the namespace tag.
@@ -444,16 +446,32 @@ If the resource is attached to the root API, it will receive the default namespa
 Method parameters
 ~~~~~~~~~~~~~~~~~
 
-For each method, the path parameter are automatically extracted.
-You can provide additional parameters (from query parameters, body or form)
-or additional details on path parameters with the ``params`` documentation.
+Parameters from the URL path are documented automatically.
+You can provide additional information using the ``params`` keyword argument of the ``api.doc()`` decorator:
+
+.. code-block:: python
+
+    @api.route('/my-resource/<id>', endpoint='my-resource')
+    @api.doc(params={'id': 'An ID'})
+    class MyResource(Resource):
+        pass
+
+or by using the ``api.param`` shortcut decorator:
+
+.. code-block:: python
+
+    @api.route('/my-resource/<id>', endpoint='my-resource')
+    @api.param('id', 'An ID')
+    class MyResource(Resource):
+        pass
+
 
 Input and output models
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-You can specify the serialized output model with the ``model`` documentation.
+You can specify the serialized output model using the ``model`` keyword argument of the ``api.doc()`` decorator.
 
-You can specify an input format for ``POST`` and ``PUT`` with the ``body`` documentation.
+For ``POST`` and ``PUT`` methods, use the ``body`` keyword argument to specify the input model.
 
 
 .. code-block:: python
@@ -483,10 +501,9 @@ You can specify an input format for ``POST`` and ``PUT`` with the ``body`` docum
             return {}
 
 
-You can't have body and form or file parameters at the same time,
-it will raise a :exc:`~flask_restplus.errors.SpecsError`.
+If both ``body`` and ``formData`` parameters are used, a :exc:`~flask_restplus.errors.SpecsError` will be raised.
 
-Models can be specified with a :class:`~flask_restplus.reqparse.RequestParser`.
+Models can also be specified with a :class:`~flask_restplus.reqparse.RequestParser`.
 
 .. code-block:: python
 
@@ -496,7 +513,7 @@ Models can be specified with a :class:`~flask_restplus.reqparse.RequestParser`.
 
     @api.route('/with-parser/', endpoint='with-parser')
     class WithParserResource(restplus.Resource):
-        @api.doc(parser=parser)
+        @api.expect(parser)
         def get(self):
             return {}
 
@@ -511,10 +528,15 @@ Models can be specified with a :class:`~flask_restplus.reqparse.RequestParser`.
                 def get(self):
                     data = api.payload
 
+.. note::
+
+    Using :class:`~flask_restplus.reqparse.RequestParser` is prefered over the ``api.param()`` decorator
+    to document form fields as it also perform validation.
+
 Headers
 ~~~~~~~
 
-You can document headers with the ``@api.header`` decorator shortcut.
+You can document headers with the ``@api.header()`` decorator shortcut.
 
 .. code-block:: python
 
@@ -529,38 +551,40 @@ You can document headers with the ``@api.header`` decorator shortcut.
 Cascading
 ---------
 
-Documentation handling is done in cascade.
-Method documentation override class-wide documentation.
-Inherited documentation override parent one.
+Method documentation takes precedence over class documentation,
+and inherited documentation takes precedence over parent documentation.
 
-By example, these two declaration are equivalents:
+For example, these two declarations are equivalent:
 
+* Class documentation is inherited by methods:
 
 .. code-block:: python
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
-    @api.doc(params={'id': 'An ID'})
+    @api.params('id', 'An ID')
     class MyResource(Resource):
         def get(self, id):
             return {}
 
 
+* Class documentation is overridden by method-specific documentation:
+
 .. code-block:: python
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
-    @api.doc(params={'id': 'Class-wide description'})
+    @api.param('id', 'Class-wide description')
     class MyResource(Resource):
-        @api.doc(params={'id': 'An ID'})
+        @api.param('id', 'An ID')
         def get(self, id):
             return {}
 
-You can also provide method specific documentation from a class decoration.
-The following example will produce the same documentation than the two previous examples:
+You can also provide method-specific documentation from a class decorator.
+The following example will produce the same documentation as the two previous examples:
 
 .. code-block:: python
 
     @api.route('/my-resource/<id>', endpoint='my-resource')
-    @api.doc(params={'id': 'Class-wide description'})
+    @api.params('id', 'Class-wide description')
     @api.doc(get={'params': {'id': 'An ID'}})
     class MyResource(Resource):
         def get(self, id):
@@ -570,7 +594,7 @@ The following example will produce the same documentation than the two previous 
 Marking as deprecated
 ---------------------
 
-You can mark as deprecated some resources or methods with the ``@api.deprecated`` decorator:
+You can mark resources or methods as deprecated with the ``@api.deprecated`` decorator:
 
 .. code-block:: python
 
@@ -599,7 +623,7 @@ You can mark as deprecated some resources or methods with the ``@api.deprecated`
 Hiding from documentation
 -------------------------
 
-You can hide some resources or methods from documentation using one of the following syntaxes:
+You can hide some resources or methods from documentation using any of the following:
 
 .. code-block:: python
 
@@ -640,10 +664,10 @@ You can hide some resources or methods from documentation using one of the follo
             return {}
 
 
-Documenting autorizations
--------------------------
+Documenting authorizations
+--------------------------
 
-In order to document an authorization you can provide an authorization dictionary to the API constructor:
+You can use the ``authorizations`` keyword argument to document authorization information:
 
 .. code-block:: python
 
@@ -656,17 +680,13 @@ In order to document an authorization you can provide an authorization dictionar
     }
     api = Api(app, authorizations=authorizations)
 
-Next, you need to set the authorization documentation on each resource/method requiring it.
-You can use a decorator to make it easier:
+Then decorate each resource and method that requires authorization:
 
 .. code-block:: python
 
-    def apikey(func):
-        return api.doc(security='apikey')(func)
-
     @api.route('/resource/')
     class Resource1(Resource):
-        @apikey
+        @api.doc(security='apikey')
         def get(self):
             pass
 
@@ -674,7 +694,7 @@ You can use a decorator to make it easier:
         def post(self):
             pass
 
-You can apply this requirement globally with the security constructor parameter:
+You can apply this requirement globally with the ``security`` parameter on the ``Api`` constructor:
 
 .. code-block:: python
 
@@ -710,7 +730,7 @@ You can have multiple security schemes:
     }
     api = Api(self.app, security=['apikey', {'oauth2': 'read'}], authorizations=authorizations)
 
-And compose/override them at method level:
+Security schemes can be overridden for a particular method:
 
 .. code-block:: python
 
@@ -720,8 +740,7 @@ And compose/override them at method level:
         def get(self):
             return {}
 
-You can disable security on a given resource/method by passing None or an empty list
-as security parameter:
+You can disable security on a given resource or method by passing ``None`` or an empty list as the ``security`` parameter:
 
 .. code-block:: python
 
@@ -740,7 +759,7 @@ as security parameter:
 Export Swagger specifications
 -----------------------------
 
-You can export the Swagger specififcations corresponding to your API.
+You can export the Swagger specifications for your API:
 
 .. code-block:: python
 
@@ -756,7 +775,7 @@ You can export the Swagger specififcations corresponding to your API.
 Swagger UI
 ----------
 
-By default ``flask-restplus`` provide a Swagger UI documentation on your API root.
+By default ``flask-restplus`` provides Swagger UI documentation, served from the root URL of the API.
 
 
 .. code-block:: python
@@ -784,8 +803,8 @@ By default ``flask-restplus`` provide a Swagger UI documentation on your API roo
         app.run(debug=True)
 
 
-If you run the code below and visit your API root URL (http://localhost:5000)
-you will have an automatically generated SwaggerUI documentation.
+If you run the code below and visit your API's root URL (http://localhost:5000)
+you can view the automatically-generated Swagger UI documentation.
 
 .. image:: _static/screenshot-apidoc-quickstart.png
 
@@ -793,7 +812,7 @@ you will have an automatically generated SwaggerUI documentation.
 Customization
 ~~~~~~~~~~~~~
 
-You can control the Swagger UI path with the ``doc`` parameter (default to the API root):
+You can control the Swagger UI path with the ``doc`` parameter (defaults to the API root):
 
 .. code-block:: python
 
@@ -809,7 +828,7 @@ You can control the Swagger UI path with the ``doc`` parameter (default to the A
     assert url_for('api.doc') == '/api/doc/'
 
 
-You can specify a custom validator url by setting ``config.SWAGGER_VALIDATOR_URL``:
+You can specify a custom validator URL by setting ``config.SWAGGER_VALIDATOR_URL``:
 
 .. code-block:: python
 
@@ -823,7 +842,7 @@ You can specify a custom validator url by setting ``config.SWAGGER_VALIDATOR_URL
 
 
 You can also specify the initial expansion state with the ``config.SWAGGER_UI_DOC_EXPANSION``
-setting (``none``, ``list`` or ``full``):
+setting (``'none'``, ``'list'`` or ``'full'``):
 
 .. code-block:: python
 
@@ -835,8 +854,7 @@ setting (``none``, ``list`` or ``full``):
 
     api = Api(app)
 
-Latest version of Swagger UI added an optionnal JSON editor
-which can be enabled with with the ``config.SWAGGER_UI_JSONEDITOR``:
+You can enable a JSON editor in Swagger UI by setting ``config.SWAGGER_UI_JSONEDITOR`` to ``True``:
 
 .. code-block:: python
 
@@ -850,8 +868,7 @@ which can be enabled with with the ``config.SWAGGER_UI_JSONEDITOR``:
 
 
 If you need a custom UI,
-you can register a custom view function with the :meth:`~Api.documentation` decorator.
-You can provide a custom UI by reusing the apidoc blueprint or rolling your own from scratch.
+you can register a custom view function with the :meth:`~Api.documentation` decorator:
 
 .. code-block:: python
 
@@ -869,7 +886,7 @@ You can provide a custom UI by reusing the apidoc blueprint or rolling your own 
 Disabling the documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can totally disable the generated Swagger UI by setting ``doc=False``:
+To disable Swagger UI entirely, set ``doc=False``:
 
 .. code-block:: python
 

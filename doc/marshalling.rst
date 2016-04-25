@@ -387,7 +387,7 @@ All you have to do is subclass :class:`~fields.Raw` and implement the :meth:`~fi
     # example usage
     fields = {
         'name': fields.String,
-        'all_caps_name': AllCapsString(attribute=name),
+        'all_caps_name': AllCapsString(attribute='name'),
     }
 
 You can also use the :attr:`__schema_format__`, ``__schema_type__`` and
