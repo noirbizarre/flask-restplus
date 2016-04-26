@@ -852,17 +852,26 @@ class RequestParserSchemaTest(TestCase):
         parser = RequestParser()
         parser.add_argument('int', type=int, help='Some integer')
         parser.add_argument('str', type=str, help='Some string')
-        self.assertEqual(parser.__schema__, [{
-            'name': 'int',
-            'type': 'integer',
-            'in': 'query',
-            'description': 'Some integer',
-        }, {
-            'name': 'str',
-            'type': 'string',
-            'in': 'query',
-            'description': 'Some string',
-        }])
+        parser.add_argument('float', type=float, help='Some float')
+
+        self.assertEqual(parser.__schema__, [
+            {
+                "description": "Some integer",
+                "type": "integer",
+                "name": "int",
+                "in": "query"
+            }, {
+                "description": "Some string",
+                "type": "string",
+                "name": "str",
+                "in": "query"
+            }, {
+                "description": "Some float",
+                "type": "number",
+                "name": "float",
+                "in": "query"
+            }
+        ])
 
     def test_unknown_type(self):
         parser = RequestParser()
