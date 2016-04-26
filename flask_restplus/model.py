@@ -15,7 +15,6 @@ from .errors import abort
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
 
-from .utils import not_none
 
 RE_REQUIRED = re.compile(r'u?\'(?P<name>.*)\' is a required property', re.I | re.U)
 
@@ -129,7 +128,7 @@ class Model(ModelBase, dict, MutableMapping):
     @cached_property
     def resolved(self):
         '''
-        Resolve real fields before submitting them to upstream restful marshal
+        Resolve real fields before submitting them to marshal
         '''
         # Duplicate fields
         resolved = copy.deepcopy(self)
@@ -150,37 +149,18 @@ class Model(ModelBase, dict, MutableMapping):
         return resolved
 
     @cached_property
-    def __schema__(self):
-        properties = {}
-        required = set()
-        discriminator = None
+    def schema(self):
+        schema = {'type': 'object'}
         for name, field in iteritems(self):
             field = instance(field)
-            properties[name] = field.__schema__
+            schema['properties'][name] = field.__schema__
             if field.required:
-                required.add(name)
+                schema.setdefault('required', set()).add(name)
             if getattr(field, 'discriminator', False):
-                discriminator = name
-
-        schema = not_none({
-            'required': sorted(list(required)) or None,
-            'properties': properties,
-            'discriminator': discriminator,
-            'x-mask': str(self.__mask__) if self.__mask__ else None,
-            'type': 'object',
-        })
-
-        if self.__parents__:
-            refs = [
-                {'$ref': '#/definitions/{0}'.format(parent.name)}
-                for parent in self.__parents__
-                ]
-
-            return {
-                'allOf': refs + [schema]
-            }
-        else:
-            return schema
+                schema['discriminator'] = name
+        if self.__mask__:
+            schema['x-mask'] = str(self.__mask__)
+        return schema
 
     def extend(self, name, fields):
         '''
