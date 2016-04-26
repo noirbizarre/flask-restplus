@@ -3,12 +3,18 @@ from flask_restplus import Namespace, Resource, fields
 api = Namespace('dogs', description='Dogs related operations')
 
 dog = api.model('Dog', {
-    'id': fields.String(required=True, description='The dog identifier'),
+    'id': fields.Integer(required=True, description='The dog identifier'),
     'name': fields.String(required=True, description='The dog name'),
 })
 
 DOGS = [
-    {'id': 'medor', 'name': 'Medor'},
+    {'id': 1, 'name': 'Chase'},
+    {'id': 2, 'name': 'Marshal'},
+    {'id': 3, 'name': 'Skye'},
+    {'id': 4, 'name': 'Rocky'},
+    {'id': 5, 'name': 'Rubble'},
+    {'id': 6, 'name': 'Zuma'},
+    {'id': 7, 'name': 'Everest'},
 ]
 
 

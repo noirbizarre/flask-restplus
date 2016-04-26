@@ -3,12 +3,15 @@ from flask_restplus import Namespace, Resource, fields
 api = Namespace('cats', description='Cats related operations')
 
 cat = api.model('Cat', {
-    'id': fields.String(required=True, description='The cat identifier'),
+    'id': fields.Integer(required=True, description='The cat identifier'),
     'name': fields.String(required=True, description='The cat name'),
 })
 
 CATS = [
-    {'id': 'felix', 'name': 'Felix'},
+    {'id': 1, 'name': 'Felix'},
+    {'id': 2, 'name': 'Garfield'},
+    {'id': 3, 'name': 'Oliver'},
+    {'id': 4, 'name': 'Rocky'},
 ]
 
 
