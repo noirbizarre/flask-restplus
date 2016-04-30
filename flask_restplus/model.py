@@ -82,17 +82,15 @@ class ModelBase(object):
         else:
             return schema
 
-
     @classmethod
-    def inherit(cls, name, data, *parents):
+    def inherit(cls, name, *parents):
         '''
         Inherit this model (use the Swagger composition pattern aka. allOf)
-
         :param str name: The new model name
         :param dict fields: The new model extra fields
         '''
-        model = cls(name, data)
-        model.__parents__ = parents
+        model = cls(name, parents[-1])
+        model.__parents__ = parents[:-1]
         return model
 
     def validate(self, data, resolver=None):
