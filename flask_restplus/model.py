@@ -17,6 +17,7 @@ from jsonschema.exceptions import ValidationError
 
 from .utils import not_none
 
+
 RE_REQUIRED = re.compile(r'u?\'(?P<name>.*)\' is a required property', re.I | re.U)
 
 
@@ -47,25 +48,6 @@ class ModelBase(object):
 
         self.inherit = instance_inherit
 
-    @cached_property
-    def __schema__(self):
-        '''
-        The fully formed swagger schema object
-        '''
-        schema = copy.copy(self._schema)
-
-        if self.__parents__:
-            refs = [
-                {'$ref': '#/definitions/{0}'.format(parent.name)}
-                for parent in self.__parents__
-                ]
-
-            return {
-                'allOf': refs + [schema]
-            }
-        else:
-            return schema
-
     @property
     def ancestors(self):
         '''
@@ -84,16 +66,34 @@ class ModelBase(object):
                     return found
         raise ValueError('Parent ' + name + ' not found')
 
+    @property
+    def __schema__(self):
+        schema = self._schema
+
+        if self.__parents__:
+            refs = [
+                {'$ref': '#/definitions/{0}'.format(parent.name)}
+                for parent in self.__parents__
+            ]
+
+            return {
+                'allOf': refs + [schema]
+            }
+        else:
+            return schema
+
+
     @classmethod
     def inherit(cls, name, data, *parents):
         '''
-        Inherit a new model from parents (use the Swagger composition pattern aka. allOf)
+        Inherit this model (use the Swagger composition pattern aka. allOf)
 
         :param str name: The new model name
-        :param dict schema: The json schema for the model
+        :param dict fields: The new model extra fields
         '''
         model = cls(name, data)
         model.__parents__ = parents
+        return model
 
     def validate(self, data, resolver=None):
         validator = Draft4Validator(self.__schema__, resolver=resolver)
@@ -111,6 +111,11 @@ class ModelBase(object):
         key = '.'.join(str(p) for p in path)
         return key, error.message
 
+    def __unicode__(self):
+        return 'Model({name},{{{fields}}})'.format(name=self.name, fields=','.join(self.keys()))
+
+    __str__ = __unicode__
+
 
 class Model(ModelBase, dict, MutableMapping):
     '''
@@ -120,18 +125,39 @@ class Model(ModelBase, dict, MutableMapping):
     :param str name: The model public name
     :param str mask: an optional default model mask
     '''
+
     def __init__(self, name, *args, **kwargs):
         self.__mask__ = kwargs.pop('mask', None)
         if self.__mask__ and not isinstance(self.__mask__, Mask):
             self.__mask__ = Mask(self.__mask__)
-
         super(Model, self).__init__(name, *args, **kwargs)
 
         def instance_clone(name, *parents):
             return self.__class__.clone(name, self, *parents)
         self.clone = instance_clone
 
-    @cached_property
+    @property
+    def _schema(self):
+        properties = {}
+        required = set()
+        discriminator = None
+        for name, field in iteritems(self):
+            field = instance(field)
+            properties[name] = field.__schema__
+            if field.required:
+                required.add(name)
+            if getattr(field, 'discriminator', False):
+                discriminator = name
+
+        return not_none({
+            'required': sorted(list(required)) or None,
+            'properties': properties,
+            'discriminator': discriminator,
+            'x-mask': str(self.__mask__) if self.__mask__ else None,
+            'type': 'object',
+        })
+
+    @property
     def resolved(self):
         '''
         Resolve real fields before submitting them to marshal
@@ -153,29 +179,6 @@ class Model(ModelBase, dict, MutableMapping):
             candidates[0].default = self.name
 
         return resolved
-
-    @cached_property
-    def _schema(self):
-        properties = {}
-        required = set()
-        discriminator = None
-        for name, field in iteritems(self):
-            field = instance(field)
-            properties[name] = field.__schema__
-            if field.required:
-                required.add(name)
-            if getattr(field, 'discriminator', False):
-                discriminator = name
-
-        schema = not_none({
-            'required': sorted(list(required)) or None,
-            'properties': properties,
-            'discriminator': discriminator,
-            'x-mask': str(self.__mask__) if self.__mask__ else None,
-            'type': 'object',
-        })
-
-        return schema
 
     def extend(self, name, fields):
         '''
@@ -213,11 +216,6 @@ class Model(ModelBase, dict, MutableMapping):
             fields.update(copy.deepcopy(parent))
         return cls(name, fields)
 
-    def __unicode__(self):
-        return 'Model({name},{{{fields}}})'.format(name=self.name, fields=','.join(self.keys()))
-
-    __str__ = __unicode__
-
 
 class SchemaModel(ModelBase):
     '''
@@ -235,4 +233,3 @@ class SchemaModel(ModelBase):
         return 'SchemaModel({name},{schema})'.format(name=self.name, schema=self._schema)
 
     __str__ = __unicode__
-
