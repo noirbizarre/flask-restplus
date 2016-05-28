@@ -17,6 +17,15 @@ from . import TestCase, Mock, patch
 
 
 class ReqParseTestCase(TestCase):
+    def setUp(self):
+        super(ReqParseTestCase, self).setUp()
+        self.ctx = self.app.test_request_context()
+        self.ctx.push()
+
+    def tearsDown(self):
+        super(ReqParseTestCase, self).tearsDown()
+        self.ctx.pop()
+
     def test_api_shortcut(self):
         api = Api(self.app)
         parser = api.parser()
@@ -257,6 +266,7 @@ class ReqParseTestCase(TestCase):
             }
             try:
                 parser.parse_args(req)
+                self.fail("Request didn't fail")
             except BadRequest as e:
                 self.assertEqual(e.data['message'], 'Input payload validation failed')
                 self.assertEqual(e.data['errors'], expected)
@@ -270,6 +280,7 @@ class ReqParseTestCase(TestCase):
             }
             try:
                 parser.parse_args(req)
+                self.fail("Request didn't fail")
             except BadRequest as e:
                 self.assertEqual(e.data['message'], 'Input payload validation failed')
                 self.assertEqual(e.data['errors'], expected)
@@ -285,6 +296,7 @@ class ReqParseTestCase(TestCase):
         with self.app.app_context():
             try:
                 parser.parse_args(req)
+                self.fail("Request didn't fail")
             except BadRequest as e:
                 self.assertEqual(e.data['message'], 'Input payload validation failed')
                 self.assertEqual(e.data['errors'], {
@@ -303,6 +315,7 @@ class ReqParseTestCase(TestCase):
         with self.app.app_context():
             try:
                 parser.parse_args(req)
+                self.fail("Request didn't fail")
             except BadRequest as e:
                 self.assertEqual(e.data['message'], 'Input payload validation failed')
                 self.assertEqual(e.data['errors'], {
