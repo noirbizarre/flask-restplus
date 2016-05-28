@@ -151,13 +151,16 @@ class Argument(object):
         try:
             return self.type(value, self.name, op)
         except TypeError:
-            try:
-                if self.type is decimal.Decimal:
-                    return self.type(str(value), self.name)
-                else:
+            if self.type is decimal.Decimal:
+                try:
+                    return self.type(str(value))
+                except decimal.InvalidOperation as d:
+                    raise ValueError("Invalid literal for Decimal: '%s'" % (value,))
+            else:
+                try:
                     return self.type(value, self.name)
-            except TypeError:
-                return self.type(value)
+                except TypeError:
+                    return self.type(value)
 
     def handle_validation_error(self, error, bundle_errors):
         '''
@@ -216,17 +219,19 @@ class Argument(object):
 
                     try:
                         value = self.convert(value, operator)
-                    except Exception as error:
+                    except ValueError as error:
                         if self.ignore:
                             continue
                         return self.handle_validation_error(error, bundle_errors)
+                    except Exception:
+                        if self.ignore:
+                            continue
+                        raise
 
                     if self.choices and value not in self.choices:
                         msg = '{0} is not a valid choice'.format(value)
                         error = ValueError(msg)
-                        if bundle_errors:
-                            return self.handle_validation_error(error, bundle_errors)
-                        self.handle_validation_error(error, bundle_errors)
+                        return self.handle_validation_error(error, bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -349,9 +354,12 @@ class RequestParser(object):
         errors = {}
         for arg in self.args:
             value, found = arg.parse(req, self.bundle_errors)
+
             if isinstance(value, ValueError):
                 errors.update(found)
                 found = None
+            elif isinstance(value, Exception):
+                raise value
             if found or arg.store_missing:
                 result[arg.dest or arg.name] = value
         if errors:

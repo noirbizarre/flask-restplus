@@ -47,25 +47,27 @@ class ReqParseTestCase(TestCase):
             args = parser.parse_args()
             self.assertEqual(args['todo'], {'task': 'aaa'})
 
-    @patch('flask_restplus.reqparse.abort')
-    def test_help_with_error_msg(self, abort):
+    @patch('flask_restplus.reqparse.abort', side_effect=BadRequest('Bad Request'))
+    def test_help_with_reerror_msg(self, abort):
         parser = RequestParser()
         parser.add_argument('foo', choices=('one', 'two'), help='Bad choice: {error_msg}')
         req = Mock(['values'])
         req.values = MultiDict([('foo', 'three')])
         with self.app.app_context():
-            parser.parse_args(req)
+            with self.assertRaises(BadRequest):
+                parser.parse_args(req)
         expected = {'foo': 'Bad choice: three is not a valid choice'}
         abort.assert_called_with(400, 'Input payload validation failed', errors=expected)
 
-    @patch('flask_restplus.reqparse.abort')
+    @patch('flask_restplus.reqparse.abort', side_effect=BadRequest('Bad Request'))
     def test_help_no_error_msg(self, abort):
         parser = RequestParser()
         parser.add_argument('foo', choices=['one', 'two'], help='Please select a valid choice')
         req = Mock(['values'])
         req.values = MultiDict([('foo', 'three')])
         with self.app.app_context():
-            parser.parse_args(req)
+            with self.assertRaises(BadRequest):
+                parser.parse_args(req)
         expected = {'foo': 'Please select a valid choice'}
         abort.assert_called_with(400, 'Input payload validation failed', errors=expected)
 
@@ -488,12 +490,35 @@ class ReqParseTestCase(TestCase):
     def test_type_decimal(self):
         parser = RequestParser()
         parser.add_argument('foo', type=decimal.Decimal, location='json')
+        parser.add_argument('bar', type=decimal.Decimal, location='json')
 
         with self.app.test_request_context('/bubble', method='post',
-                                      data=json.dumps({'foo': '1.0025'}),
+                                      data=json.dumps({'foo': '1.0025',
+                                                       'bar': 1.0025}),
                                       content_type='application/json'):
             args = parser.parse_args()
             self.assertEqual(args['foo'], decimal.Decimal('1.0025'))
+            self.assertEqual(args['bar'], decimal.Decimal('1.0025'))
+
+    def test_type_decimal_error(self):
+        parser = RequestParser()
+        parser.add_argument('foo', type=decimal.Decimal, location='json')
+
+        with self.app.test_request_context('/bubble', method='post',
+                                      data=json.dumps({'foo': '1.0a025'}),
+                                      content_type='application/json'):
+            with self.assertRaises(BadRequest):
+                parser.parse_args()
+
+    def test_type_decimal_error_bundling(self):
+        parser = RequestParser(bundle_errors=True)
+        parser.add_argument('foo', type=decimal.Decimal, location='json')
+
+        with self.app.test_request_context('/bubble', method='post',
+                                      data=json.dumps({'foo': '1.0a025'}),
+                                      content_type='application/json'):
+            with self.assertRaises(BadRequest):
+                parser.parse_args()
 
     def test_type_filestorage(self):
         parser = RequestParser()
