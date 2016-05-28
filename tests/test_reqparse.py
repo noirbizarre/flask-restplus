@@ -487,6 +487,35 @@ class ReqParseTestCase(TestCase):
             except BadRequest:
                 self.fail()
 
+    def test_type_callable_valueerror(self):
+        parser = RequestParser()
+
+        def bad_value_type(x):
+            raise ValueError(x)
+
+        parser.add_argument("bad_value", type=bad_value_type,
+                            location="json", required=False)
+
+        with self.app.test_request_context('/bubble', method="post",
+                                           data=json.dumps({"bad_value": "bad"}),
+                                           content_type='application/json'):
+            try:
+                parser.parse_args()
+                self.fail("Request didn't fail")
+            except BadRequest as e:
+                self.assertEqual(e.data['message'], 'Input payload validation failed')
+                self.assertEqual(e.data['errors'], {'bad_value': 'bad'})
+
+    def test_type_callable_broken(self):
+        parser = RequestParser()
+        parser.add_argument("broken", type=lambda x: x.bad_attribute,
+                            location="json", required=False)
+
+        with self.app.test_request_context('/bubble', method="post",
+                                           data=json.dumps({"broken": "broken"}),
+                                           content_type='application/json'):
+             self.assertRaises(AttributeError, parser.parse_args)
+
     def test_type_decimal(self):
         parser = RequestParser()
         parser.add_argument('foo', type=decimal.Decimal, location='json')
