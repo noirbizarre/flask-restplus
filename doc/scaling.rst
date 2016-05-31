@@ -148,7 +148,6 @@ in you application:
     from apis import blueprint as api
 
     app = Flask(__name__)
-    api.init_app(app)
     app.register_blueprint(api, url_prefix='/api/1')
     app.run(debug=True)
 
