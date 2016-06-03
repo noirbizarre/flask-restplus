@@ -55,7 +55,7 @@ With Flask-Restplus, you only import the api instance to route and document your
 .. code-block:: python
 
     from flask import Flask
-    from flask.ext.restplus import Api, Resource, fields
+    from flask_restplus import Api, Resource, fields
 
     app = Flask(__name__)
     api = Api(app, version='1.0', title='TodoMVC API',

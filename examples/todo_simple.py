@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask.ext.restplus import Resource, Api
+from flask_restplus import Resource, Api
 
 app = Flask(__name__)
 api = Api(app)

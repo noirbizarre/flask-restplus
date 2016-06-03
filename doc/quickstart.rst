@@ -18,7 +18,7 @@ As every other extension, you can initialize it with an application object:
 .. code-block:: python
 
     from flask import Flask
-    from flask.ext.restplus import Api
+    from flask_restplus import Api
 
     app = Flask(__name__)
     api = Api(app)
@@ -28,7 +28,7 @@ of lazily with the factory pattern:
 .. code-block:: python
 
     from flask import Flask
-    from flask.ext.restplus import Api
+    from flask_restplus import Api
 
     api = Api()
 
