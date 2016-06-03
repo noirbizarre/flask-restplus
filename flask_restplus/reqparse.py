@@ -54,6 +54,7 @@ PY_TYPES = {
     int: 'integer',
     str: 'string',
     bool: 'boolean',
+    float: 'number',
     None: 'void'
 }
 
