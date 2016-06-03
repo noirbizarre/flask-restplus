@@ -15,7 +15,7 @@ from flask import make_response as original_flask_make_response
 from flask.helpers import _endpoint_from_view_func
 from flask.signals import got_request_exception
 
-from jsonschema import RefResolver
+from jsonschema import RefResolver, FormatChecker
 
 from werkzeug import cached_property
 from werkzeug.datastructures import Headers
@@ -78,7 +78,9 @@ class Api(object):
     :param dict authorizations: A Swagger Authorizations declaration as dictionary
     :param bool serve_challenge_on_401: Serve basic authentication challenge with 401
         responses (default 'False')
-
+    :param FormatChecker format_checker: A jsonschema.FormatChecker object that is hooked into
+    the Model validator. A default or a custom FormatChecker can be provided (e.g., with custom
+    checkers), otherwise the default action is to not enforce any format validation.
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,
@@ -88,7 +90,7 @@ class Api(object):
             default='default', default_label='Default namespace', validate=None,
             tags=None, prefix='',
             default_mediatype='application/json', decorators=None,
-            catch_all_404s=False, serve_challenge_on_401=False,
+            catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
             **kwargs):
         self.version = version
         self.title = title or 'API'
@@ -115,6 +117,7 @@ class Api(object):
         self._schema = None
         self.models = {}
         self._refresolver = None
+        self.format_checker = format_checker
         self.namespaces = []
         self.default_namespace = self.namespace(default, default_label,
             endpoint='{0}-declaration'.format(default),
