@@ -74,7 +74,7 @@ setup(
     url='https://github.com/noirbizarre/flask-restplus',
     author='Axel Haustant',
     author_email='axel@data.gouv.fr',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
     install_requires=install_requires,
     tests_require=tests_require,
