@@ -225,7 +225,6 @@ And the app will simply mount them:
     from apiX import blueprint as apiX
 
     app = Flask(__name__)
-    api.init_app(app)
     app.register_blueprint(api1)
     app.register_blueprint(apiX)
     app.run(debug=True)
