@@ -108,6 +108,39 @@ class PayloadTestCase(TestCase):
 
         self.assert_errors(response, 'name')
 
+    def _setup_api_format_checker_tests(self, format_checker=None):
+        class IPAddress(restplus.fields.Raw):
+            __schema_type__ = 'string'
+            __schema_format__ = 'ipv4'
+
+        api = restplus.Api(self.app, format_checker=format_checker)
+        model = api.model('MyModel', {'ip': IPAddress(required=True)})
+
+        @api.route('/format_checker/')
+        class TestResource(restplus.Resource):
+            @api.expect(model, validate=True)
+            def post(self):
+                return {}
+
+    def test_format_checker_none_on_constructor(self):
+        self._setup_api_format_checker_tests()
+
+        data = {'ip': '192.168.1'}
+        response = self.post('/format_checker/', data)
+        self.assertEquals(response.status_code, 200)
+        out = json.loads(response.data.decode('utf8'))
+        self.assertEquals(out, {})
+
+    def test_format_checker_object_on_constructor(self):
+        from jsonschema import FormatChecker
+        self._setup_api_format_checker_tests(format_checker=FormatChecker())
+
+        data = {'ip': '192.168.1'}
+        response = self.post('/format_checker/', data)
+        self.assertEquals(response.status_code, 400)
+        out = json.loads(response.data.decode('utf8'))
+        self.assertIn('ipv4', out['errors']['ip'])
+
     def test_validation_false_in_config(self):
         with self.settings(RESTPLUS_VALIDATE=False):
             api = restplus.Api(self.app)

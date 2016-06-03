@@ -538,6 +538,26 @@ class ModelTestCase(TestCase):
             'type': 'object'
         })
 
+    def test_validate(self):
+        from jsonschema import FormatChecker
+        from werkzeug.exceptions import BadRequest
+
+        class IPAddress(fields.Raw):
+            __schema_type__ = 'string'
+            __schema_format__ = 'ipv4'
+
+        data = {'ip': '192.168.1'}
+        model = Model('MyModel', {'ip': IPAddress()})
+
+        # Test that validate without a FormatChecker does not check if a
+        # primitive type conforms to the defined format property
+        self.assertIsNone(model.validate(data))
+
+        # Test that validate with a FormatChecker enforces the check of the
+        # format property and throws an error if invalid
+        with self.assertRaises(BadRequest):
+            model.validate(data, format_checker=FormatChecker())
+
 
 class ModelDeprecattionsTest(TestCase):
     def test_extend_is_deprecated(self):
