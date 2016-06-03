@@ -14,3 +14,6 @@ script:
   - nosetests --with-coverage
 after_success:
   - coveralls --rcfile=coverage.rc
+matrix:
+  allow_failures:
+    - python: pypy3
