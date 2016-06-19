@@ -1,7 +1,7 @@
 # needs: pip install python-simplexml
 from simplexml import dumps
 from flask import make_response, Flask
-from flask.ext.restplus import Api, Resource, fields
+from flask_restplus import Api, Resource, fields
 
 
 def output_xml(data, code, headers=None):

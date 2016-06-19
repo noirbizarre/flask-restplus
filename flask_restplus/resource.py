@@ -69,4 +69,4 @@ class Resource(MethodView):
                     if isinstance(expect, ModelBase):
                         # TODO: proper content negotiation
                         data = request.get_json()
-                        expect.validate(data, self.api.refresolver)
+                        expect.validate(data, self.api.refresolver, self.api.format_checker)

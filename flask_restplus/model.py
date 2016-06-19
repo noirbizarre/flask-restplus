@@ -93,8 +93,8 @@ class ModelBase(object):
         model.__parents__ = parents[:-1]
         return model
 
-    def validate(self, data, resolver=None):
-        validator = Draft4Validator(self.__schema__, resolver=resolver)
+    def validate(self, data, resolver=None, format_checker=None):
+        validator = Draft4Validator(self.__schema__, resolver=resolver, format_checker=format_checker)
         try:
             validator.validate(data)
         except ValidationError:

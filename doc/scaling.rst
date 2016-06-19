@@ -148,7 +148,6 @@ in you application:
     from apis import blueprint as api
 
     app = Flask(__name__)
-    api.init_app(app)
     app.register_blueprint(api, url_prefix='/api/1')
     app.run(debug=True)
 
@@ -226,7 +225,6 @@ And the app will simply mount them:
     from apiX import blueprint as apiX
 
     app = Flask(__name__)
-    api.init_app(app)
     app.register_blueprint(api1)
     app.register_blueprint(apiX)
     app.run(debug=True)
