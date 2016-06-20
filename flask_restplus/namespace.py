@@ -9,7 +9,7 @@ from flask.views import http_method_funcs
 
 from .errors import abort
 from .marshalling import marshal, marshal_with
-from .model import Model
+from .model import Model, SchemaModel
 from .reqparse import RequestParser
 from .utils import merge
 
