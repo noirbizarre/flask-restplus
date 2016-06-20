@@ -404,3 +404,40 @@ You can also use the :attr:`__schema_format__`, ``__schema_type__`` and
 
     class MyVerySpecialField(fields.Raw):
         __schema_example__ = 'hello, world'
+
+
+Define model using JSON Schema
+------------------------------
+
+You can define models using `JSON Schema <http://json-schema.org/examples.html>`_ (Draft v4).
+
+.. code-block:: python
+
+    address = api.schema_model('Address', {
+        'properties': {
+            'road': {
+                'type': 'string'
+            },
+        },
+        'type': 'object'
+    })
+
+    person = address = api.schema_model('Person', {
+        'required': ['address'],
+        'properties': {
+            'name': {
+                'type': 'string'
+            },
+            'age': {
+                'type': 'integer'
+            },
+            'birthdate': {
+                'type': 'string',
+                'format': 'date-time'
+            },
+            'address': {
+                '$ref': '#/definitions/Address',
+            }
+        },
+        'type': 'object'
+    })
