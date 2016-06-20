@@ -53,6 +53,11 @@ class NamespaceTest(TestCase):
         api.model('Person', {})
         self.assertIn('Person', api.models)
 
+    def test_schema_model(self):
+        api = Namespace('test')
+        api.schema_model('Person', {})
+        self.assertIn('Person', api.models)
+
     def test_clone(self):
         api = Namespace('test')
         parent = api.model('Parent', {})
