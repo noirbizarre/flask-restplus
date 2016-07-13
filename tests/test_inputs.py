@@ -128,6 +128,8 @@ class UrlTest(InputTest):
             'http://@foo:bar@example.com',
             'http://:bar@example.com',
             'http://bar:bar:bar@example.com',
+            'http://300:300:300:300',
+            'http://example.com:70000',
         ]
 
         for url in urls:
