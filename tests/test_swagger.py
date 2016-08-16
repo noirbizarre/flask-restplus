@@ -95,6 +95,7 @@ class SwaggerTests(ApiMixin, TestCase):
             'name': 'Apache 2.0',
             'url': 'http://www.apache.org/licenses/LICENSE-2.0.html',
         })
+        self.assertEqual(data['host'], 'somewhere.com')
 
     def test_specs_endpoint_info_delayed(self):
         api = restplus.Api(version='1.0')
@@ -131,6 +132,7 @@ class SwaggerTests(ApiMixin, TestCase):
             'name': 'Apache 2.0',
             'url': 'http://www.apache.org/licenses/LICENSE-2.0.html',
         })
+        self.assertEqual(data['host'], 'somewhere.com')
 
     def test_specs_endpoint_info_callable(self):
         api = restplus.Api(version=lambda: '1.0',
@@ -166,6 +168,7 @@ class SwaggerTests(ApiMixin, TestCase):
             'name': 'Apache 2.0',
             'url': 'http://www.apache.org/licenses/LICENSE-2.0.html',
         })
+        self.assertEqual(data['host'], 'somewhere.com')
 
     def test_specs_endpoint_no_host(self):
         restplus.Api(self.app)
