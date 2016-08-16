@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, absolute_import
+
 
 import re
 
@@ -15,6 +15,7 @@ from . import fields
 from .model import Model
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
+import collections
 
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
@@ -51,7 +52,7 @@ def ref(model):
 
 def _v(value):
     '''Dereference values (callable)'''
-    return value() if callable(value) else value
+    return value() if isinstance(value, collections.Callable) else value
 
 
 def extract_path(path):
@@ -224,7 +225,7 @@ class Swagger(object):
             method_doc = doc.get(method, OrderedDict())
             method_impl = getattr(resource, method)
             if hasattr(method_impl, 'im_func'):
-                method_impl = method_impl.im_func
+                method_impl = method_impl.__func__
             elif hasattr(method_impl, '__func__'):
                 method_impl = method_impl.__func__
             method_doc = merge(method_doc, getattr(method_impl, '__apidoc__', OrderedDict()))
@@ -275,7 +276,7 @@ class Swagger(object):
 
     def register_errors(self):
         responses = {}
-        for exception, handler in self.api.error_handlers.items():
+        for exception, handler in list(self.api.error_handlers.items()):
             doc = parse_docstring(handler)
             response = {
                 'description': doc['summary']
@@ -284,7 +285,7 @@ class Swagger(object):
             if 'params' in apidoc:
                 response['headers'] = dict(
                     (n, _param_to_header(o))
-                    for n, o in apidoc['params'].items() if o.get('in') == 'header'
+                    for n, o in list(apidoc['params'].items()) if o.get('in') == 'header'
                 )
             if 'responses' in apidoc:
                 _, model = list(apidoc['responses'].values())[0]
@@ -334,7 +335,7 @@ class Swagger(object):
            https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#specification-extensions
         '''
         exts = {}
-        for key, value in doc[method].iteritems():
+        for key, value in doc[method].items():
             if key.startswith('x_'):
                 exts.update({key.replace('x_', 'x-'): value})
         return exts
@@ -413,8 +414,8 @@ class Swagger(object):
                 responses[code]['schema'] = self.serialize_schema(d['model'])
 
             if 'docstring' in d:
-                for name, description in d['docstring']['raises'].items():
-                    for exception, handler in self.api.error_handlers.items():
+                for name, description in list(d['docstring']['raises'].items()):
+                    for exception, handler in list(self.api.error_handlers.items()):
                         error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
                         code = list(error_responses.keys())[0] if error_responses else None
                         if code and exception.__name__ == name:

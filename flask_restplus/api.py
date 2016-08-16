@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 import difflib
 import inspect
@@ -32,6 +32,7 @@ from .resource import Resource
 from .swagger import Swagger
 from .utils import default_id, camel_to_dash, unpack
 from .representations import output_json
+import collections
 
 RE_RULES = re.compile('(<.*>)')
 
@@ -397,10 +398,10 @@ class Api(object):
         for resource, urls, kwargs in ns.resources:
             self.register_resource(ns, resource, *urls, **kwargs)
         # Register models
-        for name, definition in ns.models.items():
+        for name, definition in list(ns.models.items()):
             self.models[name] = definition
         # Register error handlers
-        for exception, handler in ns.error_handlers.items():
+        for exception, handler in list(ns.error_handlers.items()):
             self.error_handlers[exception] = handler
 
     def namespace(self, *args, **kwargs):
@@ -605,7 +606,7 @@ class Api(object):
     def _help_on_404(self, message=None):
         rules = dict([(RE_RULES.sub('', rule.rule), rule.rule)
                       for rule in current_app.url_map.iter_rules()])
-        close_matches = difflib.get_close_matches(request.path, rules.keys())
+        close_matches = difflib.get_close_matches(request.path, list(rules.keys()))
         if close_matches:
             # If we already have a message, add punctuation and continue it.
             message = ''.join((
@@ -655,7 +656,7 @@ class Api(object):
         :param **options: See BlueprintSetupState.add_url_rule
         '''
 
-        if callable(rule):
+        if isinstance(rule, collections.Callable):
             rule = rule(blueprint_setup.url_prefix)
         elif blueprint_setup.url_prefix:
             rule = blueprint_setup.url_prefix + rule
@@ -733,7 +734,7 @@ class Api(object):
 
         if self.serve_challenge_on_401:
             realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restplus")
-            challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+            challenge = "{0} realm=\"{1}\"".format("Basic", realm)
 
             response.headers['WWW-Authenticate'] = challenge
         return response

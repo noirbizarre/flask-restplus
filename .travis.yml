@@ -16,7 +16,4 @@ after_success:
   - coveralls --rcfile=coverage.rc
 matrix:
   allow_failures:
-    - python: 3.3
-    - python: 3.4
-    - python: 3.5
     - python: pypy3

@@ -70,7 +70,8 @@ class SwaggerTests(ApiMixin, TestCase):
             contact_url='http://support.somewhere.com',
             contact_email='contact@somewhere.com',
             license='Apache 2.0',
-            license_url='http://www.apache.org/licenses/LICENSE-2.0.html'
+            license_url='http://www.apache.org/licenses/LICENSE-2.0.html',
+            host='somewhere.com'
         )
         api.init_app(self.app)
 
@@ -105,7 +106,8 @@ class SwaggerTests(ApiMixin, TestCase):
             contact_url='http://support.somewhere.com',
             contact_email='contact@somewhere.com',
             license='Apache 2.0',
-            license_url='http://www.apache.org/licenses/LICENSE-2.0.html'
+            license_url='http://www.apache.org/licenses/LICENSE-2.0.html',
+            host='somewhere.com'
         )
 
         data = self.get_specs()
@@ -139,7 +141,8 @@ class SwaggerTests(ApiMixin, TestCase):
             contact_url=lambda: 'http://support.somewhere.com',
             contact_email=lambda: 'contact@somewhere.com',
             license=lambda: 'Apache 2.0',
-            license_url=lambda: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+            license_url=lambda: 'http://www.apache.org/licenses/LICENSE-2.0.html',
+            host='somewhere.com'
         )
         api.init_app(self.app)
 
