@@ -5,12 +5,14 @@ import inspect
 import six
 import warnings
 
+# TODO: replace "from flask.views import" by "from wsgiservice.resource import Resource.KNOWN_METHODS;"
+#       "http_method_funcs = frozenset(Resource.KNOWN_METHODS)"
 from flask.views import http_method_funcs
 
-from .errors import abort
-from .marshalling import marshal, marshal_with
-from .model import Model
-from .reqparse import RequestParser
+#from .errors import abort
+#from .marshalling import marshal, marshal_with
+#from .model import Model
+#from .reqparse import RequestParser
 from .utils import merge
 
 
@@ -34,15 +36,19 @@ class Namespace(object):
 
         self._schema = None
         self._validate = validate
-        self.models = {}
-        self.urls = {}
-        self.decorators = decorators if decorators else []
+        # self.models = {}
+        # self.urls = {}
+        # self.decorators = decorators if decorators else []
         self.resources = []
-        self.error_handlers = {}
-        self.default_error_handler = None
+        # self.error_handlers = {}
+        # self.default_error_handler = None
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
+
+    ### Add resource to namespace (maintained in triple of resource class, urls (with added namespace prefix path)
+    ### and any extra labels such as endpoint name, resource constructor named/keyword arguments in list/tuple or dict
+    ### form)
 
     def add_resource(self, resource, *urls, **kwargs):
         '''
@@ -83,6 +89,13 @@ class Namespace(object):
             return cls
         return wrapper
 
+
+    ### Merge dictionary of keyword arguments passed to Namespace.doc with prexisting
+    ### __apidoc__ function/class attribute (after adapting possible 'params' and 'parser'/'body')
+
+    # Transforms top-level and possibly nested 'params' and 'parser'/'body' items in doc dictinary
+    # according to new convention and then merges resulting dictionary existing methods with
+    # __apidoc__ function/class attribute (a better name would be _add_to_preexisting_apidoc)
     def _handle_api_doc(self, cls, doc):
         if doc is False:
             cls.__apidoc__ = False
@@ -103,6 +116,7 @@ class Namespace(object):
         '''A decorator to add some api documentation to the decorated object'''
         if isinstance(shortcut, six.text_type):
             kwargs['id'] = shortcut
+
         show = shortcut if isinstance(shortcut, bool) else True
 
         def wrapper(documented):
@@ -110,135 +124,164 @@ class Namespace(object):
             return documented
         return wrapper
 
+
+    ### hide from documentation ###
+
     def hide(self, func):
         '''A decorator to hide a resource or a method from specifications'''
         return self.doc(False)(func)
 
-    def abort(self, *args, **kwargs):
-        '''
-        Properly abort the current request
+    # ### error handling
+    #
+    # def abort(self, *args, **kwargs):
+    #     '''
+    #     Properly abort the current request
+    #
+    #     See: :func:`~flask_restplus.errors.abort`
+    #     '''
+    #     abort(*args, **kwargs)
 
-        See: :func:`~flask_restplus.errors.abort`
-        '''
-        abort(*args, **kwargs)
 
-    def add_model(self, name, definition):
-        self.models[name] = definition
-        for api in self.apis:
-            api.models[name] = definition
-        return definition
+    ### Adding models ("interface types") to the Namespace.models Model instance dictionary
+    ### that contains parts of the Model type hierarchy relevant to this namespace of the API
 
-    def model(self, name=None, model=None, mask=None, **kwargs):
-        '''
-        Register a model
+    # # Add model to the namespace
+    # def add_model(self, name, definition):
+    #     self.models[name] = definition
+    #     for api in self.apis:
+    #         api.models[name] = definition
+    #     return definition
+    #
+    # def model(self, name=None, model=None, mask=None, **kwargs):
+    #     '''
+    #     Register a model
+    #
+    #     .. seealso:: :class:`Model`
+    #     '''
+    #     model = Model(name, model, mask=mask)
+    #     model.__apidoc__.update(kwargs)
+    #     return self.add_model(name, model)
+    #
+    # def extend(self, name, parent, fields):
+    #     '''
+    #     Extend a model (Duplicate all fields)
+    #
+    #     :deprecated: since 0.9. Use :meth:`clone` instead
+    #     '''
+    #     if isinstance(parent, list):
+    #         parents = parent + [fields]
+    #         model = Model.extend(name, *parents)
+    #     else:
+    #         model = Model.extend(name, parent, fields)
+    #     return self.add_model(name, model)
+    #
+    # def clone(self, name, *specs):
+    #     '''
+    #     Clone a model (Duplicate all fields)
+    #
+    #     :param str name: the resulting model name
+    #     :param specs: a list of models from which to clone the fields
+    #
+    #     .. seealso:: :meth:`Model.clone`
+    #
+    #     '''
+    #     model = Model.clone(name, *specs)
+    #     return self.add_model(name, model)
+    #
+    # def inherit(self, name, *specs):
+    #     '''
+    #     Inherit a modal (use the Swagger composition pattern aka. allOf)
+    #
+    #     .. seealso:: :meth:`Model.inherit`
+    #     '''
+    #     model = Model.inherit(name, *specs)
+    #     return self.add_model(name, model)
 
-        .. seealso:: :class:`Model`
-        '''
-        model = Model(name, model, mask=mask)
-        model.__apidoc__.update(kwargs)
-        return self.add_model(name, model)
 
-    def extend(self, name, parent, fields):
-        '''
-        Extend a model (Duplicate all fields)
+    ### Parameter models ###
 
-        :deprecated: since 0.9. Use :meth:`clone` instead
-        '''
-        if isinstance(parent, list):
-            parents = parent + [fields]
-            model = Model.extend(name, *parents)
-        else:
-            model = Model.extend(name, parent, fields)
-        return self.add_model(name, model)
+    # # Parameter model annotation (validation is done in the Resource base class)
+    # def expect(self, *inputs, **kwargs):
+    #     '''
+    #     A decorator to Specify the expected input model
+    #
+    #     :param Model|Parse inputs: An expect model or request parser
+    #     :param bool validate: whether to perform validation or not
+    #
+    #     '''
+    #     expect = []
+    #     params = {
+    #         'validate': kwargs.get('validate', None) or self._validate,
+    #         'expect': expect
+    #     }
+    #     for param in inputs:
+    #         expect.append(param)
+    #     return self.doc(**params)
 
-    def clone(self, name, *specs):
-        '''
-        Clone a model (Duplicate all fields)
 
-        :param str name: the resulting model name
-        :param specs: a list of models from which to clone the fields
+    # # Request parser retrieval (parameter specification framework), not
+    # # clear whether going to be used in wsgiservice
 
-        .. seealso:: :meth:`Model.clone`
+    # def parser(self):
+    #     '''Instanciate a :class:`~RequestParser`'''
+    #     return RequestParser()
 
-        '''
-        model = Model.clone(name, *specs)
-        return self.add_model(name, model)
 
-    def inherit(self, name, *specs):
-        '''
-        Inherit a modal (use the Swagger composition pattern aka. allOf)
+    ### Response models ###
 
-        .. seealso:: :meth:`Model.inherit`
-        '''
-        model = Model.inherit(name, *specs)
-        return self.add_model(name, model)
+    # # Possibly affects marshal_with
+    # def as_list(self, field):
+    #     '''Allow to specify nested lists for documentation'''
+    #     field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
+    #     return field
 
-    def expect(self, *inputs, **kwargs):
-        '''
-        A decorator to Specify the expected input model
+    # # Response model annotation and rearrangement of return value of decorated method
+    # def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
+    #     '''
+    #     A decorator specifying the fields to use for serialization.
+    #
+    #     :param bool as_list: Indicate that the return type is a list (for the documentation)
+    #     :param int code: Optionally give the expected HTTP response code if its different from 200
+    #
+    #     '''
+    #     def wrapper(func):
+    #         doc = {
+    #             'responses': {
+    #                 code: (description, [fields]) if as_list else (description, fields)
+    #             },
+    #             '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
+    #         }
+    #         func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
+    #         return marshal_with(fields, **kwargs)(func)
+    #     return wrapper
+    #
+    # def marshal_list_with(self, fields, **kwargs):
+    #     '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
+    #     return self.marshal_with(fields, True, **kwargs)
+    #
+    # def marshal(self, *args, **kwargs):
+    #     '''A shortcut to the :func:`marshal` helper'''
+    #     return marshal(*args, **kwargs)
 
-        :param Model|Parse inputs: An expect model or request parser
-        :param bool validate: whether to perform validation or not
+    ### Error handler registry ###
 
-        '''
-        expect = []
-        params = {
-            'validate': kwargs.get('validate', None) or self._validate,
-            'expect': expect
-        }
-        for param in inputs:
-            expect.append(param)
-        return self.doc(**params)
+    # # Error handling in this way is Flask-specific and implemented differently in the
+    # # __call__ operator of the wsgiservice.Resource base class
+    # def errorhandler(self, exception):
+    #     '''A decorator to register an error handler for a given exception'''
+    #     if inspect.isclass(exception) and issubclass(exception, Exception):
+    #         # Register an error handler for a given exception
+    #         def wrapper(func):
+    #             self.error_handlers[exception] = func
+    #             return func
+    #         return wrapper
+    #     else:
+    #         # Register the default error handler
+    #         self.default_error_handler = exception
+    #         return exception
 
-    def parser(self):
-        '''Instanciate a :class:`~RequestParser`'''
-        return RequestParser()
 
-    def as_list(self, field):
-        '''Allow to specify nested lists for documentation'''
-        field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
-        return field
-
-    def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
-        '''
-        A decorator specifying the fields to use for serialization.
-
-        :param bool as_list: Indicate that the return type is a list (for the documentation)
-        :param int code: Optionally give the expected HTTP response code if its different from 200
-
-        '''
-        def wrapper(func):
-            doc = {
-                'responses': {
-                    code: (description, [fields]) if as_list else (description, fields)
-                },
-                '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
-            }
-            func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            return marshal_with(fields, **kwargs)(func)
-        return wrapper
-
-    def marshal_list_with(self, fields, **kwargs):
-        '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
-        return self.marshal_with(fields, True, **kwargs)
-
-    def marshal(self, *args, **kwargs):
-        '''A shortcut to the :func:`marshal` helper'''
-        return marshal(*args, **kwargs)
-
-    def errorhandler(self, exception):
-        '''A decorator to register an error handler for a given exception'''
-        if inspect.isclass(exception) and issubclass(exception, Exception):
-            # Register an error handler for a given exception
-            def wrapper(func):
-                self.error_handlers[exception] = func
-                return func
-            return wrapper
-        else:
-            # Register the default error handler
-            self.default_error_handler = exception
-            return exception
-
+    ### Simple parameter annotation ###
     def param(self, name, description=None, _in='query', **kwargs):
         '''
         A decorator to specify one of the expected parameters
@@ -252,6 +295,7 @@ class Namespace(object):
         param['description'] = description
         return self.doc(params={name: param})
 
+    ### Simple response annotation ###
     def response(self, code, description, model=None, **kwargs):
         '''
         A decorator to specify one of the expected responses
@@ -263,6 +307,7 @@ class Namespace(object):
         '''
         return self.doc(responses={code: (description, model) if model else description})
 
+    ### Simple header annotation ###
     def header(self, name, description=None, **kwargs):
         '''
         A decorator to specify one of the expected headers
@@ -273,6 +318,7 @@ class Namespace(object):
         '''
         return self.param(name, description=description, _in='header', **kwargs)
 
+    ### Simple deprecated annotation ###
     def deprecated(self, func):
         '''A decorator to mark a resource or a method as deprecated'''
         return self.doc(deprecated=True)(func)
