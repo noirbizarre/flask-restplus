@@ -8,17 +8,18 @@ from email.utils import formatdate
 
 from six import iteritems, itervalues, text_type, string_types
 
-from flask import url_for, request
-from werkzeug import cached_property
+# from flask import url_for, request
+# from werkzeug import cached_property
 
-from ._compat import urlparse, urlunparse
+# from ._compat import urlparse, urlunparse
 from .inputs import date_from_iso8601, datetime_from_iso8601, datetime_from_rfc822
 from .errors import RestError
 from .marshalling import marshal
 from .utils import camel_to_dash, not_none
 
 
-__all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime', 'Date',
+__all__ = ('Raw', 'String', 'FormattedString', #'Url',
+           'DateTime', 'Date',
            'Boolean', 'Integer', 'Float', 'Arbitrary', 'Fixed',
            'Nested', 'List', 'ClassName', 'Polymorph',
            'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingError')
@@ -165,7 +166,8 @@ class Raw(object):
         value = getattr(self, key)
         return value() if callable(value) else value
 
-    @cached_property
+    # @cached_property
+    @property # TODO: check vs. cached_property
     def __schema__(self):
         return not_none(self.schema())
 
@@ -550,31 +552,32 @@ class Date(DateTime):
             raise ValueError('Unsupported Date format')
 
 
-class Url(StringMixin, Raw):
-    '''
-    A string representation of a Url
-
-    :param str endpoint: Endpoint name. If endpoint is ``None``, ``request.endpoint`` is used instead
-    :param bool absolute: If ``True``, ensures that the generated urls will have the hostname included
-    :param str scheme: URL scheme specifier (e.g. ``http``, ``https``)
-    '''
-    def __init__(self, endpoint=None, absolute=False, scheme=None, **kwargs):
-        super(Url, self).__init__(**kwargs)
-        self.endpoint = endpoint
-        self.absolute = absolute
-        self.scheme = scheme
-
-    def output(self, key, obj):
-        try:
-            data = to_marshallable_type(obj)
-            endpoint = self.endpoint if self.endpoint is not None else request.endpoint
-            o = urlparse(url_for(endpoint, _external=self.absolute, **data))
-            if self.absolute:
-                scheme = self.scheme if self.scheme is not None else o.scheme
-                return urlunparse((scheme, o.netloc, o.path, "", "", ""))
-            return urlunparse(("", "", o.path, "", "", ""))
-        except TypeError as te:
-            raise MarshallingError(te)
+# ### URL resource TODO: Adapt this to wsgiservice e.g. using the url_for implemented in the Api class
+# class Url(StringMixin, Raw):
+#     '''
+#     A string representation of a Url
+#
+#     :param str endpoint: Endpoint name. If endpoint is ``None``, ``request.endpoint`` is used instead
+#     :param bool absolute: If ``True``, ensures that the generated urls will have the hostname included
+#     :param str scheme: URL scheme specifier (e.g. ``http``, ``https``)
+#     '''
+#     def __init__(self, endpoint=None, absolute=False, scheme=None, **kwargs):
+#         super(Url, self).__init__(**kwargs)
+#         self.endpoint = endpoint
+#         self.absolute = absolute
+#         self.scheme = scheme
+#
+#     def output(self, key, obj):
+#         try:
+#             data = to_marshallable_type(obj)
+#             endpoint = self.endpoint if self.endpoint is not None else request.endpoint
+#             o = urlparse(url_for(endpoint, _external=self.absolute, **data))
+#             if self.absolute:
+#                 scheme = self.scheme if self.scheme is not None else o.scheme
+#                 return urlunparse((scheme, o.netloc, o.path, "", "", ""))
+#             return urlunparse(("", "", o.path, "", "", ""))
+#         except TypeError as te:
+#             raise MarshallingError(te)
 
 
 class FormattedString(StringMixin, Raw):

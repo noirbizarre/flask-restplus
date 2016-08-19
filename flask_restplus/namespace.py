@@ -10,8 +10,8 @@ import warnings
 from flask.views import http_method_funcs
 
 #from .errors import abort
-#from .marshalling import marshal, marshal_with
-#from .model import Model
+from .marshalling import marshal, marshal_with
+from .model import Model
 #from .reqparse import RequestParser
 from .utils import merge
 
@@ -36,7 +36,7 @@ class Namespace(object):
 
         self._schema = None
         self._validate = validate
-        # self.models = {}
+        self.models = {}
         # self.urls = {}
         # self.decorators = decorators if decorators else []
         self.resources = []
@@ -145,78 +145,78 @@ class Namespace(object):
     ### Adding models ("interface types") to the Namespace.models Model instance dictionary
     ### that contains parts of the Model type hierarchy relevant to this namespace of the API
 
-    # # Add model to the namespace
-    # def add_model(self, name, definition):
-    #     self.models[name] = definition
-    #     for api in self.apis:
-    #         api.models[name] = definition
-    #     return definition
-    #
-    # def model(self, name=None, model=None, mask=None, **kwargs):
-    #     '''
-    #     Register a model
-    #
-    #     .. seealso:: :class:`Model`
-    #     '''
-    #     model = Model(name, model, mask=mask)
-    #     model.__apidoc__.update(kwargs)
-    #     return self.add_model(name, model)
-    #
-    # def extend(self, name, parent, fields):
-    #     '''
-    #     Extend a model (Duplicate all fields)
-    #
-    #     :deprecated: since 0.9. Use :meth:`clone` instead
-    #     '''
-    #     if isinstance(parent, list):
-    #         parents = parent + [fields]
-    #         model = Model.extend(name, *parents)
-    #     else:
-    #         model = Model.extend(name, parent, fields)
-    #     return self.add_model(name, model)
-    #
-    # def clone(self, name, *specs):
-    #     '''
-    #     Clone a model (Duplicate all fields)
-    #
-    #     :param str name: the resulting model name
-    #     :param specs: a list of models from which to clone the fields
-    #
-    #     .. seealso:: :meth:`Model.clone`
-    #
-    #     '''
-    #     model = Model.clone(name, *specs)
-    #     return self.add_model(name, model)
-    #
-    # def inherit(self, name, *specs):
-    #     '''
-    #     Inherit a modal (use the Swagger composition pattern aka. allOf)
-    #
-    #     .. seealso:: :meth:`Model.inherit`
-    #     '''
-    #     model = Model.inherit(name, *specs)
-    #     return self.add_model(name, model)
+    # Add model to the namespace
+    def add_model(self, name, definition):
+        self.models[name] = definition
+        for api in self.apis:
+            api.models[name] = definition
+        return definition
+
+    def model(self, name=None, model=None, mask=None, **kwargs):
+        '''
+        Register a model
+
+        .. seealso:: :class:`Model`
+        '''
+        model = Model(name, model, mask=mask)
+        model.__apidoc__.update(kwargs)
+        return self.add_model(name, model)
+
+    def extend(self, name, parent, fields):
+        '''
+        Extend a model (Duplicate all fields)
+
+        :deprecated: since 0.9. Use :meth:`clone` instead
+        '''
+        if isinstance(parent, list):
+            parents = parent + [fields]
+            model = Model.extend(name, *parents)
+        else:
+            model = Model.extend(name, parent, fields)
+        return self.add_model(name, model)
+
+    def clone(self, name, *specs):
+        '''
+        Clone a model (Duplicate all fields)
+
+        :param str name: the resulting model name
+        :param specs: a list of models from which to clone the fields
+
+        .. seealso:: :meth:`Model.clone`
+
+        '''
+        model = Model.clone(name, *specs)
+        return self.add_model(name, model)
+
+    def inherit(self, name, *specs):
+        '''
+        Inherit a modal (use the Swagger composition pattern aka. allOf)
+
+        .. seealso:: :meth:`Model.inherit`
+        '''
+        model = Model.inherit(name, *specs)
+        return self.add_model(name, model)
 
 
     ### Parameter models ###
 
-    # # Parameter model annotation (validation is done in the Resource base class)
-    # def expect(self, *inputs, **kwargs):
-    #     '''
-    #     A decorator to Specify the expected input model
-    #
-    #     :param Model|Parse inputs: An expect model or request parser
-    #     :param bool validate: whether to perform validation or not
-    #
-    #     '''
-    #     expect = []
-    #     params = {
-    #         'validate': kwargs.get('validate', None) or self._validate,
-    #         'expect': expect
-    #     }
-    #     for param in inputs:
-    #         expect.append(param)
-    #     return self.doc(**params)
+    # Parameter model annotation (validation is done in the Resource base class)
+    def expect(self, *inputs, **kwargs):
+        '''
+        A decorator to Specify the expected input model
+
+        :param Model|Parse inputs: An expect model or request parser
+        :param bool validate: whether to perform validation or not
+
+        '''
+        expect = []
+        params = {
+            'validate': kwargs.get('validate', None) or self._validate,
+            'expect': expect
+        }
+        for param in inputs:
+            expect.append(param)
+        return self.doc(**params)
 
 
     # # Request parser retrieval (parameter specification framework), not
@@ -235,33 +235,33 @@ class Namespace(object):
     #     field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
     #     return field
 
-    # # Response model annotation and rearrangement of return value of decorated method
-    # def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
-    #     '''
-    #     A decorator specifying the fields to use for serialization.
-    #
-    #     :param bool as_list: Indicate that the return type is a list (for the documentation)
-    #     :param int code: Optionally give the expected HTTP response code if its different from 200
-    #
-    #     '''
-    #     def wrapper(func):
-    #         doc = {
-    #             'responses': {
-    #                 code: (description, [fields]) if as_list else (description, fields)
-    #             },
-    #             '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
-    #         }
-    #         func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-    #         return marshal_with(fields, **kwargs)(func)
-    #     return wrapper
-    #
-    # def marshal_list_with(self, fields, **kwargs):
-    #     '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
-    #     return self.marshal_with(fields, True, **kwargs)
-    #
-    # def marshal(self, *args, **kwargs):
-    #     '''A shortcut to the :func:`marshal` helper'''
-    #     return marshal(*args, **kwargs)
+    # Response model annotation and rearrangement of return value of decorated method
+    def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
+        '''
+        A decorator specifying the fields to use for serialization.
+
+        :param bool as_list: Indicate that the return type is a list (for the documentation)
+        :param int code: Optionally give the expected HTTP response code if its different from 200
+
+        '''
+        def wrapper(func):
+            doc = {
+                'responses': {
+                    code: (description, [fields]) if as_list else (description, fields)
+                },
+                '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
+            }
+            func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
+            return marshal_with(fields, **kwargs)(func)
+        return wrapper
+
+    def marshal_list_with(self, fields, **kwargs):
+        '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
+        return self.marshal_with(fields, True, **kwargs)
+
+    def marshal(self, *args, **kwargs):
+        '''A shortcut to the :func:`marshal` helper'''
+        return marshal(*args, **kwargs)
 
     ### Error handler registry ###
 

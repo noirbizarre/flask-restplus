@@ -7,10 +7,10 @@ import warnings
 
 from collections import MutableMapping
 from six import iteritems, itervalues
-from werkzeug import cached_property
+# from werkzeug import cached_property
 
 from .mask import Mask
-from .errors import abort
+# from .errors import abort
 
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
@@ -53,7 +53,8 @@ class Model(dict, MutableMapping):
             return self.__class__.inherit(name, self, *parents)
         self.inherit = instance_inherit
 
-    @cached_property
+    # @cached_property
+    @property # TODO: check vs. cached_property
     def resolved(self):
         '''
         Resolve real fields before submitting them to marshal
@@ -94,7 +95,8 @@ class Model(dict, MutableMapping):
                     return found
         raise ValueError('Parent ' + name + ' not found')
 
-    @cached_property
+    # @cached_property
+    @property # TODO: check vs. cached_property
     def __schema__(self):
         properties = {}
         required = set()
@@ -177,11 +179,15 @@ class Model(dict, MutableMapping):
 
     def validate(self, data, resolver=None, format_checker=None):
         validator = Draft4Validator(self.__schema__, resolver=resolver, format_checker=format_checker)
+        # try:
+        #     validator.validate(data)
+        # except ValidationError:
+        #     abort(400, message='Input payload validation failed',
+        #           errors=dict(self.format_error(e) for e in validator.iter_errors(data)))
         try:
             validator.validate(data)
         except ValidationError:
-            abort(400, message='Input payload validation failed',
-                  errors=dict(self.format_error(e) for e in validator.iter_errors(data)))
+            raise ### TODO: Check this
 
     def format_error(self, error):
         path = list(error.path)
