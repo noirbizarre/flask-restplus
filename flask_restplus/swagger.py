@@ -17,6 +17,13 @@ from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 
 
+
+### new imports
+### TODO: move this method to the wsgiservice module
+def get_wsgiservice_methods(resource):
+    return [method for method in resource.KNOWN_METHODS if hasattr(resource, method)]
+
+
 #: Maps Flask/Werkzeug rooting types to Swagger ones
 PATH_TYPES = {
     'int': 'integer',
@@ -34,8 +41,11 @@ PY_TYPES = {
     None: 'void'
 }
 
-RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
-RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
+### Finds Flask path parameters in URL and binds groups to variable name
+#RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
+### Finds Flask path parameters in URL and binds groups to type:variable name pairs
+# RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
+RE_PARAMS = re.compile(r'{([^{}]+)}')
 
 DEFAULT_RESPONSE_DESCRIPTION = 'Success'
 DEFAULT_RESPONSE = {'description': DEFAULT_RESPONSE_DESCRIPTION}
@@ -54,11 +64,13 @@ def _v(value):
     return value() if callable(value) else value
 
 
+### Tranforms Flask paths to Swagger paths replacing path_params according to <type:param> -> {param}
 def extract_path(path):
     '''
     Transform a Flask/Werkzeug URL pattern in a Swagger one.
     '''
-    return RE_URL.sub(r'{\1}', path)
+    # return RE_URL.sub(r'{\1}', path)
+    return path
 
 
 def extract_path_params(path):
@@ -66,24 +78,33 @@ def extract_path_params(path):
     Extract Flask-style parameters from an URL pattern as Swagger ones.
     '''
     params = OrderedDict()
-    for match in RE_PARAMS.findall(path):
-        descriptor, name = match.split(':') if ':' in match else (None, match)
+    # for match in RE_PARAMS.findall(path):
+    #     descriptor, name = match.split(':') if ':' in match else (None, match)
+    #     param = {
+    #         'name': name,
+    #         'in': 'path',
+    #         'required': True
+    #     }
+    #
+    #     if descriptor in PATH_TYPES:
+    #         param['type'] = PATH_TYPES[descriptor]
+    #     elif descriptor in current_app.url_map.converters:
+    #         param['type'] = 'string'
+    #     else:
+    #         raise ValueError('Unsupported type converter')
+    #     params[name] = param
+    for name in RE_PARAMS.findall(path):
         param = {
             'name': name,
             'in': 'path',
             'required': True
         }
 
-        if descriptor in PATH_TYPES:
-            param['type'] = PATH_TYPES[descriptor]
-        elif descriptor in current_app.url_map.converters:
-            param['type'] = 'string'
-        else:
-            raise ValueError('Unsupported type converter')
+        ### TODO: Retrieve type information from annotation with decorator to add 'type' attribute to param
         params[name] = param
     return params
 
-
+### pop in and name elements in param dictionary, add type to it
 def _param_to_header(param):
     param.pop('in', None)
     param.pop('name', None)
@@ -97,7 +118,9 @@ def _param_to_header(param):
         param['type'] = typedef
     return param
 
-
+### parses doc-string for summary (first sentence in first line of doc-string), details (remainder of the
+### description in the doc-string), and exception specification (using the ":raises {exception type} : {description}"
+### annotation)
 def parse_docstring(obj):
     raw = getdoc(obj)
     summary = raw.strip(' \n').split('\n')[0].split('.')[0] if raw else None
@@ -173,8 +196,8 @@ class Swagger(object):
             'info': infos,
             'produces': list(iterkeys(self.api.representations)),
             'consumes': ['application/json'],
-            'securityDefinitions': self.api.authorizations or None,
-            'security': self.security_requirements(self.api.security) or None,
+            # 'securityDefinitions': self.api.authorizations or None,
+            # 'security': self.security_requirements(self.api.security) or None,
             'tags': tags,
             'definitions': self.serialize_definitions() or None,
             'responses': responses or None,
@@ -182,12 +205,16 @@ class Swagger(object):
         }
         return not_none(specs)
 
+    ### TODO: Get (sub)domain part of URL here (where is this information stored in wsgiservice?)
     def get_host(self):
-        hostname = current_app.config.get('SERVER_NAME', None) or None
-        if hostname and self.api.blueprint and self.api.blueprint.subdomain:
-            hostname = '.'.join((self.api.blueprint.subdomain, hostname))
-        return hostname
+        # hostname = current_app.config.get('SERVER_NAME', None) or None
+        # if hostname and self.api.blueprint and self.api.blueprint.subdomain:
+        #     hostname = '.'.join((self.api.blueprint.subdomain, hostname))
+        # return hostname
+        return None
 
+    ### This method accumulates a list of (name,description) pairs from namespaces owned by Api instance
+    ### if no extra tags are passed to Api instance at construction
     def extract_tags(self, api):
         tags = []
         by_name = {}
@@ -220,9 +247,11 @@ class Swagger(object):
         params = merge(self.expected_params(doc), doc.get('params', {}))
         params = merge(params, extract_path_params(url))
         doc['params'] = params
-        for method in [m.lower() for m in resource.methods or []]:
+        # for method in [m.lower() for m in resource.methods or []]:
+        for method in [m.lower() for m in get_wsgiservice_methods(resource)]:
             method_doc = doc.get(method, OrderedDict())
-            method_impl = getattr(resource, method)
+            # method_impl = getattr(resource, method)
+            method_impl = getattr(resource, method.upper())
             if hasattr(method_impl, 'im_func'):
                 method_impl = method_impl.im_func
             elif hasattr(method_impl, '__func__'):
@@ -237,61 +266,69 @@ class Swagger(object):
             doc[method] = method_doc
         return doc
 
+    ### TODO
     def expected_params(self, doc):
         params = {}
         if 'expect' not in doc:
             return params
 
-        for expect in doc.get('expect', []):
-            if isinstance(expect, RequestParser):
-                parser_params = dict((p['name'], p) for p in expect.__schema__)
-                params.update(parser_params)
-            elif isinstance(expect, Model):
-                params['payload'] = not_none({
-                    'name': 'payload',
-                    'required': True,
-                    'in': 'body',
-                    'schema': self.serialize_schema(expect),
-                })
-            elif isinstance(expect, (list, tuple)):
-                if len(expect) == 2:
-                    # this is (payload, description) shortcut
-                    model, description = expect
-                    params['payload'] = not_none({
-                        'name': 'payload',
-                        'required': True,
-                        'in': 'body',
-                        'schema': self.serialize_schema(model),
-                        'description': description
-                    })
-                else:
-                    params['payload'] = not_none({
-                        'name': 'payload',
-                        'required': True,
-                        'in': 'body',
-                        'schema': self.serialize_schema(expect),
-                    })
+        # for expect in doc.get('expect', []):
+        #     if isinstance(expect, RequestParser):
+        #         parser_params = dict((p['name'], p) for p in expect.__schema__)
+        #         params.update(parser_params)
+            # elif isinstance(expect, Model):
+            #     params['payload'] = not_none({
+            #         'name': 'payload',
+            #         'required': True,
+            #         'in': 'body',
+            #         'schema': self.serialize_schema(expect),
+            #     })
+            # elif isinstance(expect, (list, tuple)):
+            #     if len(expect) == 2:
+            #         # this is (payload, description) shortcut
+            #         model, description = expect
+            #         params['payload'] = not_none({
+            #             'name': 'payload',
+            #             'required': True,
+            #             'in': 'body',
+            #             'schema': self.serialize_schema(model),
+            #             'description': description
+            #         })
+            #     else:
+            #         params['payload'] = not_none({
+            #             'name': 'payload',
+            #             'required': True,
+            #             'in': 'body',
+            #             'schema': self.serialize_schema(expect),
+            #         })
         return params
 
+    ### return a dictionary of error handling cases mapping exception name to
+    ### description, header request parameter name -> type & additional info mapping and
+    ### response models
+    ### TODO: Need to consistently with wsgiservice specify error handling through the api interface
     def register_errors(self):
         responses = {}
-        for exception, handler in self.api.error_handlers.items():
-            doc = parse_docstring(handler)
-            response = {
-                'description': doc['summary']
-            }
-            apidoc = getattr(handler, '__apidoc__', {})
-            if 'params' in apidoc:
-                response['headers'] = dict(
-                    (n, _param_to_header(o))
-                    for n, o in apidoc['params'].items() if o.get('in') == 'header'
-                )
-            if 'responses' in apidoc:
-                _, model = list(apidoc['responses'].values())[0]
-                response['schema'] = self.serialize_schema(model)
-            responses[exception.__name__] = not_none(response)
+    #     for exception, handler in self.api.error_handlers.items():
+    #         doc = parse_docstring(handler)
+    #         response = {
+    #             'description': doc['summary']
+    #         }
+    #         apidoc = getattr(handler, '__apidoc__', {})
+    #         if 'params' in apidoc:
+    #             response['headers'] = dict(
+    #                 (n, _param_to_header(o))
+    #                 for n, o in apidoc['params'].items() if o.get('in') == 'header'
+    #             )
+    #         if 'responses' in apidoc:
+    #             _, model = list(apidoc['responses'].values())[0]
+    #             response['schema'] = self.serialize_schema(model)
+    #         responses[exception.__name__] = not_none(response)
         return responses
 
+    ### Extracts the resource specification from annotations
+    ### Includes method signature of all non-hidden/kwargs-specified HTTP methods
+    ### and adds namespace tags to every method
     def serialize_resource(self, ns, resource, url, kwargs):
         doc = self.extract_resource_doc(resource, url)
         if doc is False:
@@ -299,7 +336,8 @@ class Swagger(object):
         path = {
             'parameters': self.parameters_for(doc) or None
         }
-        for method in [m.lower() for m in resource.methods or []]:
+        # for method in [m.lower() for m in resource.methods or []]:
+        for method in [m.lower() for m in get_wsgiservice_methods(resource)]:
             methods = [m.lower() for m in kwargs.get('methods', [])]
             if doc[method] is False or methods and method not in methods:
                 continue
@@ -364,19 +402,20 @@ class Swagger(object):
 
             params.append(param)
 
-        # Handle fields mask
-        mask = doc.get('__mask__')
-        if (mask and current_app.config['RESTPLUS_MASK_SWAGGER']):
-            param = {
-                'name': current_app.config['RESTPLUS_MASK_HEADER'],
-                'in': 'header',
-                'type': 'string',
-                'format': 'mask',
-                'description': 'An optional fields mask',
-            }
-            if isinstance(mask, string_types):
-                param['default'] = mask
-            params.append(param)
+        # ### TODO: handle mask fields
+        # # Handle fields mask
+        # mask = doc.get('__mask__')
+        # if (mask and current_app.config['RESTPLUS_MASK_SWAGGER']):
+        #     param = {
+        #         'name': current_app.config['RESTPLUS_MASK_HEADER'],
+        #         'in': 'header',
+        #         'type': 'string',
+        #         'format': 'mask',
+        #         'description': 'An optional fields mask',
+        #     }
+        #     if isinstance(mask, string_types):
+        #         param['default'] = mask
+        #     params.append(param)
 
         return params
 
@@ -393,110 +432,121 @@ class Swagger(object):
                         responses[code].update(description=description)
                     else:
                         responses[code] = {'description': description}
-                    if model:
-                        responses[code]['schema'] = self.serialize_schema(model)
-            if 'model' in d:
-                code = str(d.get('default_code', 200))
-                if code not in responses:
-                    responses[code] = DEFAULT_RESPONSE.copy()
-                responses[code]['schema'] = self.serialize_schema(d['model'])
+                    # ### TODO: uncomment the following section
+                    # if model:
+                    #     responses[code]['schema'] = self.serialize_schema(model)
+            # if 'model' in d:
+            #     code = str(d.get('default_code', 200))
+            #     if code not in responses:
+            #         responses[code] = DEFAULT_RESPONSE.copy()
+            #     responses[code]['schema'] = self.serialize_schema(d['model'])
 
-            if 'docstring' in d:
-                for name, description in d['docstring']['raises'].items():
-                    for exception, handler in self.api.error_handlers.items():
-                        error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
-                        code = list(error_responses.keys())[0] if error_responses else None
-                        if code and exception.__name__ == name:
-                            responses[code] = {'$ref': '#/responses/{0}'.format(name)}
-                            break
+            # if 'docstring' in d:
+            #     for name, description in d['docstring']['raises'].items():
+            #         for exception, handler in self.api.error_handlers.items():
+            #             error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
+            #             code = list(error_responses.keys())[0] if error_responses else None
+            #             if code and exception.__name__ == name:
+            #                 responses[code] = {'$ref': '#/responses/{0}'.format(name)}
+            #                 break
 
         if not responses:
             responses['200'] = DEFAULT_RESPONSE.copy()
         return responses
 
+    ### model-related stuff
     def serialize_definitions(self):
         return dict(
             (name, model.__schema__)
             for name, model in iteritems(self._registered_models)
         )
 
-    def serialize_schema(self, model):
-        if isinstance(model, (list, tuple)):
-            model = model[0]
-            return {
-                'type': 'array',
-                'items': self.serialize_schema(model),
-            }
+    # ### TODO
+    # def serialize_schema(self, model):
+    #     if isinstance(model, (list, tuple)):
+    #         model = model[0]
+    #         return {
+    #             'type': 'array',
+    #             'items': self.serialize_schema(model),
+    #         }
+    #
+    #     elif isinstance(model, Model):
+    #         self.register_model(model)
+    #         return ref(model)
+    #
+    #     elif isinstance(model, string_types):
+    #         self.register_model(model)
+    #         return ref(model)
+    #
+    #     elif isclass(model) and issubclass(model, fields.Raw):
+    #         return self.serialize_schema(model())
+    #
+    #     elif isinstance(model, fields.Raw):
+    #         return model.__schema__
+    #
+    #     elif isinstance(model, (type, type(None))) and model in PY_TYPES:
+    #         return {'type': PY_TYPES[model]}
+    #
+    #     raise ValueError('Model {0} not registered'.format(model))
+    #
+    # ### model registering ###
+    # ### transitively adds all parents and component fields to registered model and returns
+    # ### a JSON-schema reference
+    # def register_model(self, model):
+    #     name = model.name if isinstance(model, Model) else model
+    #     if name not in self.api.models:
+    #         raise ValueError('Model {0} not registered'.format(name))
+    #     specs = self.api.models[name]
+    #     self._registered_models[name] = specs
+    #     if isinstance(specs, Model):
+    #         for parent in specs.__parents__:
+    #             self.register_model(parent)
+    #         for field in itervalues(specs):
+    #             self.register_field(field)
+    #     return ref(model)
+    #
+    # def register_field(self, field):
+    #     if isinstance(field, fields.Polymorph):
+    #         for model in itervalues(field.mapping):
+    #             self.register_model(model)
+    #     elif isinstance(field, fields.Nested):
+    #         self.register_model(field.nested)
+    #     elif isinstance(field, fields.List):
+    #         self.register_field(field.container)
 
-        elif isinstance(model, Model):
-            self.register_model(model)
-            return ref(model)
-
-        elif isinstance(model, string_types):
-            self.register_model(model)
-            return ref(model)
-
-        elif isclass(model) and issubclass(model, fields.Raw):
-            return self.serialize_schema(model())
-
-        elif isinstance(model, fields.Raw):
-            return model.__schema__
-
-        elif isinstance(model, (type, type(None))) and model in PY_TYPES:
-            return {'type': PY_TYPES[model]}
-
-        raise ValueError('Model {0} not registered'.format(model))
-
-    def register_model(self, model):
-        name = model.name if isinstance(model, Model) else model
-        if name not in self.api.models:
-            raise ValueError('Model {0} not registered'.format(name))
-        specs = self.api.models[name]
-        self._registered_models[name] = specs
-        if isinstance(specs, Model):
-            for parent in specs.__parents__:
-                self.register_model(parent)
-            for field in itervalues(specs):
-                self.register_field(field)
-        return ref(model)
-
-    def register_field(self, field):
-        if isinstance(field, fields.Polymorph):
-            for model in itervalues(field.mapping):
-                self.register_model(model)
-        elif isinstance(field, fields.Nested):
-            self.register_model(field.nested)
-        elif isinstance(field, fields.List):
-            self.register_field(field.container)
-
+    # ### security-related documentation ###
+    # ### TODO
     def security_for(self, doc, method):
         security = None
-        if 'security' in doc:
-            auth = doc['security']
-            security = self.security_requirements(auth)
-
-        if 'security' in doc[method]:
-            auth = doc[method]['security']
-            security = self.security_requirements(auth)
-
+        # if 'security' in doc:
+        #     auth = doc['security']
+        #     security = self.security_requirements(auth)
+        #
+        # if 'security' in doc[method]:
+        #     auth = doc[method]['security']
+        #     security = self.security_requirements(auth)
+        #
         return security
+    #
+    # def security_requirements(self, value):
+    #     if isinstance(value, (list, tuple)):
+    #         return [self.security_requirement(v) for v in value]
+    #     elif value:
+    #         requirement = self.security_requirement(value)
+    #         return [requirement] if requirement else None
+    #     else:
+    #         return []
+    #
+    # def security_requirement(self, value):
+    #     if isinstance(value, (string_types)):
+    #         return {value: []}
+    #     elif isinstance(value, dict):
+    #         return dict(
+    #             (k, v if isinstance(v, (list, tuple)) else [v])
+    #             for k, v in iteritems(value)
+    #         )
+    #     else:
+    #         return None
 
-    def security_requirements(self, value):
-        if isinstance(value, (list, tuple)):
-            return [self.security_requirement(v) for v in value]
-        elif value:
-            requirement = self.security_requirement(value)
-            return [requirement] if requirement else None
-        else:
-            return []
 
-    def security_requirement(self, value):
-        if isinstance(value, (string_types)):
-            return {value: []}
-        elif isinstance(value, dict):
-            return dict(
-                (k, v if isinstance(v, (list, tuple)) else [v])
-                for k, v in iteritems(value)
-            )
-        else:
-            return None
+

@@ -10,14 +10,14 @@ import sys
 from functools import wraps, partial
 from types import MethodType
 
-from flask import url_for, request, current_app
+# from flask import url_for, request, current_app
 # from flask import make_response as original_flask_make_response
 # from flask.helpers import _endpoint_from_view_func
 # from flask.signals import got_request_exception
 
 from jsonschema import RefResolver, FormatChecker
 
-from werkzeug import cached_property
+# from werkzeug import cached_property
 # from werkzeug.datastructures import Headers
 # from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 # from werkzeug.http import HTTP_STATUS_CODES
@@ -33,7 +33,8 @@ from .swagger import Swagger
 from .utils import default_id, camel_to_dash, unpack
 from .representations import output_json
 
-RE_RULES = re.compile('(<.*>)')
+# ### TODO: Would need to be readapted to RE_RULES = re.compile('({.*})')
+# RE_RULES = re.compile('(<.*>)')
 
 # List headers that should never be handled by Flask-RESTPlus
 HEADERS_BLACKLIST = ('Content-Length',)
@@ -42,7 +43,8 @@ DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
 
 
 ### wsgiservice-specific imoprts
-from wsgiservice.application import get_app
+import wsgiservice
+
 
 
 
@@ -216,15 +218,28 @@ class Api(object):
         # app.config.setdefault('RESTPLUS_MASK_SWAGGER', True)
 
     def create_wsgiservice_app(self):
-        '''Creates a wsgiservice.application instance from the resources owned by the namespaces of this Api instance'''
+        '''
+        Creates a :class:`wsgiservice.application.Application` instance from the resources owned by self (the namespaces of this Api instance)
+        '''
+        # TODO: Create Swagger documentation and serve it as a wsgiservice.Resource instance
+        #       Do not create Swagger doc with a resource as this will
+
+        endpoint = str('specs')
+        self.endpoints.add(endpoint)
+
+        self.swagger_path = '/swagger.json'
+        SwaggerResourceClass = generate_swagger_resource(api=self)
+
+        self.resources.append((SwaggerResourceClass, [self.swagger_path], {}))
+
         for resource, urls, _ in self.resources:
             assert len(urls) == 1
             if getattr(resource,'_path',None) is not None:
-                if resource._path != urls[0]:
+                if resource._path != urls[0]: # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
                     raise Exception # raise a path error exception due to remounting at different resource
             else:
-                resource._path = urls[0]
-        return get_app({resource.__name__ : resource for resource, _, _ in self.resources})
+                resource._path = urls[0] # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
+        return wsgiservice.get_app({resource.__name__ : resource for resource, _, _ in self.resources})
 
 
     def __getattr__(self, name):
@@ -253,7 +268,6 @@ class Api(object):
     #     conf['apidoc_registered'] = True
 
     # ### registers Swagger specification resource ("SwaggerView") ###
-    # ### TODO: mount this resource separately to the wsgiservice.Application instance
     # def _register_specs(self, app_or_blueprint):
     #     if self._add_specs:
     #         endpoint = str('specs')
@@ -463,24 +477,25 @@ class Api(object):
         else:
             return name
 
-    @property
-    def specs_url(self):
-        '''
-        The Swagger specifications absolute url (ie. `swagger.json`)
+    # @property
+    # def specs_url(self):
+    #     '''
+    #     The Swagger specifications absolute url (ie. `swagger.json`)
+    #
+    #     :rtype: str
+    #     '''
+    #     return url_for(self.endpoint('specs'), _external=True)
+    #
+    # @property
+    # def base_url(self):
+    #     '''
+    #     The API base absolute url
+    #
+    #     :rtype: str
+    #     '''
+    #     return url_for(self.endpoint('root'), _external=True)
 
-        :rtype: str
-        '''
-        return url_for(self.endpoint('specs'), _external=True)
-
-    @property
-    def base_url(self):
-        '''
-        The API base absolute url
-
-        :rtype: str
-        '''
-        return url_for(self.endpoint('root'), _external=True)
-
+    ### Base url, replaced by an explicit path TODO: replace prefix by a more reasonable name such as _base_path ###
     @property
     def base_path(self):
         '''
@@ -488,10 +503,12 @@ class Api(object):
 
         :rtype: str
         '''
-        return url_for(self.endpoint('root'))
+        # return url_for(self.endpoint('root'))
+        return self.prefix
 
-    ### Swagger schema as a dictionary ###
-    @cached_property
+    ### Swagger schema as a dictionary TODO: cache it once it's computed ###
+    #@cached_property
+    # @property # FIXME: property decorator currently breaks accessibility of this decorator from outside
     def __schema__(self):
         '''
         The Swagger specifications/schema for this API
@@ -755,6 +772,7 @@ class Api(object):
     #                                  key=operator.itemgetter(1), reverse=True)]
 
     # ### register response content type transformation function ###
+    # ### TODO: make "representation" (response content type) configurable on this class
     # def representation(self, mediatype):
     #     '''
     #     Allows additional representation transformers to be declared for the
@@ -793,33 +811,53 @@ class Api(object):
     #         response.headers['WWW-Authenticate'] = challenge
     #     return response
 
-    ### Flask url retrieval, probably no analogue in wsgiservice ###
+    ### Flask url retrieval, rewritten to comopse base_path with resource url in wsgiservice ###
     def url_for(self, resource, **values):
         '''
         Generates a URL to the given resource.
 
         Works like :func:`flask.url_for`.
         '''
-        endpoint = resource.endpoint
-        if self.blueprint:
-            endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
-        return url_for(endpoint, **values)
+        # endpoint = resource.endpoint
+        # if self.blueprint:
+        #     endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
+        # return url_for(endpoint, **values)
+
+        for resource_class, urls, _ in iter(self.resources):
+            if resource == resource_class:
+                return self.base_path + urls[0].lstrip('/')
+        else:
+            return None
 
 
-class SwaggerView(Resource):
-    '''Render the Swagger specifications as JSON'''
-    def get(self):
-        return self.api.__schema__
-
-    def mediatypes(self):
-        return ['application/json']
-
-
-def mask_parse_error_handler(error):
-    '''When a mask can't be parsed'''
-    return {'message': 'Mask parse error: {0}'.format(error)}, 400
+# class SwaggerView(Resource):
+#     '''Render the Swagger specifications as JSON'''
+#     def get(self):
+#         return self.api.__schema__
+#
+#     def mediatypes(self):
+#         return ['application/json']
 
 
-def mask_error_handler(error):
-    '''When any error occurs on mask'''
-    return {'message': 'Mask error: {0}'.format(error)}, 400
+# def mask_parse_error_handler(error):
+#     '''When a mask can't be parsed'''
+#     return {'message': 'Mask parse error: {0}'.format(error)}, 400
+#
+#
+# def mask_error_handler(error):
+#     '''When any error occurs on mask'''
+#     return {'message': 'Mask error: {0}'.format(error)}, 400
+
+
+### Swagger Documentation resource factory
+def generate_swagger_resource(api):
+    '''Returns a wsgiservice Swagger documentation Resource class that binds the Api instance'''
+
+    class SwaggerResource(wsgiservice.resource.Resource):
+
+        def GET(self):
+            return api.__schema__()
+
+    return SwaggerResource
+
+### TODO: Define the Resource for the Swagger UI
