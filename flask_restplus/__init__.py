@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from . import fields, reqparse, apidoc, inputs, cors
+#from . import fields, reqparse, apidoc, inputs, cors
+from . import fields, apidoc, inputs
 from .api import Api  # noqa
 from .marshalling import marshal, marshal_with, marshal_with_field  # noqa
 from .mask import Mask
 from .model import Model  # noqa
 from .namespace import Namespace  # noqa
 from .resource import Resource  # noqa
-from .errors import abort, RestError, SpecsError, ValidationError
+#from .errors import abort, RestError, SpecsError, ValidationError
+from .errors import RestError, SpecsError, ValidationError
 from .swagger import Swagger
 from .__about__ import __version__, __description__
 
@@ -24,10 +26,10 @@ __all__ = (
     'Mask',
     'Model',
     'abort',
-    'cors',
+    # 'cors',
     'fields',
     'inputs',
-    'reqparse',
+#    'reqparse',
     'RestError',
     'SpecsError',
     'Swagger',

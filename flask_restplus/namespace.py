@@ -229,11 +229,11 @@ class Namespace(object):
 
     ### Response models ###
 
-    # # Possibly affects marshal_with
-    # def as_list(self, field):
-    #     '''Allow to specify nested lists for documentation'''
-    #     field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
-    #     return field
+    # Possibly affects marshal_with
+    def as_list(self, field):
+        '''Allow to specify nested lists for documentation'''
+        field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
+        return field
 
     # Response model annotation and rearrangement of return value of decorated method
     def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
@@ -252,16 +252,17 @@ class Namespace(object):
                 '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
             }
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            return marshal_with(fields, **kwargs)(func)
+            # return marshal_with(fields, **kwargs)(func)
+            return func #TODO: Uncomment the above if marshalling feature is required
         return wrapper
 
     def marshal_list_with(self, fields, **kwargs):
         '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
         return self.marshal_with(fields, True, **kwargs)
 
-    def marshal(self, *args, **kwargs):
-        '''A shortcut to the :func:`marshal` helper'''
-        return marshal(*args, **kwargs)
+    # def marshal(self, *args, **kwargs):
+    #     '''A shortcut to the :func:`marshal` helper'''
+    #     return marshal(*args, **kwargs)
 
     ### Error handler registry ###
 
