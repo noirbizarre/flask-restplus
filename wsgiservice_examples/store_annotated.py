@@ -9,7 +9,7 @@ import logging
 import sys
 
 
-from flask_restplus import namespace, api
+from flask_restplus import namespace, api, fields
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
 
@@ -21,13 +21,18 @@ ns = namespace.Namespace(
     name='store_interface_ns', description='An associative (key,document) store',
     path='/', decorators=None, validate=None)
 
+
 # # TODO: define model
-#  id_model = ns.model('id', fields.String(pattern=r'[-0-9a-zA-Z]{36}',
-#          description='UUID of document')) )
+id_model = ns.model('id', { 'id': fields.String(pattern=r'[-0-9a-zA-Z]{36}',
+                                                description='UUID of key-document pair',
+                                                example='3c805c7c-9ff0-4879-8eb7-d2eee97ca39d') } )
 ## model inheritance, alternatively use ns.clone to copy all fields
-# id_doc_model = ns.inherit('id_doc_model',
-#   'id_model', fields.String(),
-#    description='UUID-document pair')
+doc_model = ns.inherit('doc_model',
+                        {'doc': fields.String(description='The document',example='Some document goes here...')})
+
+
+# saved_model = ns.model('saved_model',{'saved': fields.Boolean(description='Storage status')})
+id_saved_model = ns.clone('id_saved_model', id_model,{'saved': fields.Boolean(description='Storage status',example='True')})
 
 # # TODO: Error annotations (e.g. marshal_with, others)
 
@@ -43,7 +48,7 @@ def put_document(id,doc_resource_request_post):
 
 
 #@mount('/{id}')    # Api.create_wsgiservice_app adds _path attribute to Resources of owned Namespaces
-@ns.route('/{id}') # TODO: Check path paramater documentation generated from Namespace.route/Api.route
+@ns.route('/{id}')  # TODO: Check path paramater documentation generated from Namespace.route/Api.route
 @ns.param(name='id', description='User ID, must be a valid UUID.',_in='path')  # parameter documentation
 @validate('id', re=r'[-0-9a-zA-Z]{36}', doc='User ID, must be a valid UUID.')  # TODO: replace by request parser or model
 class Document(Resource):
@@ -64,7 +69,7 @@ class Document(Resource):
     # @expect(id_doc_pair)
     # TODO: extract into separate function in order not to perform request validation twice
     @ns.param(name='data', description='Document replacing old document.', _in='formData')
-    @ns.response(code=200, description='Document updated', model=None)
+    @ns.marshal_with(id_saved_model,code=200, description='Document updated')
     def PUT(self, id):
         """Overwrite or create the document indicated by the ID. Parameters
         are passed as key/value pairs in the POST data."""
@@ -80,9 +85,11 @@ class Document(Resource):
 @ns.route('/')
 class Documents(Resource):
 
+    # @ns.param(name='data',description='Document to post.',_in='formData') # replaced by @ns.expect(...) below
+
     @ns.deprecated
-    @ns.param(name='data',description='Document to post.',_in='formData') # -> @ns.expect(...)
-    @ns.response(code=201, description='Document posted', model=None)     # -> @ns.marshal(code=201,description='id',id_model)
+    @ns.expect(doc_model)
+    @ns.response(code=201, description='Document posted', model=id_saved_model)  # -> @ns.marshal(code=201,description='id',id_model)
     def POST(self):
         """Create a new document, assigning a unique ID. Parameters are
                 passed in as key/value pairs in the POST data."""

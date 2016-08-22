@@ -452,9 +452,9 @@ class Api(object):
         for resource, urls, kwargs in ns.resources:
             self.register_resource(ns, resource, *urls, **kwargs)
         # ### TODO: Uncomment for models
-        # # Register models
-        # for name, definition in ns.models.items():
-        #     self.models[name] = definition
+        # Register models
+        for name, definition in ns.models.items():
+            self.models[name] = definition
         # # Register error handlers
         # for exception, handler in ns.error_handlers.items():
         #     self.error_handlers[exception] = handler

@@ -13,7 +13,7 @@ from ._compat import OrderedDict
 
 from . import fields
 from .model import Model
-from .reqparse import RequestParser
+#from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 
 
@@ -272,35 +272,36 @@ class Swagger(object):
         if 'expect' not in doc:
             return params
 
-        # for expect in doc.get('expect', []):
-        #     if isinstance(expect, RequestParser):
-        #         parser_params = dict((p['name'], p) for p in expect.__schema__)
-        #         params.update(parser_params)
+        for expect in doc.get('expect', []):
+            # if isinstance(expect, RequestParser):
+            #     parser_params = dict((p['name'], p) for p in expect.__schema__)
+            #     params.update(parser_params)
             # elif isinstance(expect, Model):
-            #     params['payload'] = not_none({
-            #         'name': 'payload',
-            #         'required': True,
-            #         'in': 'body',
-            #         'schema': self.serialize_schema(expect),
-            #     })
-            # elif isinstance(expect, (list, tuple)):
-            #     if len(expect) == 2:
-            #         # this is (payload, description) shortcut
-            #         model, description = expect
-            #         params['payload'] = not_none({
-            #             'name': 'payload',
-            #             'required': True,
-            #             'in': 'body',
-            #             'schema': self.serialize_schema(model),
-            #             'description': description
-            #         })
-            #     else:
-            #         params['payload'] = not_none({
-            #             'name': 'payload',
-            #             'required': True,
-            #             'in': 'body',
-            #             'schema': self.serialize_schema(expect),
-            #         })
+            if isinstance(expect, Model):
+                params['payload'] = not_none({
+                    'name': 'payload',
+                    'required': True,
+                    'in': 'body',
+                    'schema': self.serialize_schema(expect),
+                })
+            elif isinstance(expect, (list, tuple)):
+                if len(expect) == 2:
+                    # this is (payload, description) shortcut
+                    model, description = expect
+                    params['payload'] = not_none({
+                        'name': 'payload',
+                        'required': True,
+                        'in': 'body',
+                        'schema': self.serialize_schema(model),
+                        'description': description
+                    })
+                else:
+                    params['payload'] = not_none({
+                        'name': 'payload',
+                        'required': True,
+                        'in': 'body',
+                        'schema': self.serialize_schema(expect),
+                    })
         return params
 
     ### return a dictionary of error handling cases mapping exception name to
@@ -432,23 +433,23 @@ class Swagger(object):
                         responses[code].update(description=description)
                     else:
                         responses[code] = {'description': description}
-                    # ### TODO: uncomment the following section
-                    # if model:
-                    #     responses[code]['schema'] = self.serialize_schema(model)
-            # if 'model' in d:
-            #     code = str(d.get('default_code', 200))
-            #     if code not in responses:
-            #         responses[code] = DEFAULT_RESPONSE.copy()
-            #     responses[code]['schema'] = self.serialize_schema(d['model'])
+                    ### TODO: uncomment the following section
+                    if model:
+                        responses[code]['schema'] = self.serialize_schema(model)
+            if 'model' in d:
+                code = str(d.get('default_code', 200))
+                if code not in responses:
+                    responses[code] = DEFAULT_RESPONSE.copy()
+                responses[code]['schema'] = self.serialize_schema(d['model'])
 
-            # if 'docstring' in d:
-            #     for name, description in d['docstring']['raises'].items():
-            #         for exception, handler in self.api.error_handlers.items():
-            #             error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
-            #             code = list(error_responses.keys())[0] if error_responses else None
-            #             if code and exception.__name__ == name:
-            #                 responses[code] = {'$ref': '#/responses/{0}'.format(name)}
-            #                 break
+            if 'docstring' in d:
+                for name, description in d['docstring']['raises'].items():
+                    for exception, handler in self.api.error_handlers.items():
+                        error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
+                        code = list(error_responses.keys())[0] if error_responses else None
+                        if code and exception.__name__ == name:
+                            responses[code] = {'$ref': '#/responses/{0}'.format(name)}
+                            break
 
         if not responses:
             responses['200'] = DEFAULT_RESPONSE.copy()
@@ -461,58 +462,57 @@ class Swagger(object):
             for name, model in iteritems(self._registered_models)
         )
 
-    # ### TODO
-    # def serialize_schema(self, model):
-    #     if isinstance(model, (list, tuple)):
-    #         model = model[0]
-    #         return {
-    #             'type': 'array',
-    #             'items': self.serialize_schema(model),
-    #         }
-    #
-    #     elif isinstance(model, Model):
-    #         self.register_model(model)
-    #         return ref(model)
-    #
-    #     elif isinstance(model, string_types):
-    #         self.register_model(model)
-    #         return ref(model)
-    #
-    #     elif isclass(model) and issubclass(model, fields.Raw):
-    #         return self.serialize_schema(model())
-    #
-    #     elif isinstance(model, fields.Raw):
-    #         return model.__schema__
-    #
-    #     elif isinstance(model, (type, type(None))) and model in PY_TYPES:
-    #         return {'type': PY_TYPES[model]}
-    #
-    #     raise ValueError('Model {0} not registered'.format(model))
-    #
-    # ### model registering ###
-    # ### transitively adds all parents and component fields to registered model and returns
-    # ### a JSON-schema reference
-    # def register_model(self, model):
-    #     name = model.name if isinstance(model, Model) else model
-    #     if name not in self.api.models:
-    #         raise ValueError('Model {0} not registered'.format(name))
-    #     specs = self.api.models[name]
-    #     self._registered_models[name] = specs
-    #     if isinstance(specs, Model):
-    #         for parent in specs.__parents__:
-    #             self.register_model(parent)
-    #         for field in itervalues(specs):
-    #             self.register_field(field)
-    #     return ref(model)
-    #
-    # def register_field(self, field):
-    #     if isinstance(field, fields.Polymorph):
-    #         for model in itervalues(field.mapping):
-    #             self.register_model(model)
-    #     elif isinstance(field, fields.Nested):
-    #         self.register_model(field.nested)
-    #     elif isinstance(field, fields.List):
-    #         self.register_field(field.container)
+    def serialize_schema(self, model):
+        if isinstance(model, (list, tuple)):
+            model = model[0]
+            return {
+                'type': 'array',
+                'items': self.serialize_schema(model),
+            }
+
+        elif isinstance(model, Model):
+            self.register_model(model)
+            return ref(model)
+
+        elif isinstance(model, string_types):
+            self.register_model(model)
+            return ref(model)
+
+        elif isclass(model) and issubclass(model, fields.Raw):
+            return self.serialize_schema(model())
+
+        elif isinstance(model, fields.Raw):
+            return model.__schema__
+
+        elif isinstance(model, (type, type(None))) and model in PY_TYPES:
+            return {'type': PY_TYPES[model]}
+
+        raise ValueError('Model {0} not registered'.format(model))
+
+    ### model registering ###
+    ### transitively adds all parents and component fields to registered model and returns
+    ### a JSON-schema reference
+    def register_model(self, model):
+        name = model.name if isinstance(model, Model) else model
+        if name not in self.api.models:
+            raise ValueError('Model {0} not registered'.format(name))
+        specs = self.api.models[name]
+        self._registered_models[name] = specs
+        if isinstance(specs, Model):
+            for parent in specs.__parents__:
+                self.register_model(parent)
+            for field in itervalues(specs):
+                self.register_field(field)
+        return ref(model)
+
+    def register_field(self, field):
+        if isinstance(field, fields.Polymorph):
+            for model in itervalues(field.mapping):
+                self.register_model(model)
+        elif isinstance(field, fields.Nested):
+            self.register_model(field.nested)
+        elif isinstance(field, fields.List):
+            self.register_field(field.container)
 
     # ### security-related documentation ###
     # ### TODO
