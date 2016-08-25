@@ -394,7 +394,7 @@ class Api(object):
     #     else:
     #         raise InternalServerError()
 
-    ### Swagger documentation view function (not a flask-restplus.Resource) ###
+    # ### Swagger documentation view function (not a flask-restplus.Resource) ###
     # def documentation(self, func):
     #     '''A decorator to specify a view funtion for the documentation'''
     #     self._doc_view = func

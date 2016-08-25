@@ -49,7 +49,7 @@ def put_document(id,doc_resource_request_post):
 
 #@mount('/{id}')    # Api.create_wsgiservice_app adds _path attribute to Resources of owned Namespaces
 @ns.route('/{id}')  # TODO: Check path paramater documentation generated from Namespace.route/Api.route
-@ns.param(name='id', description='User ID, must be a valid UUID.',_in='path')  # parameter documentation
+@ns.param(name='id', description='User ID, must be a valid UUID.')  # parameter documentation
 @validate('id', re=r'[-0-9a-zA-Z]{36}', doc='User ID, must be a valid UUID.')  # TODO: replace by request parser or model
 class Document(Resource):
     """Represents an individual document in the document store. The storage
@@ -66,9 +66,9 @@ class Document(Resource):
         return data[id]
 
     # parameter model
-    # @expect(id_doc_pair)
+    # @expect(doc_model)
     # TODO: extract into separate function in order not to perform request validation twice
-    @ns.param(name='data', description='Document replacing old document.', _in='formData')
+    @ns.param(name='doc', description='Document replacing old document.', _in='formData')
     @ns.marshal_with(id_saved_model,code=200, description='Document updated')
     def PUT(self, id):
         """Overwrite or create the document indicated by the ID. Parameters
@@ -85,10 +85,10 @@ class Document(Resource):
 @ns.route('/')
 class Documents(Resource):
 
-    # @ns.param(name='data',description='Document to post.',_in='formData') # replaced by @ns.expect(...) below
+    # @ns.expect(doc_model)
 
     @ns.deprecated
-    @ns.expect(doc_model)
+    @ns.param(name='doc',description='Document to post.',_in='formData') # could be replaced by @ns.expect(...) if body would be parsed correctly
     @ns.response(code=201, description='Document posted', model=id_saved_model)  # -> @ns.marshal(code=201,description='id',id_model)
     def POST(self):
         """Create a new document, assigning a unique ID. Parameters are
