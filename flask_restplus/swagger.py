@@ -12,7 +12,7 @@ from flask import current_app
 from ._compat import OrderedDict
 
 from . import fields
-from .model import Model
+from .model import Model, ModelBase
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 
@@ -45,7 +45,7 @@ RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)
 
 def ref(model):
     '''Return a reference to model in definitions'''
-    name = model.name if isinstance(model, Model) else model
+    name = model.name if isinstance(model, ModelBase) else model
     return {'$ref': '#/definitions/{0}'.format(name)}
 
 
@@ -246,7 +246,7 @@ class Swagger(object):
             if isinstance(expect, RequestParser):
                 parser_params = dict((p['name'], p) for p in expect.__schema__)
                 params.update(parser_params)
-            elif isinstance(expect, Model):
+            elif isinstance(expect, ModelBase):
                 params['payload'] = not_none({
                     'name': 'payload',
                     'required': True,
@@ -428,7 +428,7 @@ class Swagger(object):
                 'items': self.serialize_schema(model),
             }
 
-        elif isinstance(model, Model):
+        elif isinstance(model, ModelBase):
             self.register_model(model)
             return ref(model)
 
@@ -448,14 +448,15 @@ class Swagger(object):
         raise ValueError('Model {0} not registered'.format(model))
 
     def register_model(self, model):
-        name = model.name if isinstance(model, Model) else model
+        name = model.name if isinstance(model, ModelBase) else model
         if name not in self.api.models:
             raise ValueError('Model {0} not registered'.format(name))
         specs = self.api.models[name]
         self._registered_models[name] = specs
-        if isinstance(specs, Model):
+        if isinstance(specs, ModelBase):
             for parent in specs.__parents__:
                 self.register_model(parent)
+        if isinstance(specs, Model):
             for field in itervalues(specs):
                 self.register_field(field)
         return ref(model)

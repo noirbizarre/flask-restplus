@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from flask_restplus import fields, Model
+from flask_restplus import fields, Model, SchemaModel
 
 from . import TestCase
 
@@ -557,6 +557,67 @@ class ModelTestCase(TestCase):
         # format property and throws an error if invalid
         with self.assertRaises(BadRequest):
             model.validate(data, format_checker=FormatChecker())
+
+
+class ModelSchemaTestCase(TestCase):
+    def test_model_schema(self):
+        address = SchemaModel('Address', {
+            'properties': {
+                'road': {
+                    'type': 'string'
+                },
+            },
+            'type': 'object'
+        })
+
+        person = SchemaModel('Person', {
+            # 'required': ['address'],
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                },
+                'address': {
+                    '$ref': '#/definitions/Address',
+                }
+            },
+            'type': 'object'
+        })
+
+        self.assertEqual(person.__schema__, {
+            # 'required': ['address'],
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                },
+                'address': {
+                    '$ref': '#/definitions/Address',
+                }
+            },
+            'type': 'object'
+        })
+
+        self.assertEqual(address.__schema__, {
+            'properties': {
+                'road': {
+                    'type': 'string'
+                },
+            },
+            'type': 'object'
+        })
 
 
 class ModelDeprecattionsTest(TestCase):
