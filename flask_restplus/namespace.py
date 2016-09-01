@@ -5,17 +5,20 @@ import inspect
 import six
 import warnings
 
-# TODO: replace "from flask.views import" by "from wsgiservice.resource import Resource.KNOWN_METHODS;"
-#       "http_method_funcs = frozenset(Resource.KNOWN_METHODS)"
-from flask.views import http_method_funcs
+from wsgiservice.resource import Resource as wsgiservice_resource
 
-#from .errors import abort
-from .marshalling import marshal, marshal_with
+# from .errors import abort
+# from .marshalling import marshal, marshal_with
 from .model import Model
-#from .reqparse import RequestParser
+# from .reqparse import RequestParser
 from .utils import merge
 
 
+
+
+# TODO: FUL-3375 Specify authentication schemes on the namespace level
+# TODO: FUL-3505 Possibly specify specialized error handling on the namespace level
+# TODO: FUL-3376
 class Namespace(object):
     '''
     Group resources together.
@@ -34,10 +37,11 @@ class Namespace(object):
         self.description = description
         self.path = (path or ('/' + name)).rstrip('/')
 
-        self._schema = None
+        # self._schema = None # unused attribute
         self._validate = validate
         self.models = {}
         # self.urls = {}
+        # # TODO: Provide explicit security/error handling interface instead of passing callbacks
         # self.decorators = decorators if decorators else []
         self.resources = []
         # self.error_handlers = {}
@@ -49,7 +53,6 @@ class Namespace(object):
     ### Add resource to namespace (maintained in triple of resource class, urls (with added namespace prefix path)
     ### and any extra labels such as endpoint name, resource constructor named/keyword arguments in list/tuple or dict
     ### form)
-
     def add_resource(self, resource, *urls, **kwargs):
         '''
         Register a Resource for a given API Namespace
@@ -90,19 +93,16 @@ class Namespace(object):
         return wrapper
 
 
-    ### Merge dictionary of keyword arguments passed to Namespace.doc with prexisting
-    ### __apidoc__ function/class attribute (after adapting possible 'params' and 'parser'/'body')
-
-    # Transforms top-level and possibly nested 'params' and 'parser'/'body' items in doc dictinary
-    # according to new convention and then merges resulting dictionary existing methods with
-    # __apidoc__ function/class attribute (a better name would be _add_to_preexisting_apidoc)
+    # Adds documentation dictionary (obtained from keyword arguments passed to Namespace.doc)
+    # with prexisting __apidoc__ function/class attribute (after adapting 'params' and 'parser'/
+    # 'body' entries). In case of doc == False the __apidoc__ attribute is set to false
     def _handle_api_doc(self, cls, doc):
         if doc is False:
             cls.__apidoc__ = False
             return
         unshortcut_params_description(doc)
         handle_deprecations(doc)
-        for http_method in http_method_funcs:
+        for http_method in [method.lower() for method in wsgiservice_resource.KNOWN_METHODS]:
             if http_method in doc:
                 if doc[http_method] is False:
                     continue
@@ -125,14 +125,12 @@ class Namespace(object):
         return wrapper
 
 
-    ### hide from documentation ###
-
     def hide(self, func):
         '''A decorator to hide a resource or a method from specifications'''
         return self.doc(False)(func)
 
     # ### error handling
-    #
+    # # TODO: FUL-3505
     # def abort(self, *args, **kwargs):
     #     '''
     #     Properly abort the current request
@@ -152,6 +150,7 @@ class Namespace(object):
             api.models[name] = definition
         return definition
 
+    # TODO: FUL-3376 Clean up mask
     def model(self, name=None, model=None, mask=None, **kwargs):
         '''
         Register a model
@@ -219,14 +218,6 @@ class Namespace(object):
         return self.doc(**params)
 
 
-    # # Request parser retrieval (parameter specification framework), not
-    # # clear whether going to be used in wsgiservice
-
-    # def parser(self):
-    #     '''Instanciate a :class:`~RequestParser`'''
-    #     return RequestParser()
-
-
     ### Response models ###
 
     # Possibly affects marshal_with
@@ -236,6 +227,7 @@ class Namespace(object):
         return field
 
     # Response model annotation and rearrangement of return value of decorated method
+    # TODO: FUL-3376 mask
     def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
         '''
         A decorator specifying the fields to use for serialization.
@@ -249,23 +241,20 @@ class Namespace(object):
                 'responses': {
                     code: (description, [fields]) if as_list else (description, fields)
                 },
-                '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
+                # '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
             }
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            # return marshal_with(fields, **kwargs)(func)
-            return func #TODO: Uncomment the above if marshalling feature is required
+            # deleted: marshal_with(fields, **kwargs)(func)
+            return func
         return wrapper
 
     def marshal_list_with(self, fields, **kwargs):
         '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
         return self.marshal_with(fields, True, **kwargs)
 
-    # def marshal(self, *args, **kwargs):
-    #     '''A shortcut to the :func:`marshal` helper'''
-    #     return marshal(*args, **kwargs)
 
     ### Error handler registry ###
-
+    # # TODO: FUL-3505
     # # Error handling in this way is Flask-specific and implemented differently in the
     # # __call__ operator of the wsgiservice.Resource base class
     # def errorhandler(self, exception):

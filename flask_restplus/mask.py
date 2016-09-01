@@ -10,6 +10,10 @@ from inspect import isclass
 from ._compat import OrderedDict
 from .errors import RestError
 
+
+### NOTE: Filters for response objects, currently not used in wsgiservice_restplus
+
+
 log = logging.getLogger(__name__)
 
 LEXER = re.compile(r'\{|\}|\,|[\w_:\-\*]+')

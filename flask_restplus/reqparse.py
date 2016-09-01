@@ -16,6 +16,9 @@ from .marshalling import marshal
 from .model import Model
 
 
+# TODO: FUL-3376, not currently used in wsgiservice_restplus
+
+
 class ParseResult(dict):
     '''
     The default result container as an Object dict.

@@ -7,7 +7,10 @@ from flask import request, current_app, has_app_context
 
 from ._compat import OrderedDict
 from .mask import Mask, apply as apply_mask
-from .utils import unpack
+# from .utils import unpack
+
+
+### NOTE: Filters/Mappers for response objects, currently not used in wsgiservice_restplus
 
 
 def marshal(data, fields, envelope=None, mask=None):

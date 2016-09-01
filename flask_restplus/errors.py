@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 # import flask
 
+# TODO: FUL-3376
 # from werkzeug.exceptions import HTTPException
 
 __all__ = (
@@ -12,7 +13,7 @@ __all__ = (
     'SpecsError',
 )
 
-
+# TODO: FUL-3376
 # def abort(code=500, message=None, **kwargs):
 #     '''
 #     Properly abort the current request.
@@ -36,7 +37,7 @@ __all__ = (
 
 
 class RestError(Exception):
-    '''Base class for all Flask-Restplus Errors'''
+    '''Base class for all wsgiservice-Restplus Errors'''
     def __init__(self, msg):
         self.msg = msg
 

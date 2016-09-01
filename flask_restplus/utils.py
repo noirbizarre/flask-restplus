@@ -12,7 +12,8 @@ FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
 ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 
-__all__ = ('merge', 'camel_to_dash', 'default_id', 'not_none', 'not_none_sorted', 'unpack')
+__all__ = ('merge', 'camel_to_dash', 'default_id', 'not_none', 'not_none_sorted' #, 'unpack'
+           )
 
 
 def merge(first, second):
@@ -77,40 +78,40 @@ def not_none_sorted(data):
     ordered_items = OrderedDict(sorted(iteritems(data)))
     return OrderedDict((k, v) for k, v in iteritems(ordered_items) if v is not None)
 
-
-def unpack(response, default_code=200):
-    '''
-    Unpack a Flask standard response.
-
-    Flask response can be:
-    - a single value
-    - a 2-tuple ``(value, code)``
-    - a 3-tuple ``(value, code, headers)``
-
-    .. warning::
-
-        When using this function, you must ensure that the tuple is not the reponse data.
-        To do so, prefer returning list instead of tuple for listings.
-
-    :param response: A Flask style response
-    :param int default_code: The HTTP code to use as default if none is provided
-    :return: a 3-tuple ``(data, code, headers)``
-    :rtype: tuple
-    :raise ValueError: if the response does not have one of the expected format
-    '''
-    if not isinstance(response, tuple):
-        # data only
-        return response, default_code, {}
-    elif len(response) == 1:
-        # data only as tuple
-        return response[0], default_code, {}
-    elif len(response) == 2:
-        # data and code
-        data, code = response
-        return data, code, {}
-    elif len(response) == 3:
-        # data, code and headers
-        data, code, headers = response
-        return data, code or default_code, headers
-    else:
-        raise ValueError('Too many response values')
+# # TODO:FUL-3375
+# def unpack(response, default_code=200):
+#     '''
+#     Unpack a Flask standard response.
+#
+#     Flask response can be:
+#     - a single value
+#     - a 2-tuple ``(value, code)``
+#     - a 3-tuple ``(value, code, headers)``
+#
+#     .. warning::
+#
+#         When using this function, you must ensure that the tuple is not the reponse data.
+#         To do so, prefer returning list instead of tuple for listings.
+#
+#     :param response: A Flask style response
+#     :param int default_code: The HTTP code to use as default if none is provided
+#     :return: a 3-tuple ``(data, code, headers)``
+#     :rtype: tuple
+#     :raise ValueError: if the response does not have one of the expected format
+#     '''
+#     if not isinstance(response, tuple):
+#         # data only
+#         return response, default_code, {}
+#     elif len(response) == 1:
+#         # data only as tuple
+#         return response[0], default_code, {}
+#     elif len(response) == 2:
+#         # data and code
+#         data, code = response
+#         return data, code, {}
+#     elif len(response) == 3:
+#         # data, code and headers
+#         data, code, headers = response
+#         return data, code or default_code, headers
+#     else:
+#         raise ValueError('Too many response values')

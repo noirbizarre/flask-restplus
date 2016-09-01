@@ -23,15 +23,13 @@ from jsonschema import RefResolver, FormatChecker
 # from werkzeug.http import HTTP_STATUS_CODES
 # from werkzeug.wrappers import Response as ResponseBase
 
-from . import apidoc
+# from . import apidoc
 from ._compat import OrderedDict
-from .mask import ParseError, MaskError
+# from .mask import ParseError, MaskError
 from .namespace import Namespace
-#from .postman import PostmanCollectionV1
-from .resource import Resource
+# from .postman import PostmanCollectionV1
 from .swagger import Swagger
-from .utils import default_id, camel_to_dash, unpack
-from .representations import output_json
+from .utils import default_id, camel_to_dash # deleted unpack
 
 # ### TODO: Would need to be readapted to RE_RULES = re.compile('({.*})')
 # RE_RULES = re.compile('(<.*>)')
@@ -39,7 +37,11 @@ from .representations import output_json
 # List headers that should never be handled by Flask-RESTPlus
 HEADERS_BLACKLIST = ('Content-Length',)
 
-DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
+
+# Replaced output_json by None (cf. wsgiservice.Resource content negotiation)
+# TODO: FUL-3376
+DEFAULT_REPRESENTATIONS = [('application/json', None)]
+
 
 
 ### wsgiservice-specific imoprts
@@ -90,6 +92,7 @@ class Api(object):
     checkers), otherwise the default action is to not enforce any format validation.
     '''
 
+    # TODO: NOW
     def __init__(self, app=None, version='1.0', title=None, description=None,
             terms_url=None, license=None, license_url=None,
             contact=None, contact_url=None, contact_email=None,
@@ -151,6 +154,7 @@ class Api(object):
         #     self.init_app(app)
         # # super(Api, self).__init__(app, **kwargs)
 
+    # TODO: NOW
     def init_app(self, app, **kwargs):
         '''
         Allow to lazy register the API on a Flask application::
@@ -187,6 +191,7 @@ class Api(object):
         # else:
         #     self.blueprint = app
 
+    # TODO: NOW
     ### TODO: replace this method by a wsgiservice.Application factory that
     ###       is cnostructed with a sequence of resources (ideally including Swagger Spec resource)
     ###        Name it e.g. create_wsgiservice_application(self)
@@ -217,12 +222,15 @@ class Api(object):
         # app.config.setdefault('RESTPLUS_MASK_HEADER', 'X-Fields')
         # app.config.setdefault('RESTPLUS_MASK_SWAGGER', True)
 
+    # TODO: NOW
     def create_wsgiservice_app(self):
         '''
         Creates a :class:`wsgiservice.application.Application` instance from the resources owned by self (the namespaces of this Api instance)
         '''
-        # TODO: Create Swagger documentation and serve it as a wsgiservice.Resource instance
-        #       Do not create Swagger doc with a resource as this will
+        # TODO: Make the Swagger specification resources configurable, such as with a
+        #       endpoint path -> (predicate, extra_info) dict that supplies a boolean
+        #       predicate callback that decides whether to include endpoint in documentation
+        #       and a
 
         endpoint = str('specs')
         self.endpoints.add(endpoint)
@@ -238,7 +246,8 @@ class Api(object):
                 if resource._path != urls[0]: # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
                     raise Exception # raise a path error exception due to remounting at different resource
             else:
-                resource._path = urls[0] # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
+                resource._path = self.base_path.rstrip('/') + urls[0] # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
+
         return wsgiservice.get_app({resource.__name__ : resource for resource, _, _ in self.resources})
 
 
@@ -248,6 +257,7 @@ class Api(object):
         except AttributeError:
             raise AttributeError('Api does not have {0} attribute'.format(name))
 
+    # # TODO: FUL-3376
     # def _complete_url(self, url_part, registration_prefix):
     #     '''
     #     This method is used to defer the construction of the final url in
@@ -260,14 +270,8 @@ class Api(object):
     #     parts = (registration_prefix, self.prefix, url_part)
     #     return ''.join(part for part in parts if part)
 
-    # ### Api documentation mounting ###
-    # def _register_apidoc(self, app):
-    #     conf = app.extensions.setdefault('restplus', {})
-    #     if not conf.get('apidoc_registered', False):
-    #         app.register_blueprint(apidoc.apidoc)
-    #     conf['apidoc_registered'] = True
-
     # ### registers Swagger specification resource ("SwaggerView") ###
+    # TODO: NOW
     # def _register_specs(self, app_or_blueprint):
     #     if self._add_specs:
     #         endpoint = str('specs')
@@ -281,7 +285,7 @@ class Api(object):
     #         self.endpoints.add(endpoint)
 
     # ### mounts documentation resource ###
-    # ### TODO: mount documentation resource separately to wsgiservice.Application instance ###
+    # TODO: NOW
     # def _register_doc(self, app_or_blueprint):
     #     if self._add_specs and self._doc:
     #         # Register documentation before root if enabled
@@ -296,6 +300,7 @@ class Api(object):
         kwargs['endpoint'] = endpoint
         self.endpoints.add(endpoint)
 
+        # TODO: FUL-3376
         # if self.app is not None:
         #     self._register_view(self.app, resource, *urls, **kwargs)
         # else:
@@ -303,6 +308,7 @@ class Api(object):
         self.resources.append((resource, urls, kwargs))
         return endpoint
 
+    # TODO: FUL-3506
     # ### Construct flask view function(s) from resource class (including binding of resource constructor to
     # ### named/kw-arguments), applies all Api-level decorators to the resulting view function and return
     # ### value transformation based on requested content type registering the view with the Application ###
@@ -350,6 +356,7 @@ class Api(object):
     #         # Add the url to the application or blueprint
     #         app.add_url_rule(rule, view_func=resource_func, **kwargs)
     #
+    # # TODO: FUL-3506
     # def output(self, resource):
     #     '''
     #     Wraps a resource (as a flask view function),
@@ -366,6 +373,7 @@ class Api(object):
     #         return self.make_response(data, code, headers=headers)
     #     return wrapper
     #
+    # # TODO: FUL-3506
     # def make_response(self, data, *args, **kwargs):
     #     '''
     #     Looks up the representation transformer for the requested media
@@ -400,10 +408,11 @@ class Api(object):
     #     self._doc_view = func
     #     return func
 
-    # ### documentation view functions
+    # TODO: FUL-3376
     # def render_root(self):
     #     self.abort(404)
     #
+    # # TODO: NOW
     # def render_doc(self):
     #     '''Override this method to customize the documentation page'''
     #     if self._doc_view:
@@ -413,6 +422,7 @@ class Api(object):
     #     return apidoc.ui_for(self)
 
 
+    # TODO: FUL-3376
     ### Creates a default endpoint name for an unnamed resource in a given namespace for use at        ###
     ### enpoint registering. Unfortunately, this function is partially reimplemented in _register_view ###
     def default_endpoint(self, resource, namespace):
@@ -443,6 +453,7 @@ class Api(object):
     ### Add namespace to internally maintained list and add this Api instance to list of Api objects in namespace ###
     ### Can keep Api-Namespace mutual references and (possibly) resource as well as model copying,
     ### but remove error handler code
+    # TODO: FUL-3505
     def add_namespace(self, ns):
         if ns not in self.namespaces:
             self.namespaces.append(ns)
@@ -451,11 +462,11 @@ class Api(object):
         # Register resources
         for resource, urls, kwargs in ns.resources:
             self.register_resource(ns, resource, *urls, **kwargs)
-        # ### TODO: Uncomment for models
         # Register models
         for name, definition in ns.models.items():
             self.models[name] = definition
         # # Register error handlers
+        # TODO: FUL-3505
         # for exception, handler in ns.error_handlers.items():
         #     self.error_handlers[exception] = handler
 
@@ -470,6 +481,7 @@ class Api(object):
         self.add_namespace(ns)
         return ns
 
+    # TODO: FUL-3376
     ### prepend endpoint with api.blueprint.name ###
     def endpoint(self, name):
         if self.blueprint:
@@ -477,6 +489,7 @@ class Api(object):
         else:
             return name
 
+    # TODO: FUL-3376
     # @property
     # def specs_url(self):
     #     '''
@@ -486,6 +499,7 @@ class Api(object):
     #     '''
     #     return url_for(self.endpoint('specs'), _external=True)
     #
+    # TODO: FUL-3376
     # @property
     # def base_url(self):
     #     '''
@@ -495,6 +509,7 @@ class Api(object):
     #     '''
     #     return url_for(self.endpoint('root'), _external=True)
 
+    # TODO: FUL-3376
     ### Base url, replaced by an explicit path TODO: replace prefix by a more reasonable name such as _base_path ###
     @property
     def base_path(self):
@@ -520,6 +535,7 @@ class Api(object):
         return self._schema
 
     # ### error handler registration ###
+    # # TODO: FUL-3505
     # def errorhandler(self, exception):
     #     '''A decorator to register an error handler for a given exception'''
     #     if inspect.isclass(exception) and issubclass(exception, Exception):
@@ -533,6 +549,7 @@ class Api(object):
     #         self._default_error_handler = exception
     #         return exception
     #
+    # # TODO: FUL-3505
     # def owns_endpoint(self, endpoint):
     #     '''
     #     Tests if an endpoint name (not path) belongs to this Api.
@@ -549,6 +566,7 @@ class Api(object):
     #             return False
     #     return endpoint in self.endpoints
     #
+    # # TODO: FUL-3505
     # def _should_use_fr_error_handler(self):
     #     '''
     #     Determine if error should be handled with FR or default Flask
@@ -574,6 +592,7 @@ class Api(object):
     #         # Werkzeug throws other kinds of exceptions, such as Redirect
     #         pass
     #
+    # # TODO: FUL-3505
     # def _has_fr_route(self):
     #     '''Encapsulating the rules for whether the request was to a Flask endpoint'''
     #     # 404's, 405's, which might not have a url_rule
@@ -584,6 +603,7 @@ class Api(object):
     #         return False
     #     return self.owns_endpoint(request.url_rule.endpoint)
     #
+    # # TODO: FUL-3505
     # def error_router(self, original_handler, e):
     #     '''
     #     This function decides whether the error occured in a flask-restplus
@@ -604,6 +624,7 @@ class Api(object):
     #             pass  # Fall through to original handler
     #     return original_handler(e)
     #
+    # # TODO: FUL-3505
     # def handle_error(self, e):
     #     '''
     #     Error handler for the API transforms a raised exception into a Flask response,
@@ -665,6 +686,7 @@ class Api(object):
     #         resp = self.unauthorized(resp)
     #     return resp
     #
+    # # TODO: FUL-3505
     # def _help_on_404(self, message=None):
     #     rules = dict([(RE_RULES.sub('', rule.rule), rule.rule)
     #                   for rule in current_app.url_map.iter_rules()])
@@ -681,6 +703,7 @@ class Api(object):
     #         ))
     #     return message
 
+    # #TODO: FUL-3376 (decide whether this should be added as a feature)
     ### Postman API specification ###
     # def as_postman(self, urlvars=False, swagger=False):
     #     '''
@@ -692,19 +715,16 @@ class Api(object):
     #     '''
     #     return PostmanCollectionV1(self, swagger=swagger).as_dict(urlvars=urlvars)
 
-    # ### Get JSON-version of request payload ###
-    # @property
-    # def payload(self):
-    #     '''Store the input payload in the current request context'''
-    #     return request.get_json()
-
-    ### JSON schema model type system reference resolver ###
     @property
     def refresolver(self):
+        '''
+        JSON schema model system reference resolver
+        '''
         if not self._refresolver:
             self._refresolver = RefResolver.from_schema(self.__schema__)
         return self._refresolver
 
+    # # TODO: NOW
     # ### deferred initialization (if Api instance was initialized with ) to when blueprint is ###
     # ### registered with flask.Flask instance                                                 ###
     # @staticmethod
@@ -736,6 +756,7 @@ class Api(object):
     #     blueprint_setup.app.add_url_rule(rule, '%s.%s' % (blueprint_setup.blueprint.name, endpoint),
     #                                      view_func, defaults=defaults, **options)
     #
+    # # TODO: NOW
     # def _deferred_blueprint_init(self, setup_state):
     #     '''
     #     Synchronize prefix between blueprint/api and registration options, then
@@ -761,6 +782,7 @@ class Api(object):
     #     self._init_app(setup_state.app)
 
 
+    # TODO: FUL-3376
     # ### Content negotiation/supported media types ###
     # def mediatypes_method(self):
     #     '''Return a method that returns a list of mediatypes'''
@@ -771,6 +793,7 @@ class Api(object):
     #     return [h for h, q in sorted(request.accept_mimetypes,
     #                                  key=operator.itemgetter(1), reverse=True)]
 
+    # TODO: FUL-3376
     # ### register response content type transformation function ###
     # ### TODO: make "representation" (response content type) configurable on this class
     # def representation(self, mediatype):
@@ -800,6 +823,7 @@ class Api(object):
     #         return func
     #     return wrapper
 
+    # TODO: FUL-3375
     # ### security: unauthorized request ###
     # def unauthorized(self, response):
     #     '''Given a response, change it to ask for credentials'''
@@ -811,7 +835,8 @@ class Api(object):
     #         response.headers['WWW-Authenticate'] = challenge
     #     return response
 
-    ### Flask url retrieval, rewritten to comopse base_path with resource url in wsgiservice ###
+    # TODO: FUL-3376
+    ###  Url retrieval, rewritten from flask-restplus to comopse base_path with resource url in wsgiservice ###
     def url_for(self, resource, **values):
         '''
         Generates a URL to the given resource.
@@ -830,15 +855,7 @@ class Api(object):
             return None
 
 
-# class SwaggerView(Resource):
-#     '''Render the Swagger specifications as JSON'''
-#     def get(self):
-#         return self.api.__schema__
-#
-#     def mediatypes(self):
-#         return ['application/json']
-
-
+# # TODO: FUL-3505
 # def mask_parse_error_handler(error):
 #     '''When a mask can't be parsed'''
 #     return {'message': 'Mask parse error: {0}'.format(error)}, 400
@@ -851,13 +868,16 @@ class Api(object):
 
 ### Swagger Documentation resource factory
 def generate_swagger_resource(api):
-    '''Returns a wsgiservice Swagger documentation Resource class that binds the Api instance'''
+    '''
+    Returns a wsgiservice Swagger documentation Resource class that binds the Api instance
+    '''
 
-    class SwaggerResource(wsgiservice.resource.Resource):
+    class SwaggerResource(wsgiservice.Resource):
+        '''
+        Resource for the Swagger specification of the bound Api
+        '''
 
         def GET(self):
             return api.__schema__()
 
     return SwaggerResource
-
-### TODO: Define the Resource for the Swagger UI

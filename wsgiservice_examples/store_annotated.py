@@ -26,13 +26,14 @@ ns = namespace.Namespace(
 id_model = ns.model('id', { 'id': fields.String(pattern=r'[-0-9a-zA-Z]{36}',
                                                 description='UUID of key-document pair',
                                                 example='3c805c7c-9ff0-4879-8eb7-d2eee97ca39d') } )
+
 ## model inheritance, alternatively use ns.clone to copy all fields
 doc_model = ns.inherit('doc_model',
                         {'doc': fields.String(description='The document',example='Some document goes here...')})
 
 
 # saved_model = ns.model('saved_model',{'saved': fields.Boolean(description='Storage status')})
-id_saved_model = ns.clone('id_saved_model', id_model,{'saved': fields.Boolean(description='Storage status',example='True')})
+id_saved_model = ns.clone('id_saved_model', id_model, {'saved': fields.Boolean(description='Storage status',example='True')})
 
 # # TODO: Error annotations (e.g. marshal_with, others)
 

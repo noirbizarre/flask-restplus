@@ -10,6 +10,8 @@ except:
     from urllib.parse import urlencode
 
 
+### TODO: FUL-3376
+
 def clean(data):
     '''Remove all keys where value is None'''
     return dict((k, v) for k, v in data.items() if v is not None)

@@ -7,10 +7,8 @@ import warnings
 
 from collections import MutableMapping
 from six import iteritems, itervalues
-# from werkzeug import cached_property
 
 from .mask import Mask
-# from .errors import abort
 
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
@@ -53,8 +51,7 @@ class Model(dict, MutableMapping):
             return self.__class__.inherit(name, self, *parents)
         self.inherit = instance_inherit
 
-    # @cached_property
-    @property # TODO: check vs. cached_property
+    @property # TODO: was werkzeug.cached_property
     def resolved(self):
         '''
         Resolve real fields before submitting them to marshal
@@ -95,8 +92,7 @@ class Model(dict, MutableMapping):
                     return found
         raise ValueError('Parent ' + name + ' not found')
 
-    # @cached_property
-    @property # TODO: check vs. cached_property
+    @property # TODO: was werkzeug.cached_property
     def __schema__(self):
         properties = {}
         required = set()

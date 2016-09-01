@@ -10,6 +10,10 @@ from .model import Model
 from .utils import unpack
 
 
+
+### TODO: This does method dispatching and payload validation -
+###       Should be almost completely rewritten for wsgiservice in FUL-3506
+
 class Resource(MethodView):
     '''
     Represents an abstract RESTPlus resource.

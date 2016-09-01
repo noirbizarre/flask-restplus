@@ -7,21 +7,15 @@ from inspect import isclass, getdoc
 from collections import Hashable
 from six import string_types, itervalues, iteritems, iterkeys
 
-from flask import current_app
+# from flask import current_app # TODO: FUL-3376 Delete once hostname and masks dependencies are dealt with
 
 from ._compat import OrderedDict
 
 from . import fields
 from .model import Model
-#from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 
-
-
-### new imports
-### TODO: move this method to the wsgiservice module
-def get_wsgiservice_methods(resource):
-    return [method for method in resource.KNOWN_METHODS if hasattr(resource, method)]
+from .wsgiservice_adaptors import get_resource_http_methods
 
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
@@ -33,7 +27,7 @@ PATH_TYPES = {
 }
 
 
-#: Maps Pyton primitives types to Swagger ones
+#: Maps Python primitives types to Swagger ones
 PY_TYPES = {
     int: 'integer',
     str: 'string',
@@ -41,16 +35,16 @@ PY_TYPES = {
     None: 'void'
 }
 
-### Finds Flask path parameters in URL and binds groups to variable name
-#RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
-### Finds Flask path parameters in URL and binds groups to type:variable name pairs
-# RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
+### Finds wsgiservice path parameters in URL and binds groups to variable name
 RE_PARAMS = re.compile(r'{([^{}]+)}')
 
+
+### TODO: FUL-3376: Adapt to wsgiservice default
 DEFAULT_RESPONSE_DESCRIPTION = 'Success'
 DEFAULT_RESPONSE = {'description': DEFAULT_RESPONSE_DESCRIPTION}
 
-RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)$', re.MULTILINE)
+### TODO: FUL-3505 (error handling)
+# RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)$', re.MULTILINE)
 
 
 def ref(model):
@@ -64,35 +58,18 @@ def _v(value):
     return value() if callable(value) else value
 
 
-### Tranforms Flask paths to Swagger paths replacing path_params according to <type:param> -> {param}
 def extract_path(path):
     '''
-    Transform a Flask/Werkzeug URL pattern in a Swagger one.
+    Transform a wsgiservice URL pattern in a Swagger one.
     '''
-    # return RE_URL.sub(r'{\1}', path)
     return path
 
 
 def extract_path_params(path):
     '''
-    Extract Flask-style parameters from an URL pattern as Swagger ones.
+    Extract wsgiservice path parameters from an URL pattern as Swagger ones.
     '''
     params = OrderedDict()
-    # for match in RE_PARAMS.findall(path):
-    #     descriptor, name = match.split(':') if ':' in match else (None, match)
-    #     param = {
-    #         'name': name,
-    #         'in': 'path',
-    #         'required': True
-    #     }
-    #
-    #     if descriptor in PATH_TYPES:
-    #         param['type'] = PATH_TYPES[descriptor]
-    #     elif descriptor in current_app.url_map.converters:
-    #         param['type'] = 'string'
-    #     else:
-    #         raise ValueError('Unsupported type converter')
-    #     params[name] = param
     for name in RE_PARAMS.findall(path):
         param = {
             'name': name,
@@ -100,14 +77,21 @@ def extract_path_params(path):
             'required': True
         }
 
-        ### TODO: Retrieve type information from annotation with decorator to add 'type' attribute to param
+        ### TODO: FUL-3506: Merge type information from annotation with decorator
+        ###       to add 'type' attribute to param (currently implemented
+        ###        with wsgiservice.validate decorator)
         params[name] = param
     return params
 
-### pop in and name elements in param dictionary, add type to it
+
 def _param_to_header(param):
-    param.pop('in', None)
-    param.pop('name', None)
+    '''
+    Transforms header parameter dict for documentation
+
+    Pops 'in' and 'name' and adds 'type'
+    '''
+    param.pop('in', None)   # in header
+    param.pop('name', None) # header name
 
     typedef = param.get('type', 'string')
     if isinstance(typedef, Hashable) and typedef in PY_TYPES:
@@ -118,18 +102,24 @@ def _param_to_header(param):
         param['type'] = typedef
     return param
 
-### parses doc-string for summary (first sentence in first line of doc-string), details (remainder of the
-### description in the doc-string), and exception specification (using the ":raises {exception type} : {description}"
-### annotation)
+
 def parse_docstring(obj):
+    '''
+    Parses a resource/method doc-string
+
+    Summary (first sentence in first line of doc-string), details (remainder of the
+    description in the doc-string) and exception specification (using the
+    ":raises {exception type} : {description} annotation)
+    '''
     raw = getdoc(obj)
     summary = raw.strip(' \n').split('\n')[0].split('.')[0] if raw else None
     raises = {}
     details = raw.replace(summary, '').lstrip('. \n').strip(' \n') if raw else None
-    for match in RE_RAISES.finditer(raw or ''):
-        raises[match.group('name')] = match.group('description')
-        if details:
-            details = details.replace(match.group(0), '')
+    # TODO: FUL-3505
+    # for match in RE_RAISES.finditer(raw or ''):
+    #     raises[match.group('name')] = match.group('description')
+    #     if details:
+    #         details = details.replace(match.group(0), '')
     parsed = {
         'raw': raw,
         'summary': summary or None,
@@ -205,7 +195,7 @@ class Swagger(object):
         }
         return not_none(specs)
 
-    ### TODO: Get (sub)domain part of URL here (where is this information stored in wsgiservice?)
+    ### TODO: FUL-3376: Get (sub)domain of URL (where is this information stored in wsgiservice?)
     def get_host(self):
         # hostname = current_app.config.get('SERVER_NAME', None) or None
         # if hostname and self.api.blueprint and self.api.blueprint.subdomain:
@@ -213,7 +203,7 @@ class Swagger(object):
         # return hostname
         return None
 
-    ### This method accumulates a list of (name,description) pairs from namespaces owned by Api instance
+    ### Accumulates a list of (name,description) pairs from namespaces owned by Api instance
     ### if no extra tags are passed to Api instance at construction
     def extract_tags(self, api):
         tags = []
@@ -247,10 +237,8 @@ class Swagger(object):
         params = merge(self.expected_params(doc), doc.get('params', {}))
         params = merge(params, extract_path_params(url))
         doc['params'] = params
-        # for method in [m.lower() for m in resource.methods or []]:
-        for method in [m.lower() for m in get_wsgiservice_methods(resource)]:
+        for method in [m.lower() for m in get_resource_http_methods(resource) or []]:
             method_doc = doc.get(method, OrderedDict())
-            # method_impl = getattr(resource, method)
             method_impl = getattr(resource, method.upper())
             if hasattr(method_impl, 'im_func'):
                 method_impl = method_impl.im_func
@@ -266,17 +254,14 @@ class Swagger(object):
             doc[method] = method_doc
         return doc
 
-    ### TODO
+
     def expected_params(self, doc):
         params = {}
         if 'expect' not in doc:
             return params
 
         for expect in doc.get('expect', []):
-            # if isinstance(expect, RequestParser):
-            #     parser_params = dict((p['name'], p) for p in expect.__schema__)
-            #     params.update(parser_params)
-            # elif isinstance(expect, Model):
+            # deleted RequestParser dependency here
             if isinstance(expect, Model):
                 params['payload'] = not_none({
                     'name': 'payload',
@@ -307,7 +292,7 @@ class Swagger(object):
     ### return a dictionary of error handling cases mapping exception name to
     ### description, header request parameter name -> type & additional info mapping and
     ### response models
-    ### TODO: Need to consistently with wsgiservice specify error handling through the api interface
+    ### TODO: FUL-3505: Develop error interface specification for wsgiservice/beekeeper
     def register_errors(self):
         responses = {}
     #     for exception, handler in self.api.error_handlers.items():
@@ -337,8 +322,7 @@ class Swagger(object):
         path = {
             'parameters': self.parameters_for(doc) or None
         }
-        # for method in [m.lower() for m in resource.methods or []]:
-        for method in [m.lower() for m in get_wsgiservice_methods(resource)]:
+        for method in [m.lower() for m in get_resource_http_methods(resource) or []]:
             methods = [m.lower() for m in kwargs.get('methods', [])]
             if doc[method] is False or methods and method not in methods:
                 continue
@@ -403,7 +387,7 @@ class Swagger(object):
 
             params.append(param)
 
-        # ### TODO: handle mask fields
+        # ### TODO: FUL-3505
         # # Handle fields mask
         # mask = doc.get('__mask__')
         # if (mask and current_app.config['RESTPLUS_MASK_SWAGGER']):
@@ -433,7 +417,6 @@ class Swagger(object):
                         responses[code].update(description=description)
                     else:
                         responses[code] = {'description': description}
-                    ### TODO: uncomment the following section
                     if model:
                         responses[code]['schema'] = self.serialize_schema(model)
             if 'model' in d:
@@ -462,6 +445,7 @@ class Swagger(object):
             for name, model in iteritems(self._registered_models)
         )
 
+    ### serialize data type in response
     def serialize_schema(self, model):
         if isinstance(model, (list, tuple)):
             model = model[0]
@@ -514,8 +498,8 @@ class Swagger(object):
         elif isinstance(field, fields.List):
             self.register_field(field.container)
 
-    # ### security-related documentation ###
-    # ### TODO
+    ### security/authenatication documentation ###
+    ### TODO: FUL-3375
     def security_for(self, doc, method):
         security = None
         # if 'security' in doc:
