@@ -17,13 +17,13 @@ from types import MethodType
 
 from jsonschema import RefResolver, FormatChecker
 
-# from werkzeug import cached_property
-# from werkzeug.datastructures import Headers
-# from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
-# from werkzeug.http import HTTP_STATUS_CODES
-# from werkzeug.wrappers import Response as ResponseBase
+# TODO: FUL-3505 and FUL-3376
+from werkzeug import cached_property
+from werkzeug.datastructures import Headers
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
+from werkzeug.http import HTTP_STATUS_CODES
+from werkzeug.wrappers import Response as ResponseBase
 
-# from . import apidoc
 from ._compat import OrderedDict
 # from .mask import ParseError, MaskError
 from .namespace import Namespace
@@ -41,8 +41,6 @@ HEADERS_BLACKLIST = ('Content-Length',)
 # Replaced output_json by None (cf. wsgiservice.Resource content negotiation)
 # TODO: FUL-3376
 DEFAULT_REPRESENTATIONS = [('application/json', None)]
-
-
 
 ### wsgiservice-specific imoprts
 import wsgiservice
@@ -66,7 +64,6 @@ class Api(object):
         - The API root/documentation will be ``{endpoint}.root``
         - A resource registered as 'resource' will be available as ``{endpoint}.resource``
 
-    :param flask.Flask|flask.Blueprint app: the Flask application object or a Blueprint
     :param str version: The API version (used in Swagger documentation)
     :param str title: The API title (used in Swagger documentation)
     :param str description: The API description (used in Swagger documentation)
@@ -74,11 +71,13 @@ class Api(object):
     :param str contact: A contact email for the API (used in Swagger documentation)
     :param str license: The license associated to the API (used in Swagger documentation)
     :param str license_url: The license page URL (used in Swagger documentation)
+    :param func default_id: The default Swagger Operation.operationId string generation function
+        accepting a resource class and HTTP method string
     :param str endpoint: The API base endpoint (default to 'api).
     :param str default: The default namespace base name (default to 'default')
     :param str default_label: The default namespace label (used in Swagger documentation)
     :param str default_mediatype: The default media type to return
-    :param bool validate: Whether or not the API should perform input payload validation.
+    :param bool validate: API-wide request validation setting (can be overridden by concrete methods).
     :param str doc: The documentation path. If set to a false value, documentation is disabled.
                 (Default to '/')
     :param list decorators: Decorators to attach to every resource
@@ -92,15 +91,15 @@ class Api(object):
     checkers), otherwise the default action is to not enforce any format validation.
     '''
 
-    # TODO: NOW
-    def __init__(self, app=None, version='1.0', title=None, description=None,
+    def __init__(self,
+            version='1.0', title=None, description=None,
             terms_url=None, license=None, license_url=None,
             contact=None, contact_url=None, contact_email=None,
-            authorizations=None, security=None, doc='/', default_id=default_id,
+            authorizations=None, security=None, swagger_path='/swagger.json', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
             tags=None, prefix='',
-            default_mediatype='application/json', decorators=None,
-            catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
+            default_mediatype='application/json', decorators=None, # catch_all_404s=False, serve_challenge_on_401=False, # TODO FUL-3505
+            format_checker=None,
             **kwargs):
         self.version = version
         self.title = title or 'API'
@@ -111,116 +110,52 @@ class Api(object):
         self.contact_url = contact_url
         self.license = license
         self.license_url = license_url
-        # self.authorizations = authorizations
-        # self.security = security
+        self.authorizations = authorizations
+        self.security = security
         self.default_id = default_id
-        self._validate = validate
-        self._doc = doc
-        self._doc_view = None
-        self._default_error_handler = None
+        self._validate = validate          # Api-wide request validation setting
+        self._swagger_path = swagger_path
+
+        self._default_error_handler = None # TODO: FUL-3505
         self.tags = tags or []
 
+        # TODO: FUL-3505
         # self.error_handlers = {
         #     ParseError: mask_parse_error_handler,
         #     MaskError: mask_error_handler,
         # }
-        self._schema = None
+
+        self._schema = None # cache for Swagger JSON specification
         self.models = {}
         self._refresolver = None
         self.format_checker = format_checker
         self.namespaces = []
-        self.default_namespace = self.namespace(default, default_label,
-            endpoint='{0}-declaration'.format(default),
-            validate=validate,
-            api=self,
-            path='/',
-        )
+
+        # TODO: FUL-3376 (probably deletable)
+        # delete default namespace as it's just syntactic ease not to define an extra namespace
+        if default is not None and default_label is not None:
+            self.default_namespace = self.namespace(default, default_label,
+                endpoint='{0}-declaration'.format(default),
+                validate=validate,
+                api=self,
+            )
 
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
+
+        # TODO: FUL-3505
         # self.catch_all_404s = catch_all_404s
         # self.serve_challenge_on_401 = serve_challenge_on_401
-        # self.blueprint_setup = None
-        self.endpoints = set()
-        self.resources = []
-        self.app = None
-        self.blueprint = None
 
-        # if app is not None:
-        #     self.app = app
-        #     self.init_app(app)
-        # # super(Api, self).__init__(app, **kwargs)
+        # TODO: FUL-3376 (probably deletable)
+        # self.resources = []
 
-    # TODO: NOW
-    def init_app(self, app, **kwargs):
-        '''
-        Allow to lazy register the API on a Flask application::
 
-        >>> app = Flask(__name__)
-        >>> api = Api()
-        >>> api.init_app(app)
-
-        :param flask.Flask app: the Flask application object
-        :param str title: The API title (used in Swagger documentation)
-        :param str description: The API description (used in Swagger documentation)
-        :param str terms_url: The API terms page URL (used in Swagger documentation)
-        :param str contact: A contact email for the API (used in Swagger documentation)
-        :param str license: The license associated to the API (used in Swagger documentation)
-        :param str license_url: The license page URL (used in Swagger documentation)
-
-        '''
-        self.title = kwargs.get('title', self.title)
-        self.description = kwargs.get('description', self.description)
-        self.terms_url = kwargs.get('terms_url', self.terms_url)
-        self.contact = kwargs.get('contact', self.contact)
-        self.contact_url = kwargs.get('contact_url', self.contact_url)
-        self.contact_email = kwargs.get('contact_email', self.contact_email)
-        self.license = kwargs.get('license', self.license)
-        self.license_url = kwargs.get('license_url', self.license_url)
-        self._add_specs = kwargs.get('add_specs', True)
-
-        # # If app is a blueprint, defer the initialization
-        # try:
-        #     app.record(self._deferred_blueprint_init)
-        # # Flask.Blueprint has a 'record' attribute, Flask.Api does not
-        # except AttributeError:
-        #     self._init_app(app)
-        # else:
-        #     self.blueprint = app
-
-    # TODO: NOW
-    ### TODO: replace this method by a wsgiservice.Application factory that
-    ###       is cnostructed with a sequence of resources (ideally including Swagger Spec resource)
-    ###        Name it e.g. create_wsgiservice_application(self)
-    def _init_app(self, app):
-        '''
-        Perform initialization actions with the given :class:`flask.Flask` object.
-
-        :param flask.Flask app: The flask application object
-        '''
-        # ### TODO: define the Swagger documentation resource separately mounting it to the
-        #           wsgiservice.Application instance to be created here
-        # self._register_specs(self.blueprint or app)
-        # self._register_doc(self.blueprint or app)
-
-        # ### flask exception handler instantiation
-        # app.handle_exception = partial(self.error_router, app.handle_exception)
-        # app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
-
-        # ### register resources as view functions to the flask.Application instance,
-        #     Just need to create and return a wsgiservice.Application instance here
-        # if len(self.resources) > 0:
-        #     for resource, urls, kwargs in self.resources:
-        #         self._register_view(app, resource, *urls, **kwargs)
-
-        ### TODO: mount the Swagger UI as a wsgiservice resource, e.g. when the Application object is instantiated
-        #self._register_apidoc(app)
-        # self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
-        # app.config.setdefault('RESTPLUS_MASK_HEADER', 'X-Fields')
-        # app.config.setdefault('RESTPLUS_MASK_SWAGGER', True)
+    # NOTE: init_app and _init_app methods deleted here
+    # These methods mainly served to allow distributed initialization
 
     # TODO: NOW
     def create_wsgiservice_app(self):
@@ -231,9 +166,6 @@ class Api(object):
         #       endpoint path -> (predicate, extra_info) dict that supplies a boolean
         #       predicate callback that decides whether to include endpoint in documentation
         #       and a
-
-        endpoint = str('specs')
-        self.endpoints.add(endpoint)
 
         self.swagger_path = '/swagger.json'
         SwaggerResourceClass = generate_swagger_resource(api=self)
@@ -251,279 +183,65 @@ class Api(object):
         return wsgiservice.get_app({resource.__name__ : resource for resource, _, _ in self.resources})
 
 
-    def __getattr__(self, name):
-        try:
-            return getattr(self.default_namespace, name)
-        except AttributeError:
-            raise AttributeError('Api does not have {0} attribute'.format(name))
+    # # TODO: FUL-3376 (probably deletable)
+    # def __getattr__(self, name):
+    #     try:
+    #         return getattr(self.default_namespace, name)
+    #     except AttributeError:
+    #         raise AttributeError('Api does not have {0} attribute'.format(name))
 
-    # # TODO: FUL-3376
-    # def _complete_url(self, url_part, registration_prefix):
-    #     '''
-    #     This method is used to defer the construction of the final url in
-    #     the case that the Api is created with a Blueprint.
+
+    # TODO: FUL-3376 (probably deletable)
+    ### Add resource, assigned urls and constructor named/kw-args to sequence of resources
+    # def register_resource(self, namespace, resource, *urls, **kwargs):
     #
-    #     :param url_part: The part of the url the endpoint is registered with
-    #     :param registration_prefix: The part of the url contributed by the
-    #         blueprint.  Generally speaking, BlueprintSetupState.url_prefix
-    #     '''
-    #     parts = (registration_prefix, self.prefix, url_part)
-    #     return ''.join(part for part in parts if part)
-
-    # ### registers Swagger specification resource ("SwaggerView") ###
-    # TODO: NOW
-    # def _register_specs(self, app_or_blueprint):
-    #     if self._add_specs:
-    #         endpoint = str('specs')
-    #         self._register_view(
-    #             app_or_blueprint,
-    #             SwaggerView,
-    #             '/swagger.json',
-    #             endpoint=endpoint,
-    #             resource_class_args=(self, )
-    #         )
-    #         self.endpoints.add(endpoint)
-
-    # ### mounts documentation resource ###
-    # TODO: NOW
-    # def _register_doc(self, app_or_blueprint):
-    #     if self._add_specs and self._doc:
-    #         # Register documentation before root if enabled
-    #         app_or_blueprint.add_url_rule(self._doc, 'doc', self.render_doc)
-    #     app_or_blueprint.add_url_rule(self.prefix or '/', 'root', self.render_root)
-
-    ### Add resource, assigned urls and constructor named/kw-args to sequence
-    def register_resource(self, namespace, resource, *urls, **kwargs):
-        endpoint = kwargs.pop('endpoint', None)
-        endpoint = str(endpoint or self.default_endpoint(resource, namespace))
-
-        kwargs['endpoint'] = endpoint
-        self.endpoints.add(endpoint)
-
-        # TODO: FUL-3376
-        # if self.app is not None:
-        #     self._register_view(self.app, resource, *urls, **kwargs)
-        # else:
-        #     self.resources.append((resource, urls, kwargs))
-        self.resources.append((resource, urls, kwargs))
-        return endpoint
-
-    # TODO: FUL-3506
-    # ### Construct flask view function(s) from resource class (including binding of resource constructor to
-    # ### named/kw-arguments), applies all Api-level decorators to the resulting view function and return
-    # ### value transformation based on requested content type registering the view with the Application ###
-    # def _register_view(self, app, resource, *urls, **kwargs):
-    #     endpoint = kwargs.pop('endpoint', None) or camel_to_dash(resource.__name__)
-    #     resource_class_args = kwargs.pop('resource_class_args', ())
-    #     resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
+    #     kwargs['endpoint'] = default_endpoint(resource, namespace)
     #
-    #     # NOTE: 'view_functions' is cleaned up from Blueprint class in Flask 1.0
-    #     if endpoint in getattr(app, 'view_functions', {}):
-    #         previous_view_class = app.view_functions[endpoint].__dict__['view_class']
-    #
-    #         # if you override the endpoint with a different class, avoid the collision by raising an exception
-    #         if previous_view_class != resource:
-    #             msg = 'This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__)
-    #             raise ValueError(msg)
-    #
-    #     resource.mediatypes = self.mediatypes_method()  # Hacky
-    #     resource.endpoint = endpoint
-    #     resource_func = self.output(resource.as_view(endpoint, self, *resource_class_args,
-    #         **resource_class_kwargs))
-    #
-    #     for decorator in self.decorators:
-    #         resource_func = decorator(resource_func)
-    #
-    #     for url in urls:
-    #         # If this Api has a blueprint
-    #         if self.blueprint:
-    #             # And this Api has been setup
-    #             if self.blueprint_setup:
-    #                 # Set the rule to a string directly, as the blueprint is already
-    #                 # set up.
-    #                 self.blueprint_setup.add_url_rule(url, view_func=resource_func, **kwargs)
-    #                 continue
-    #             else:
-    #                 # Set the rule to a function that expects the blueprint prefix
-    #                 # to construct the final url.  Allows deferment of url finalization
-    #                 # in the case that the associated Blueprint has not yet been
-    #                 # registered to an application, so we can wait for the registration
-    #                 # prefix
-    #                 rule = partial(self._complete_url, url)
-    #         else:
-    #             # If we've got no Blueprint, just build a url with no prefix
-    #             rule = self._complete_url(url, '')
-    #         # Add the url to the application or blueprint
-    #         app.add_url_rule(rule, view_func=resource_func, **kwargs)
-    #
-    # # TODO: FUL-3506
-    # def output(self, resource):
-    #     '''
-    #     Wraps a resource (as a flask view function),
-    #     for cases where the resource does not directly return a response object
-    #
-    #     :param resource: The resource as a flask view function
-    #     '''
-    #     @wraps(resource)
-    #     def wrapper(*args, **kwargs):
-    #         resp = resource(*args, **kwargs)
-    #         if isinstance(resp, ResponseBase):  # There may be a better way to test
-    #             return resp
-    #         data, code, headers = unpack(resp)
-    #         return self.make_response(data, code, headers=headers)
-    #     return wrapper
-    #
-    # # TODO: FUL-3506
-    # def make_response(self, data, *args, **kwargs):
-    #     '''
-    #     Looks up the representation transformer for the requested media
-    #     type, invoking the transformer to create a response object. This
-    #     defaults to default_mediatype if no transformer is found for the
-    #     requested mediatype. If default_mediatype is None, a 406 Not
-    #     Acceptable response will be sent as per RFC 2616 section 14.1
-    #
-    #     :param data: Python object containing response data to be transformed
-    #     '''
-    #     default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
-    #     mediatype = request.accept_mimetypes.best_match(
-    #         self.representations,
-    #         default=default_mediatype,
-    #     )
-    #     if mediatype is None:
-    #         raise NotAcceptable()
-    #     if mediatype in self.representations:
-    #         resp = self.representations[mediatype](data, *args, **kwargs)
-    #         resp.headers['Content-Type'] = mediatype
-    #         return resp
-    #     elif mediatype == 'text/plain':
-    #         resp = original_flask_make_response(str(data), *args, **kwargs)
-    #         resp.headers['Content-Type'] = 'text/plain'
-    #         return resp
-    #     else:
-    #         raise InternalServerError()
-
-    # ### Swagger documentation view function (not a flask-restplus.Resource) ###
-    # def documentation(self, func):
-    #     '''A decorator to specify a view funtion for the documentation'''
-    #     self._doc_view = func
-    #     return func
-
-    # TODO: FUL-3376
-    # def render_root(self):
-    #     self.abort(404)
-    #
-    # # TODO: NOW
-    # def render_doc(self):
-    #     '''Override this method to customize the documentation page'''
-    #     if self._doc_view:
-    #         return self._doc_view()
-    #     elif not self._doc:
-    #         self.abort(404)
-    #     return apidoc.ui_for(self)
+    #     self.resources.append((resource, urls, kwargs))
 
 
-    # TODO: FUL-3376
-    ### Creates a default endpoint name for an unnamed resource in a given namespace for use at        ###
-    ### enpoint registering. Unfortunately, this function is partially reimplemented in _register_view ###
-    def default_endpoint(self, resource, namespace):
-        '''
-        Provide a default endpoint for a resource on a given namespace.
+    # NOTE: _register_view method deleted here
+    # Constructed flask view function(s) from resource class (including binding of resource constructor to
+    # named/kw-arguments), application of all Api-level decorators to the resulting view function and return
+    # value transformation based on requested content type registering the view with the flask.Application
+    # instance.
 
-        Endpoints are ensured not to collide.
+    # NOTE: default_endpoint method moved outside this instance (as not dependent on internal attributes)
 
-        Override this method specify a custom algoryhtm for default endpoint.
-
-        :param Resource resource: the resource for which we want an endpoint
-        :param Namespace namespace: the namespace holding the resource
-        :returns str: An endpoint name
-        '''
-        endpoint = camel_to_dash(resource.__name__)
-        if namespace is not self.default_namespace:
-            endpoint = '{ns.name}_{endpoint}'.format(ns=namespace, endpoint=endpoint)
-        if endpoint in self.endpoints:
-            suffix = 2
-            while True:
-                new_endpoint = '{base}_{suffix}'.format(base=endpoint, suffix=suffix)
-                if new_endpoint not in self.endpoints:
-                    endpoint = new_endpoint
-                    break
-                suffix += 1
-        return endpoint
-
-    ### Add namespace to internally maintained list and add this Api instance to list of Api objects in namespace ###
-    ### Can keep Api-Namespace mutual references and (possibly) resource as well as model copying,
-    ### but remove error handler code
-    # TODO: FUL-3505
+    # Add namespace to list in this Api instance and this Api instance to list of Api objects
+    # in namespace
+    # # TODO: FUL-3505
     def add_namespace(self, ns):
         if ns not in self.namespaces:
             self.namespaces.append(ns)
             if self not in ns.apis:
                 ns.apis.append(self)
-        # Register resources
+        # Copy all resources
+        # TODO: FUL-3376 copy elision?
         for resource, urls, kwargs in ns.resources:
             self.register_resource(ns, resource, *urls, **kwargs)
-        # Register models
+        # Copy all models
+        # TODO: FUL-3376 copy elision?
         for name, definition in ns.models.items():
             self.models[name] = definition
-        # # Register error handlers
         # TODO: FUL-3505
+        # # Register error handlers
         # for exception, handler in ns.error_handlers.items():
         #     self.error_handlers[exception] = handler
 
-    ### Create a namespace and add it to internally maintained sequence ###
-    def namespace(self, *args, **kwargs):
-        '''
-        A namespace factory.
 
-        :returns Namespace: a new namespace instance
-        '''
-        ns = Namespace(*args, **kwargs)
-        self.add_namespace(ns)
-        return ns
-
-    # TODO: FUL-3376
-    ### prepend endpoint with api.blueprint.name ###
-    def endpoint(self, name):
-        if self.blueprint:
-            return '{0}.{1}'.format(self.blueprint.name, name)
-        else:
-            return name
-
-    # TODO: FUL-3376
-    # @property
-    # def specs_url(self):
-    #     '''
-    #     The Swagger specifications absolute url (ie. `swagger.json`)
-    #
-    #     :rtype: str
-    #     '''
-    #     return url_for(self.endpoint('specs'), _external=True)
-    #
-    # TODO: FUL-3376
-    # @property
-    # def base_url(self):
-    #     '''
-    #     The API base absolute url
-    #
-    #     :rtype: str
-    #     '''
-    #     return url_for(self.endpoint('root'), _external=True)
-
-    # TODO: FUL-3376
-    ### Base url, replaced by an explicit path TODO: replace prefix by a more reasonable name such as _base_path ###
+    # TODO: FUL-3376: replace prefix by a more reasonable name such as _base_path ###
     @property
     def base_path(self):
         '''
-        The API path
+        The base path of the API
 
         :rtype: str
         '''
-        # return url_for(self.endpoint('root'))
         return self.prefix
 
-    ### Swagger schema as a dictionary TODO: cache it once it's computed ###
-    #@cached_property
-    # @property # FIXME: property decorator currently breaks accessibility of this decorator from outside
+    # Swagger schema as a dictionary
+    # TODO: FUL-3376 make it accessible as a @property
     def __schema__(self):
         '''
         The Swagger specifications/schema for this API
@@ -724,104 +442,8 @@ class Api(object):
             self._refresolver = RefResolver.from_schema(self.__schema__)
         return self._refresolver
 
-    # # TODO: NOW
-    # ### deferred initialization (if Api instance was initialized with ) to when blueprint is ###
-    # ### registered with flask.Flask instance                                                 ###
-    # @staticmethod
-    # def _blueprint_setup_add_url_rule_patch(blueprint_setup, rule, endpoint=None, view_func=None, **options):
-    #     '''
-    #     Method used to patch BlueprintSetupState.add_url_rule for setup
-    #     state instance corresponding to this Api instance.  Exists primarily
-    #     to enable _complete_url's function.
-    #
-    #     :param blueprint_setup: The BlueprintSetupState instance (self)
-    #     :param rule: A string or callable that takes a string and returns a
-    #         string(_complete_url) that is the url rule for the endpoint
-    #         being registered
-    #     :param endpoint: See BlueprintSetupState.add_url_rule
-    #     :param view_func: See BlueprintSetupState.add_url_rule
-    #     :param **options: See BlueprintSetupState.add_url_rule
-    #     '''
-    #
-    #     if callable(rule):
-    #         rule = rule(blueprint_setup.url_prefix)
-    #     elif blueprint_setup.url_prefix:
-    #         rule = blueprint_setup.url_prefix + rule
-    #     options.setdefault('subdomain', blueprint_setup.subdomain)
-    #     if endpoint is None:
-    #         endpoint = _endpoint_from_view_func(view_func)
-    #     defaults = blueprint_setup.url_defaults
-    #     if 'defaults' in options:
-    #         defaults = dict(defaults, **options.pop('defaults'))
-    #     blueprint_setup.app.add_url_rule(rule, '%s.%s' % (blueprint_setup.blueprint.name, endpoint),
-    #                                      view_func, defaults=defaults, **options)
-    #
-    # # TODO: NOW
-    # def _deferred_blueprint_init(self, setup_state):
-    #     '''
-    #     Synchronize prefix between blueprint/api and registration options, then
-    #     perform initialization with setup_state.app :class:`flask.Flask` object.
-    #     When a :class:`flask_restplus.Api` object is initialized with a blueprint,
-    #     this method is recorded on the blueprint to be run when the blueprint is later
-    #     registered to a :class:`flask.Flask` object.  This method also monkeypatches
-    #     BlueprintSetupState.add_url_rule with _blueprint_setup_add_url_rule_patch.
-    #
-    #     :param setup_state: The setup state object passed to deferred functions
-    #         during blueprint registration
-    #     :type setup_state: flask.blueprints.BlueprintSetupState
-    #
-    #     '''
-    #
-    #     self.blueprint_setup = setup_state
-    #     if setup_state.add_url_rule.__name__ != '_blueprint_setup_add_url_rule_patch':
-    #         setup_state._original_add_url_rule = setup_state.add_url_rule
-    #         setup_state.add_url_rule = MethodType(Api._blueprint_setup_add_url_rule_patch,
-    #                                               setup_state)
-    #     if not setup_state.first_registration:
-    #         raise ValueError('flask-restplus blueprints can only be registered once.')
-    #     self._init_app(setup_state.app)
-
-
-    # TODO: FUL-3376
-    # ### Content negotiation/supported media types ###
-    # def mediatypes_method(self):
-    #     '''Return a method that returns a list of mediatypes'''
-    #     return lambda resource_cls: self.mediatypes() + [self.default_mediatype]
-    #
-    # def mediatypes(self):
-    #     '''Returns a list of requested mediatypes sent in the Accept header'''
-    #     return [h for h, q in sorted(request.accept_mimetypes,
-    #                                  key=operator.itemgetter(1), reverse=True)]
-
-    # TODO: FUL-3376
-    # ### register response content type transformation function ###
-    # ### TODO: make "representation" (response content type) configurable on this class
-    # def representation(self, mediatype):
-    #     '''
-    #     Allows additional representation transformers to be declared for the
-    #     api. Transformers are functions that must be decorated with this
-    #     method, passing the mediatype the transformer represents. Three
-    #     arguments are passed to the transformer:
-    #
-    #     * The data to be represented in the response body
-    #     * The http status code
-    #     * A dictionary of headers
-    #
-    #     The transformer should convert the data appropriately for the mediatype
-    #     and return a Flask response object.
-    #
-    #     Ex::
-    #
-    #         @api.representation('application/xml')
-    #         def xml(data, code, headers):
-    #             resp = make_response(convert_data_to_xml(data), code)
-    #             resp.headers.extend(headers)
-    #             return resp
-    #     '''
-    #     def wrapper(func):
-    #         self.representations[mediatype] = func
-    #         return func
-    #     return wrapper
+    # NOTE: deleted representation here
+    # Was used to define response transformations to custom custom media types such as JSON/XML/etc.
 
     # TODO: FUL-3375
     # ### security: unauthorized request ###
@@ -836,17 +458,12 @@ class Api(object):
     #     return response
 
     # TODO: FUL-3376
-    ###  Url retrieval, rewritten from flask-restplus to comopse base_path with resource url in wsgiservice ###
+    ###  Retrieve URL path for a particular resource ###
+    # To work with absolute URLs would need host name
     def url_for(self, resource, **values):
         '''
         Generates a URL to the given resource.
-
-        Works like :func:`flask.url_for`.
         '''
-        # endpoint = resource.endpoint
-        # if self.blueprint:
-        #     endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
-        # return url_for(endpoint, **values)
 
         for resource_class, urls, _ in iter(self.resources):
             if resource == resource_class:
@@ -881,3 +498,15 @@ def generate_swagger_resource(api):
             return api.__schema__()
 
     return SwaggerResource
+
+
+def default_endpoint(resource, namespace):
+    '''
+    Provide a default endpoint name for a resource on a given namespace.
+
+    :param Resource resource: the resource modeling the endpoint
+    :param Namespace namespace: the namespace holding the resource
+    :returns str: An endpoint name
+    '''
+    endpoint = camel_to_dash(resource.__name__)
+    return '{ns.name}_{endpoint}'.format(ns=namespace, endpoint=endpoint)
