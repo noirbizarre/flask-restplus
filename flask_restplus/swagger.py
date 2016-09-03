@@ -163,7 +163,7 @@ class Swagger(object):
 
         for ns in self.api.namespaces:
             for resource, urls, kwargs in ns.resources:
-                for url in urls:
+                for url in self.api.ns_urls(ns, urls):
                     paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
 
         specs = {
