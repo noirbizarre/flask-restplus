@@ -14,6 +14,8 @@ from .model import Model
 from .utils import merge
 
 
+from wsgiservice_adaptors import get_resource_http_methods
+
 
 # TODO: FUL-3375 Specify authentication schemes on the namespace level
 # TODO: FUL-3505 Possibly specify specialized error handling on the namespace level
@@ -113,7 +115,7 @@ class Namespace(object):
             return
         unshortcut_params_description(doc)
         handle_deprecations(doc)
-        for http_method in [method.lower() for method in wsgiservice_resource.KNOWN_METHODS]:
+        for http_method in [method.lower() for method in get_resource_http_methods(cls)]:
             if http_method in doc:
                 if doc[http_method] is False:
                     continue

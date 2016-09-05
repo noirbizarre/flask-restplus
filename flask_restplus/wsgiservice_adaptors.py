@@ -10,5 +10,8 @@ def get_resource_http_methods(resource):
 
     :param resource wsgiservice.Resource : wsgiservice Resource to be inspected
     '''
-    return [method for method in resource.KNOWN_METHODS if hasattr(resource, method) \
+    if issubclass(resource,wsgiservice_resource):
+        return [method for method in resource.KNOWN_METHODS if hasattr(resource, method) \
             and method != 'OPTIONS']
+    else:
+        return []
