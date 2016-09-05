@@ -175,9 +175,8 @@ class Swagger(object):
         responses = self.register_errors()
 
         for ns in self.api.namespaces:
-            for resource, urls, kwargs in ns.resources:
-                for url in urls:
-                    paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
+            for resource, url, kwargs in ns.resources:
+                paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
 
         specs = {
             'swagger': '2.0',

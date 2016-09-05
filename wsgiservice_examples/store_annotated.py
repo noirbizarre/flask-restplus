@@ -102,12 +102,12 @@ class Documents(Resource):
 # Note only that for Beekeeper's application the URL prefix for mounting the wsgiservice.Application instance to the
 # URLMap must be retrieved from the Api instance with Api.base_path() in order to enforce consistency between application
 # and documentation
-api = api.Api(app=None, version='1.0', title=None, description=None,
+api = api.Api(version='1', title=None, description=None,
             terms_url=None, license=None, license_url=None,
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', # default_id=default_id, # this is flask-restplus.utils.default_id
-            default='default', default_label='Default namespace', validate=None,
-            tags=None, prefix='/',                       # NOTE the special prefix as the base_path
+            validate=None,
+            tags=None, prefix='/',  # NOTE the special prefix as the base_path
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False, format_checker=None)
 

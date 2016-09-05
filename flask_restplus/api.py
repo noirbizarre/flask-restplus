@@ -95,12 +95,12 @@ class Api(object):
             version='1.0', title=None, description=None,
             terms_url=None, license=None, license_url=None,
             contact=None, contact_url=None, contact_email=None,
-            authorizations=None, security=None, swagger_path='/swagger.json', default_id=default_id,
-            default='default', default_label='Default namespace', validate=None,
+            authorizations=None, security=None, swagger_path='/swagger.json', default_id=default_id, #default='default', default_label='Default namespace',
+            validate=None,
             tags=None, prefix='',
-            default_mediatype='application/json', decorators=None, # catch_all_404s=False, serve_challenge_on_401=False, # TODO FUL-3505
+            decorators=None, # catch_all_404s=False, serve_challenge_on_401=False, # TODO FUL-3505
             format_checker=None,
-            **kwargs):
+            **kwargs): # TODO: FUL-3376 Delete kwargs
         self.version = version
         self.title = title or 'API'
         self.description = description
@@ -131,19 +131,19 @@ class Api(object):
         self.format_checker = format_checker
         self.namespaces = []
 
-        # TODO: FUL-3376 (probably deletable)
-        # delete default namespace as it's just syntactic ease not to define an extra namespace
-        if default is not None and default_label is not None:
-            self.default_namespace = self.namespace(default, default_label,
-                endpoint='{0}-declaration'.format(default),
-                validate=validate,
-                api=self,
-            )
+        # # TODO: FUL-3376 (probably deletable)
+        # # delete default namespace as it's just syntactic ease not to define an extra namespace
+        # if default is not None and default_label is not None:
+        #     self.default_namespace = self.namespace(default, default_label,
+        #         endpoint='{0}-declaration'.format(default),
+        #         validate=validate,
+        #         api=self,
+        #     )
 
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
-        self.urls = {}
+
         self.prefix = prefix
-        self.default_mediatype = default_mediatype
+
         self.decorators = decorators if decorators else []
 
         # TODO: FUL-3505
@@ -151,7 +151,7 @@ class Api(object):
         # self.serve_challenge_on_401 = serve_challenge_on_401
 
         # TODO: FUL-3376 (probably deletable)
-        # self.resources = []
+        self.resources = []
 
 
     # NOTE: init_app and _init_app methods deleted here
@@ -167,20 +167,19 @@ class Api(object):
         #       predicate callback that decides whether to include endpoint in documentation
         #       and a
 
-        self.swagger_path = '/swagger.json'
-        SwaggerResourceClass = generate_swagger_resource(api=self)
+        SwaggerResourceClass = generate_swagger_resource(api=self, swagger_path=self._swagger_path)
 
-        self.resources.append((SwaggerResourceClass, [self.swagger_path], {}))
+        self.resources.append((SwaggerResourceClass, self._swagger_path, {}))
 
-        for resource, urls, _ in self.resources:
-            assert len(urls) == 1
+        # Check for resource._path == url (Api.prefix ignored)
+        # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
+        for resource, url, _ in self.resources:
             if getattr(resource,'_path',None) is not None:
-                if resource._path != urls[0]: # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
-                    raise Exception # raise a path error exception due to remounting at different resource
-            else:
-                resource._path = self.base_path.rstrip('/') + urls[0] # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
+                if resource._path != url:
+                    raise Exception # raise a path error exception due to inconsistent mount point
 
-        return wsgiservice.get_app({resource.__name__ : resource for resource, _, _ in self.resources})
+        return wsgiservice.get_app(
+            {resource.__name__ : resource for resource, _, _ in self.resources})
 
 
     # # TODO: FUL-3376 (probably deletable)
@@ -191,13 +190,13 @@ class Api(object):
     #         raise AttributeError('Api does not have {0} attribute'.format(name))
 
 
-    # TODO: FUL-3376 (probably deletable)
-    ### Add resource, assigned urls and constructor named/kw-args to sequence of resources
-    # def register_resource(self, namespace, resource, *urls, **kwargs):
-    #
-    #     kwargs['endpoint'] = default_endpoint(resource, namespace)
-    #
-    #     self.resources.append((resource, urls, kwargs))
+    # TODO: FUL-3376 (probably deletable to do copy elision)
+    ## Add resource, assigned urls and constructor named/kw-args to sequence of resources
+    def register_resource(self, namespace, resource, url, **kwargs):
+
+        kwargs['endpoint'] = default_endpoint(resource, namespace)
+
+        self.resources.append((resource, url, kwargs))
 
 
     # NOTE: _register_view method deleted here
@@ -216,18 +215,31 @@ class Api(object):
             self.namespaces.append(ns)
             if self not in ns.apis:
                 ns.apis.append(self)
+
         # Copy all resources
         # TODO: FUL-3376 copy elision?
-        for resource, urls, kwargs in ns.resources:
-            self.register_resource(ns, resource, *urls, **kwargs)
+        for resource, url, kwargs in ns.resources:
+            self.register_resource(ns, resource, url, **kwargs)
+
         # Copy all models
         # TODO: FUL-3376 copy elision?
         for name, definition in ns.models.items():
             self.models[name] = definition
+
         # TODO: FUL-3505
         # # Register error handlers
         # for exception, handler in ns.error_handlers.items():
         #     self.error_handlers[exception] = handler
+
+
+    # TODO: FUL-3376 Remove this at later stage (Api should become a namespace collection)
+    def get_resources(self):
+        '''Get resources held by this instance'''
+        resources = {}
+        for ns in self.namespaces:
+            for resource, _, _ in ns.resources:
+                resources[resource.__name__] = resource
+        return resources
 
 
     # TODO: FUL-3376: replace prefix by a more reasonable name such as _base_path ###
@@ -465,9 +477,9 @@ class Api(object):
         Generates a URL to the given resource.
         '''
 
-        for resource_class, urls, _ in iter(self.resources):
+        for resource_class, url, _ in iter(self.resources):
             if resource == resource_class:
-                return self.base_path + urls[0].lstrip('/')
+                return self.base_path + url.lstrip('/')
         else:
             return None
 
@@ -484,15 +496,17 @@ class Api(object):
 
 
 ### Swagger Documentation resource factory
-def generate_swagger_resource(api):
+def generate_swagger_resource(api, swagger_path):
     '''
     Returns a wsgiservice Swagger documentation Resource class that binds the Api instance
     '''
 
+    # @namespace.route(swagger_path)
     class SwaggerResource(wsgiservice.Resource):
         '''
         Resource for the Swagger specification of the bound Api
         '''
+        _path = swagger_path
 
         def GET(self):
             return api.__schema__()

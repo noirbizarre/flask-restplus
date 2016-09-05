@@ -15,7 +15,6 @@ from .utils import merge
 
 
 
-
 # TODO: FUL-3375 Specify authentication schemes on the namespace level
 # TODO: FUL-3505 Possibly specify specialized error handling on the namespace level
 # TODO: FUL-3376
@@ -32,15 +31,14 @@ class Namespace(object):
     :param bool validate: Whether or not to perform validation on this namespace
     :param Api api: an optional API to attache to the namespace
     '''
-    def __init__(self, name, description=None, path=None, decorators=None, validate=None, **kwargs):
+    def __init__(self, name, description=None, path='/', decorators=None, validate=None, **kwargs):
         self.name = name
         self.description = description
-        self.path = (path or ('/' + name)).rstrip('/')
+        self.path = path.rstrip('/') + '/' if path else ('/' + name + '/')
 
         # self._schema = None # unused attribute
         self._validate = validate
         self.models = {}
-        # self.urls = {}
         # # TODO: Provide explicit security/error handling interface instead of passing callbacks
         # self.decorators = decorators if decorators else []
         self.resources = []
@@ -53,7 +51,7 @@ class Namespace(object):
     ### Add resource to namespace (maintained in triple of resource class, urls (with added namespace prefix path)
     ### and any extra labels such as endpoint name, resource constructor named/keyword arguments in list/tuple or dict
     ### form)
-    def add_resource(self, resource, *urls, **kwargs):
+    def add_resource(self, resource, url, **kwargs):
         '''
         Register a Resource for a given API Namespace
 
@@ -75,20 +73,33 @@ class Namespace(object):
             namespace.add_resource(Foo, '/foo', endpoint="foo")
             namespace.add_resource(FooSpecial, '/special/foo', endpoint="foo")
         '''
-        urls = [self.path + url for url in urls]
-        self.resources.append((resource, urls, kwargs))
+        self.resources.append((resource, url, kwargs))
         for api in self.apis:
-            api.register_resource(self, resource, *urls, **kwargs)
+            api.register_resource(self, resource, url, **kwargs)
 
-    def route(self, *urls, **kwargs):
+    def route(self, url, **kwargs):
         '''
         A decorator to route resources.
         '''
+        if url[0] != '/':
+            raise ValueError
+
+        url = self.path.rstrip('/') + url if len(url) > 1 else \
+            ( self.path.rstrip('/') if len(self.path) > 1 else \
+              self.path)
+
         def wrapper(cls):
             doc = kwargs.pop('doc', None)
             if doc is not None:
                 self._handle_api_doc(cls, doc)
-            self.add_resource(cls, *urls, **kwargs)
+            # the following implements the side-effects of the wsgiservice mount decorator
+            if getattr(cls,'_path',None) is None:
+                cls._path = url
+            else:
+                if cls._path != url:
+                    raise ValueError
+
+            self.add_resource(cls, url, **kwargs)
             return cls
         return wrapper
 
