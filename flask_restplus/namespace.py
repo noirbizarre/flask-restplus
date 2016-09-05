@@ -85,10 +85,12 @@ class Namespace(object):
         '''
         if url[0] != '/':
             raise ValueError
-
-        url = self.path.rstrip('/') + url if len(url) > 1 else \
-            ( self.path.rstrip('/') if len(self.path) > 1 else \
-              self.path)
+        if len(url) > 1:
+            url = self.path.rstrip('/') + url
+        elif len(self.path) > 1:
+            url = self.path.rstrip('/')
+        else:
+            url = self.path
 
         def wrapper(cls):
             doc = kwargs.pop('doc', None)
