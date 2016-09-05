@@ -78,6 +78,7 @@ class Api(object):
     :param str default_label: The default namespace label (used in Swagger documentation)
     :param str default_mediatype: The default media type to return
     :param bool validate: API-wide request validation setting (can be overridden by concrete methods).
+    :param str prefix: API base_path occurring in Swagger specification but NOT in _path attributes of resources
     :param str doc: The documentation path. If set to a false value, documentation is disabled.
                 (Default to '/')
     :param list decorators: Decorators to attach to every resource
@@ -131,15 +132,6 @@ class Api(object):
         self.format_checker = format_checker
         self.namespaces = []
 
-        # # TODO: FUL-3376 (probably deletable)
-        # # delete default namespace as it's just syntactic ease not to define an extra namespace
-        # if default is not None and default_label is not None:
-        #     self.default_namespace = self.namespace(default, default_label,
-        #         endpoint='{0}-declaration'.format(default),
-        #         validate=validate,
-        #         api=self,
-        #     )
-
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
 
         self.prefix = prefix
@@ -155,24 +147,20 @@ class Api(object):
 
 
     # NOTE: init_app and _init_app methods deleted here
-    # These methods mainly served to allow distributed initialization
+    # These methods mainly served to enable the various initialization models of Flask
 
-    # TODO: NOW
+    # TODO: Make the Swagger specification resources configurable (such as e.g. with a predicate
+    #       that specifies whether to include an endpoint in the documentation)
     def create_wsgiservice_app(self):
         '''
         Creates a :class:`wsgiservice.application.Application` instance from the resources owned by self (the namespaces of this Api instance)
         '''
-        # TODO: Make the Swagger specification resources configurable, such as with a
-        #       endpoint path -> (predicate, extra_info) dict that supplies a boolean
-        #       predicate callback that decides whether to include endpoint in documentation
-        #       and a
 
         SwaggerResourceClass = generate_swagger_resource(api=self, swagger_path=self._swagger_path)
 
         self.resources.append((SwaggerResourceClass, self._swagger_path, {}))
 
         # Check for resource._path == url (Api.prefix ignored)
-        # Note that we do not use the base_path here as it's assumed to be merged in elsewhere
         for resource, url, _ in self.resources:
             if getattr(resource,'_path',None) is not None:
                 if resource._path != url:
@@ -182,12 +170,7 @@ class Api(object):
             {resource.__name__ : resource for resource, _, _ in self.resources})
 
 
-    # # TODO: FUL-3376 (probably deletable)
-    # def __getattr__(self, name):
-    #     try:
-    #         return getattr(self.default_namespace, name)
-    #     except AttributeError:
-    #         raise AttributeError('Api does not have {0} attribute'.format(name))
+    # NOTE: self.default_namespace deleted here as all namespaces must be added manually
 
 
     # TODO: FUL-3376 (probably deletable to do copy elision)
@@ -469,7 +452,7 @@ class Api(object):
     #         response.headers['WWW-Authenticate'] = challenge
     #     return response
 
-    # TODO: FUL-3376
+    # TODO: FUL-3376 (Remove if possible)
     ###  Retrieve URL path for a particular resource ###
     # To work with absolute URLs would need host name
     def url_for(self, resource, **values):

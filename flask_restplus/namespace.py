@@ -7,6 +7,8 @@ import warnings
 
 from wsgiservice.resource import Resource as wsgiservice_resource
 
+from inspect import isclass
+
 # from .errors import abort
 # from .marshalling import marshal, marshal_with
 from .model import Model
@@ -117,14 +119,15 @@ class Namespace(object):
             return
         unshortcut_params_description(doc)
         handle_deprecations(doc)
-        for http_method in [method.lower() for method in get_resource_http_methods(cls)]:
-            if http_method in doc:
-                if doc[http_method] is False:
-                    continue
-                unshortcut_params_description(doc[http_method])
-                handle_deprecations(doc[http_method])
-                if 'expect' in doc[http_method] and not isinstance(doc[http_method]['expect'], (list, tuple)):
-                    doc[http_method]['expect'] = [doc[http_method]['expect']]
+        if isclass(cls):
+            for http_method in [method.lower() for method in get_resource_http_methods(cls)]:
+                if http_method in doc:
+                    if doc[http_method] is False:
+                        continue
+                    unshortcut_params_description(doc[http_method])
+                    handle_deprecations(doc[http_method])
+                    if 'expect' in doc[http_method] and not isinstance(doc[http_method]['expect'], (list, tuple)):
+                        doc[http_method]['expect'] = [doc[http_method]['expect']]
         cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
 
     def doc(self, shortcut=None, **kwargs):
