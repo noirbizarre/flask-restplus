@@ -10,7 +10,7 @@ from .api import Api  # noqa
 from .model import Model  # noqa
 from .namespace import Namespace  # noqa
 # from .resource import Resource  # noqa
-from .errors import RestError, SpecsError, ValidationError # deleted abort
+from .errors import RestError, SpecsError, ValidationError, SecurityError # deleted abort
 from .swagger import Swagger
 from .__about__ import __version__, __description__
 
@@ -34,4 +34,5 @@ __all__ = (
     'SpecsError',
     'Swagger',
     'ValidationError',
+    'SecurityError',
 )

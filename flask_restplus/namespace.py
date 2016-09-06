@@ -332,6 +332,18 @@ class Namespace(object):
         return self.doc(deprecated=True)(func)
 
 
+    def security(self,*args):
+        '''
+        Operation security decorator
+
+        Positional arguments specify alternative security requirements to use the operation.
+        Requirements validity check is done when adding namespace to Api
+        '''
+
+        def wrapper(documented):
+            return self.doc(security=args)(documented)
+        return wrapper
+
 def unshortcut_params_description(data):
     if 'params' in data:
         for name, description in six.iteritems(data['params']):

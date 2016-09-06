@@ -61,6 +61,7 @@ class Document(Resource):
 
     # parameter model
     # @expect(id) # TODO: models
+    # @ns.security('basic_auth','api_key')
     @ns.response(code=200,description='Returned requested document',model=None)
     def GET(self, id):
         "Return the document indicated by the ID."
@@ -71,6 +72,7 @@ class Document(Resource):
     # TODO: extract into separate function in order not to perform request validation twice
     @ns.param(name='doc', description='Document replacing old document.', _in='formData')
     @ns.marshal_with(id_saved_model,code=200, description='Document updated')
+    @ns.security('basic_auth')
     def PUT(self, id):
         """Overwrite or create the document indicated by the ID. Parameters
         are passed as key/value pairs in the POST data."""
@@ -99,17 +101,39 @@ class Documents(Resource):
         raise_201(self, id)
 
 
+
+# API security definitions
+# dictionary of name -  Swagger Security Scheme object
+security_defintions = { 'api_token'    : { 'type'        : 'apiKey',
+                                           'name'        : 'Authorization',
+                                           'in'          : 'header',
+                                           'description' : 'API token authenatication: ' \
+                                           'Enter the token you received from http://... ' \
+                                           'in this format: \"Token xwdt...\"'
+                                           },
+                        'basic_auth': {'type': 'basic'} }
+
+
+
+# API wide applied security settings (list of security schemes to authorize with the API
+# (logical OR between list elements))
+# Assembled to a Swagger Security Requirement object by documentation generator
+api_wide_security = ('api_token',
+                     'basic_auth' )
+
+
+
 # Note only that for Beekeeper's application the URL prefix for mounting the wsgiservice.Application instance to the
 # URLMap must be retrieved from the Api instance with Api.base_path() in order to enforce consistency between application
 # and documentation
 api = api.Api(version='1', title=None, description=None,
-            terms_url=None, license=None, license_url=None,
-            contact=None, contact_url=None, contact_email=None,
-            authorizations=None, security=None, doc='/', # default_id=default_id, # this is flask-restplus.utils.default_id
-            validate=None,
-            tags=None, prefix='/',  # NOTE the special prefix as the base_path
-            default_mediatype='application/json', decorators=None,
-            catch_all_404s=False, serve_challenge_on_401=False, format_checker=None)
+              terms_url=None, license=None, license_url=None,
+              contact=None, contact_url=None, contact_email=None,
+              authorizations=security_defintions, security=api_wide_security, doc='/', # default_id=default_id, # this is flask-restplus.utils.default_id
+              validate=None,
+              tags=None, prefix='/',  # NOTE the special prefix as the base_path
+              default_mediatype='application/json', decorators=None,
+              catch_all_404s=False, serve_challenge_on_401=False, format_checker=None)
 
 api.add_namespace(ns)
 

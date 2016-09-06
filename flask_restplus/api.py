@@ -31,6 +31,10 @@ from .namespace import Namespace
 from .swagger import Swagger
 from .utils import default_id, camel_to_dash # deleted unpack
 
+from .errors import SecurityError
+
+from .wsgiservice_adaptors import get_resource_http_methods
+
 # ### TODO: Would need to be readapted to RE_RULES = re.compile('({.*})')
 # RE_RULES = re.compile('(<.*>)')
 
@@ -194,6 +198,11 @@ class Api(object):
     # in namespace
     # # TODO: FUL-3505
     def add_namespace(self, ns):
+
+        # Check whether namespace security requirements are contained in API security definitions
+        if not self._security_requirements_in_authorizations(ns):
+            raise SecurityError('Namespace security use inconsistent with Api security definitions in authorizations')
+
         if ns not in self.namespaces:
             self.namespaces.append(ns)
             if self not in ns.apis:
@@ -213,6 +222,17 @@ class Api(object):
         # # Register error handlers
         # for exception, handler in ns.error_handlers.items():
         #     self.error_handlers[exception] = handler
+
+
+    def _security_requirements_in_authorizations(self, ns):
+        for resource, _, _ in ns.resources:
+            for method in get_resource_http_methods(resource):
+                method = getattr(resource, method)
+                if hasattr(method, '__apidoc__'):
+                    for security_requirement in method.__apidoc__.get('security', []):
+                        if security_requirement not in self.authorizations:
+                            return False
+        return True
 
 
     # TODO: FUL-3376 Remove this at later stage (Api should become a namespace collection)

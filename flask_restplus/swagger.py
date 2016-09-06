@@ -185,8 +185,8 @@ class Swagger(object):
             'info': infos,
             'produces': list(iterkeys(self.api.representations)),
             'consumes': ['application/json'],
-            # 'securityDefinitions': self.api.authorizations or None,
-            # 'security': self.security_requirements(self.api.security) or None,
+            'securityDefinitions': self.api.authorizations or None,
+            'security': self.security_requirements(self.api.security) or None,
             'tags': tags,
             'definitions': self.serialize_definitions() or None,
             'responses': responses or None,
@@ -501,35 +501,35 @@ class Swagger(object):
     ### TODO: FUL-3375
     def security_for(self, doc, method):
         security = None
-        # if 'security' in doc:
-        #     auth = doc['security']
-        #     security = self.security_requirements(auth)
-        #
-        # if 'security' in doc[method]:
-        #     auth = doc[method]['security']
-        #     security = self.security_requirements(auth)
-        #
+        if 'security' in doc:
+            auth = doc['security']
+            security = self.security_requirements(auth)
+
+        if 'security' in doc[method]:
+            auth = doc[method]['security']
+            security = self.security_requirements(auth)
+
         return security
-    #
-    # def security_requirements(self, value):
-    #     if isinstance(value, (list, tuple)):
-    #         return [self.security_requirement(v) for v in value]
-    #     elif value:
-    #         requirement = self.security_requirement(value)
-    #         return [requirement] if requirement else None
-    #     else:
-    #         return []
-    #
-    # def security_requirement(self, value):
-    #     if isinstance(value, (string_types)):
-    #         return {value: []}
-    #     elif isinstance(value, dict):
-    #         return dict(
-    #             (k, v if isinstance(v, (list, tuple)) else [v])
-    #             for k, v in iteritems(value)
-    #         )
-    #     else:
-    #         return None
+
+    def security_requirements(self, value):
+        if isinstance(value, (list, tuple)):
+            return [self.security_requirement(v) for v in value]
+        elif value:
+            requirement = self.security_requirement(value)
+            return [requirement] if requirement else None
+        else:
+            return []
+
+    def security_requirement(self, value):
+        if isinstance(value, (string_types)):
+            return {value: []}
+        elif isinstance(value, dict):
+            return dict(
+                (k, v if isinstance(v, (list, tuple)) else [v])
+                for k, v in iteritems(value)
+            )
+        else:
+            return None
 
 
 
