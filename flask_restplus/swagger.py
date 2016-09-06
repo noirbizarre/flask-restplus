@@ -294,21 +294,21 @@ class Swagger(object):
     ### TODO: FUL-3505: Develop error interface specification for wsgiservice/beekeeper
     def register_errors(self):
         responses = {}
-    #     for exception, handler in self.api.error_handlers.items():
-    #         doc = parse_docstring(handler)
-    #         response = {
-    #             'description': doc['summary']
-    #         }
-    #         apidoc = getattr(handler, '__apidoc__', {})
-    #         if 'params' in apidoc:
-    #             response['headers'] = dict(
-    #                 (n, _param_to_header(o))
-    #                 for n, o in apidoc['params'].items() if o.get('in') == 'header'
-    #             )
-    #         if 'responses' in apidoc:
-    #             _, model = list(apidoc['responses'].values())[0]
-    #             response['schema'] = self.serialize_schema(model)
-    #         responses[exception.__name__] = not_none(response)
+        # for exception, handler in self.api.error_handlers.items():
+        #     doc = parse_docstring(handler)
+        #     response = {
+        #         'description': doc['summary']
+        #     }
+        #     apidoc = getattr(handler, '__apidoc__', {})
+        #     if 'params' in apidoc:
+        #         response['headers'] = dict(
+        #             (n, _param_to_header(o))
+        #             for n, o in apidoc['params'].items() if o.get('in') == 'header'
+        #         )
+        #     if 'responses' in apidoc:
+        #         _, model = list(apidoc['responses'].values())[0]
+        #         response['schema'] = self.serialize_schema(model)
+        #     responses[exception.__name__] = not_none(response)
         return responses
 
     ### Extracts the resource specification from annotations
