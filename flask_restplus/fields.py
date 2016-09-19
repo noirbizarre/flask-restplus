@@ -325,7 +325,7 @@ class StringMixin(object):
 class MinMaxMixin(object):
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.pop('min', None)
-        self.excluisveMinimum = kwargs.pop('exclusiveMin', None)
+        self.exclusiveMinimum = kwargs.pop('exclusiveMin', None)
         self.maximum = kwargs.pop('max', None)
         self.exclusiveMaximum = kwargs.pop('exclusiveMax', None)
         super(MinMaxMixin, self).__init__(*args, **kwargs)
@@ -333,7 +333,7 @@ class MinMaxMixin(object):
     def schema(self):
         schema = super(MinMaxMixin, self).schema()
         schema.update(minimum=self._v('minimum'),
-                      exclusiveMinimum=self._v('excluisveMinimum'),
+                      exclusiveMinimum=self._v('exclusiveMinimum'),
                       maximum=self._v('maximum'),
                       exclusiveMaximum=self._v('exclusiveMaximum'))
         return schema
