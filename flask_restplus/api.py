@@ -394,6 +394,13 @@ class Api(object):
         return [path + url for url in urls]
 
     def add_namespace(self, ns, path=None):
+        '''
+        This method registers resources from namespace for current instance of api.
+        You can use argument path for definition custom prefix url for namespace.
+        
+        :param Namespace ns: the namespace
+        :param path: registration prefix of namespace
+        '''
         if ns not in self.namespaces:
             self.namespaces.append(ns)
             if self not in ns.apis:
