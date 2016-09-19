@@ -110,6 +110,31 @@ The `apis.__init__` module should aggregate them:
     api.add_namespace(nsX)
 
 
+You can define custom url-prefixes for namespaces during registering them in your API.
+You don't have to bind url-prefix while declaration of Namespace object.
+
+.. code-block:: Python
+
+    from flask_restplus import Api
+
+    from .namespace1 import api as ns1
+    from .namespace2 import api as ns2
+    # ...
+    from .namespaceX import api as nsX
+
+    api = Api(
+        title='My Title',
+        version='1.0',
+        description='A description',
+        # All API metadatas
+    )
+
+    api.add_namespace(ns1, path='/prefix/of/ns1')
+    api.add_namespace(ns2, path='/prefix/of/ns2')
+    # ...
+    api.add_namespace(nsX, path='/prefix/of/nsX')
+
+
 Using this pattern, you simple have to register your API in `app.py` like that:
 
 .. code-block:: Python
