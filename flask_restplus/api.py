@@ -166,7 +166,7 @@ class Api(object):
 
         # Check for resource._path == url (Api.prefix ignored)
         for resource, url, _ in self.resources:
-            if getattr(resource,'_path',None) is not None:
+            if getattr(resource,'_path', None) is not None:
                 if resource._path != url:
                     raise Exception # raise a path error exception due to inconsistent mount point
 
@@ -225,6 +225,7 @@ class Api(object):
 
 
     def _security_requirements_in_authorizations(self, ns):
+
         for resource, _, _ in ns.resources:
             for method in get_resource_http_methods(resource):
                 method = getattr(resource, method)

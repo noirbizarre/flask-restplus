@@ -58,3 +58,7 @@ doc/_build/
 
 # Specifics
 flask_restplus/static/bower
+
+# PyCharm project setup files:
+.idea/*
+.project

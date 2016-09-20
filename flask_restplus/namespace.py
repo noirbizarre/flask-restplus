@@ -273,20 +273,20 @@ class Namespace(object):
 
     ### Error handler registry ###
     # # TODO: FUL-3505
-    # # Error handling in this way is Flask-specific and implemented differently in the
-    # # __call__ operator of the wsgiservice.Resource base class
-    # def errorhandler(self, exception):
-    #     '''A decorator to register an error handler for a given exception'''
-    #     if inspect.isclass(exception) and issubclass(exception, Exception):
-    #         # Register an error handler for a given exception
-    #         def wrapper(func):
-    #             self.error_handlers[exception] = func
-    #             return func
-    #         return wrapper
-    #     else:
-    #         # Register the default error handler
-    #         self.default_error_handler = exception
-    #         return exception
+    # Error handling in this way is Flask-specific and implemented differently in the
+    # __call__ operator of the wsgiservice.Resource base class
+    def errorhandler(self, exception):
+        '''A decorator to register an error handler for a given exception'''
+        if inspect.isclass(exception) and issubclass(exception, Exception):
+            # Register an error handler for a given exception
+            def wrapper(func):
+                self.error_handlers[exception] = func
+                return func
+            return wrapper
+        else:
+            # Register the default error handler
+            self.default_error_handler = exception
+            return exception
 
 
     ### Simple parameter annotation ###
