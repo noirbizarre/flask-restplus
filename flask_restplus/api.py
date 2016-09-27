@@ -125,6 +125,7 @@ class Api(object):
             api=self,
             path='/',
         )
+        self.ns_paths = dict()
 
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
@@ -385,14 +386,31 @@ class Api(object):
                 suffix += 1
         return endpoint
 
-    def add_namespace(self, ns):
+    def get_ns_path(self, ns):
+        return self.ns_paths.get(ns)
+
+    def ns_urls(self, ns, urls):
+        path = self.get_ns_path(ns) or ns.path
+        return [path + url for url in urls]
+
+    def add_namespace(self, ns, path=None):
+        '''
+        This method registers resources from namespace for current instance of api.
+        You can use argument path for definition custom prefix url for namespace.
+        
+        :param Namespace ns: the namespace
+        :param path: registration prefix of namespace
+        '''
         if ns not in self.namespaces:
             self.namespaces.append(ns)
             if self not in ns.apis:
                 ns.apis.append(self)
+            # Associate ns with prefix-path
+            if path is not None:
+                self.ns_paths[ns] = path
         # Register resources
         for resource, urls, kwargs in ns.resources:
-            self.register_resource(ns, resource, *urls, **kwargs)
+            self.register_resource(ns, resource, *self.ns_urls(ns, urls), **kwargs)
         # Register models
         for name, definition in ns.models.items():
             self.models[name] = definition

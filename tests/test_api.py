@@ -249,3 +249,16 @@ class APITestCase(TestCase):
         with self.context():
             self.assertEqual(url_for('api.ns_test_resource'), '/api/ns/test/')
             self.assertEqual(url_for('api.ns_test_resource_2'), '/api/ns/test2/')
+
+    def test_ns_path_prefixes(self):
+        api = restplus.Api()
+        ns = restplus.Namespace('test_ns', description='Test namespace')
+        @ns.route('/test/', endpoint='test_resource')
+        class TestResource(restplus.Resource):
+            pass
+
+        api.add_namespace(ns, '/api_test')
+        api.init_app(self.app)
+
+        with self.context():
+            self.assertEqual(url_for('test_resource'), '/api_test/test/')

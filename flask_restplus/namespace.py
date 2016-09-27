@@ -30,7 +30,7 @@ class Namespace(object):
     def __init__(self, name, description=None, path=None, decorators=None, validate=None, **kwargs):
         self.name = name
         self.description = description
-        self.path = (path or ('/' + name)).rstrip('/')
+        self._path = path
 
         self._schema = None
         self._validate = validate
@@ -43,6 +43,10 @@ class Namespace(object):
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
+            
+    @property
+    def path(self):
+        return (self._path or ('/' + self.name)).rstrip('/')
 
     def add_resource(self, resource, *urls, **kwargs):
         '''
@@ -66,10 +70,10 @@ class Namespace(object):
             namespace.add_resource(Foo, '/foo', endpoint="foo")
             namespace.add_resource(FooSpecial, '/special/foo', endpoint="foo")
         '''
-        urls = [self.path + url for url in urls]
         self.resources.append((resource, urls, kwargs))
         for api in self.apis:
-            api.register_resource(self, resource, *urls, **kwargs)
+            ns_urls = api.ns_urls(self, urls)
+            api.register_resource(self, resource, *ns_urls, **kwargs)
 
     def route(self, *urls, **kwargs):
         '''
