@@ -6,6 +6,16 @@
     {% include 'swagger-ui-libs.html' %}
     <script type="text/javascript">
         $(function () {
+            // Performance tuning for Highlight.js
+            hljs.configure({
+                highlightSizeThreshold: 5000
+            });
+
+            // Pre load translate...
+            if(window.SwaggerTranslator) {
+                window.SwaggerTranslator.translate();
+            }
+
             window.swaggerUi = new SwaggerUi({
                 url: "{{ specs_url }}",
                 validatorUrl: "{{ config.SWAGGER_VALIDATOR_URL }}" || null,
@@ -21,6 +31,11 @@
                             });
                         {%- endif %}
                     }
+
+                    if (window.SwaggerTranslator) {
+                        window.SwaggerTranslator.translate();
+                    }
+
                     $('pre code').each(function(i, e) {
                         hljs.highlightBlock(e)
                     });
@@ -32,11 +47,18 @@
                 docExpansion: "{{ config.SWAGGER_UI_DOC_EXPANSION | default('none') }}"
             });
             window.swaggerUi.load();
+
+            function log() {
+                if ('console' in window) {
+                    console.log.apply(console, arguments);
+                }
+            }
         });
     </script>
 </head>
 
 <body class="swagger-section">
+    <div class="swagger-ui-wrap"><div id="auth_container"></div></div>
     <div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>
     <div id="swagger-ui-container" class="swagger-ui-wrap"></div>
 </body>

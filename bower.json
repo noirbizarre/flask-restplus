@@ -23,6 +23,6 @@
     "tests"
   ],
   "dependencies": {
-    "swagger-ui": "~2.1.4"
+    "swagger-ui": "~2.2.6"
   }
 }
