@@ -95,6 +95,26 @@ class APIDocTestCase(TestCase):
                 response = client.get(url_for('doc'))
                 self.assertIn('jsonEditor: true', str(response.data))
 
+    def test_apidoc_doc_language_parameter(self):
+        restplus.Api(self.app)
+
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('doc'))
+                self.assertNotIn('lang/translator.js', str(response.data))
+                self.assertNotIn('lang/en.js', str(response.data))
+                self.assertNotIn('lang/fr.js', str(response.data))
+                self.assertNotIn('window.SwaggerTranslator', str(response.data))
+
+        self.app.config['SWAGGER_UI_LANGUAGES'] = ['en', 'fr']
+        with self.context():
+            with self.app.test_client() as client:
+                response = client.get(url_for('doc'))
+                self.assertIn('lang/translator.js', str(response.data))
+                self.assertIn('lang/en.js', str(response.data))
+                self.assertIn('lang/fr.js', str(response.data))
+                self.assertIn('window.SwaggerTranslator', str(response.data))
+
     def test_apidoc_doc_minified(self):
         restplus.Api(self.app)
 

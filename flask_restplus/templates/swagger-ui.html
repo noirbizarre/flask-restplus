@@ -11,10 +11,12 @@
                 highlightSizeThreshold: 5000
             });
 
+            {% if config.SWAGGER_UI_LANGUAGES %}
             // Pre load translate...
             if(window.SwaggerTranslator) {
                 window.SwaggerTranslator.translate();
             }
+            {% endif %}
 
             window.swaggerUi = new SwaggerUi({
                 url: "{{ specs_url }}",
@@ -32,9 +34,11 @@
                         {%- endif %}
                     }
 
+                    {% if config.SWAGGER_UI_LANGUAGES %}
                     if (window.SwaggerTranslator) {
                         window.SwaggerTranslator.translate();
                     }
+                    {% endif %}
 
                     $('pre code').each(function(i, e) {
                         hljs.highlightBlock(e)
