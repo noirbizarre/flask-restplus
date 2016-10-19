@@ -6,7 +6,8 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Allows to specify a custom mount path on namespace registration
+- Allow to express models as raw schemas.
 
 0.9.2 (2016-04-22)
 ------------------
