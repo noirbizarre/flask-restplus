@@ -27,7 +27,8 @@ If you want to contribute some code:
 2. create a branch with an explicit name (like ``my-new-feature`` or ``issue-XX``)
 3. do your work in it
 4. rebase it on the master branch from the official repository (cleanup your history by performing an interactive rebase)
-5. submit your pull-request
+5. add you change to the changelog
+6. submit your pull-request
 
 There are some rules to follow:
 
