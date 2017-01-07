@@ -367,7 +367,7 @@ class Api(object):
 
         Endpoints are ensured not to collide.
 
-        Override this method specify a custom algoryhtm for default endpoint.
+        Override this method specify a custom algorithm for default endpoint.
 
         :param Resource resource: the resource for which we want an endpoint
         :param Namespace namespace: the namespace holding the resource
