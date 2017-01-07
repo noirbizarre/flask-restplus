@@ -133,9 +133,12 @@ class Swagger(object):
         :returns: the full Swagger specification in a serializable format
         :rtype: dict
         '''
-        basepath = self.api.base_path
-        if len(basepath) > 1 and basepath.endswith('/'):
-            basepath = basepath[:-1]
+        basepath = current_app.config.get('SWAGGER_BASEPATH', '')
+        if not basepath:
+            basepath = self.api.base_path
+            if len(basepath) > 1 and basepath.endswith('/'):
+                basepath = basepath[:-1]
+
         infos = {
             'title': _v(self.api.title),
             'version': _v(self.api.version),
