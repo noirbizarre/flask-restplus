@@ -294,7 +294,7 @@ and register models to your :class:`API` or :class:`Namespace`.
 Duplicating with ``clone``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :meth:`Model.extend` method allows you to instanciate an augmented model.
+The :meth:`Model.clone` method allows you to instanciate an augmented model.
 It saves you duplicating all fields.
 
 .. code-block:: python
@@ -303,7 +303,7 @@ It saves you duplicating all fields.
         'name': fields.String
     })
 
-    child = parent.extend('Child', {
+    child = parent.clone('Child', {
         'age': fields.Integer
     })
 
@@ -315,7 +315,7 @@ The :meth:`Api/Namespace.clone <~Namespace.clone>` also register it on the API.
         'name': fields.String
     })
 
-    child = api.extend('Child', parent, {
+    child = api.clone('Child', parent, {
         'age': fields.Integer
     })
 
