@@ -1030,3 +1030,13 @@ class RequestParserSchemaTest(TestCase):
             'type': 'string',
             'format': 'custom-format',
         }])
+
+    def test_callable_default(self):
+        parser = RequestParser()
+        parser.add_argument('int', type=int, default=lambda: 5)
+        self.assertEqual(parser.__schema__, [{
+            'name': 'int',
+            'type': 'integer',
+            'in': 'query',
+            'default': 5,
+        }])

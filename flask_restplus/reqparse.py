@@ -270,7 +270,7 @@ class Argument(object):
         if self.help:
             param['description'] = self.help
         if self.default:
-            param['default'] = self.default
+            param['default'] = self.default() if callable(self.default) else self.default
         if self.action == 'append':
             param['items'] = {'type': param['type']}
             param['type'] = 'array'
