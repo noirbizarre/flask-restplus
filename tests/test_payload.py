@@ -271,6 +271,98 @@ class PayloadTestCase(TestCase):
 
         self.assert_errors(response, 'members.0.age', 'members.1.name')
 
+    def _setup_expect_validation_single_resource_tests(self):
+        # Setup a minimal Api with endpoint that expects in input payload
+        # a single object of a resource
+        api = restplus.Api(self.app, validate=True)
+
+        user = api.model('User', {
+            'username': restplus.fields.String()
+        })
+
+        @api.route('/validation/')
+        class Users(restplus.Resource):
+            @api.expect(user)
+            def post(self):
+                return {}
+
+    def _setup_expect_validation_collection_resource_tests(self):
+        # Setup a minimal Api with endpoint that expects in input payload
+        # one or more objects of a resource
+        api = restplus.Api(self.app, validate=True)
+
+        user = api.model('User', {
+            'username': restplus.fields.String()
+        })
+
+        @api.route('/validation/')
+        class Users(restplus.Resource):
+            @api.expect([user])
+            def post(self):
+                return {}
+
+    def test_expect_validation_single_resource_success(self):
+        self._setup_expect_validation_single_resource_tests()
+
+        # Input payload is a valid JSON object
+        response = self.post('/validation/', {
+            'username': 'alice'
+        })
+        self.assertEqual(200, response.status_code)
+        out = json.loads(response.data.decode('utf8'))
+        self.assertEqual({}, out)
+
+    def test_expect_validation_single_resource_error(self):
+        self._setup_expect_validation_single_resource_tests()
+
+        # Input payload is an invalid JSON object
+        response = self.post('/validation/', {
+            'username': 123
+        })
+        self.assert_errors(response, 'username')
+
+        # Input payload is a JSON array (expected JSON object)
+        response = self.post('/validation/', [{
+            'username': 123
+        }])
+        self.assert_errors(response, '')
+
+    def test_expect_validation_collection_resource_success(self):
+        self._setup_expect_validation_collection_resource_tests()
+
+        # Input payload is a valid JSON object
+        response = self.post('/validation/', {
+            'username': 'alice'
+        })
+        self.assertEqual(200, response.status_code)
+        out = json.loads(response.data.decode('utf8'))
+        self.assertEqual({}, out)
+
+        # Input payload is a JSON array with valid JSON objects
+        response = self.post('/validation/', [
+            {'username': 'alice'},
+            {'username': 'bob'}
+        ])
+        self.assertEqual(200, response.status_code)
+        out = json.loads(response.data.decode('utf8'))
+        self.assertEqual({}, out)
+
+    def test_expect_validation_collection_resource_error(self):
+        self._setup_expect_validation_collection_resource_tests()
+
+        # Input payload is an invalid JSON object
+        response = self.post('/validation/', {
+            'username': 123
+        })
+        self.assert_errors(response, 'username')
+
+        # Input payload is a JSON array but with an invalid JSON object
+        response = self.post('/validation/', [
+            {'username': 'alice'},
+            {'username': 123}
+        ])
+        self.assert_errors(response, 'username')
+
     def test_validation_with_propagate(self):
         self.app.config['PROPAGATE_EXCEPTIONS'] = True
         api = restplus.Api(self.app, validate=True)
