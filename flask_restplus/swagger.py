@@ -82,8 +82,9 @@ def extract_path_params(path):
         else:
             raise ValueError('Unsupported type converter')
         params[name] = param
-    store_path = path
+    #store_path = path
     global store_path
+    store_path = path
     return params
 
 
