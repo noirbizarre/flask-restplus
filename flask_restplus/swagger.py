@@ -2,12 +2,13 @@
 from __future__ import unicode_literals, absolute_import
 
 import re
+import json
 
 from inspect import isclass, getdoc
 from collections import Hashable
 from six import string_types, itervalues, iteritems, iterkeys
 
-from flask import current_app
+from flask import current_app, url_for
 
 from ._compat import OrderedDict
 
@@ -81,6 +82,8 @@ def extract_path_params(path):
         else:
             raise ValueError('Unsupported type converter')
         params[name] = param
+    store_path = path
+    global store_path
     return params
 
 
@@ -325,7 +328,32 @@ class Swagger(object):
                 operation['consumes'] = ['multipart/form-data']
             else:
                 operation['consumes'] = ['application/x-www-form-urlencoded', 'multipart/form-data']
+        for key, value in doc[method].items():
+            if key.startswith('x_'):
+                operation.update(self.vendor_fields(doc, method))
         return not_none(operation)
+
+    def substitute_token(self, data, token, replacement_string):
+        '''Replace token with replacement string'''
+        data = json.loads(json.dumps(data).replace(token, replacement_string))
+        return data
+
+    def vendor_fields(self, doc, method):
+        '''Extract custom 3rd party Vendor fields prefixed with x-
+            https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#specification-extensions
+        '''
+        exts = {}
+        external_url = url_for('root', _external=True,)[:-1]+store_path
+        for key, value in doc[method].items():
+            if key.startswith('x_'):
+                exts.update({key.replace('x_', 'x-'): value})
+                exts.update(self.substitute_token(exts, '{{flask.fields.url.external}}', external_url))
+                '''Search token in exts and replace it with external url'''
+        if exts.keys():
+            for v_exts in exts.keys():
+                return exts[v_exts]
+        else:
+            return exts
 
     def description_for(self, doc, method):
         '''Extract the description metadata and fallback on the whole docstring'''
