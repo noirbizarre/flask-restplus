@@ -82,7 +82,6 @@ def extract_path_params(path):
         else:
             raise ValueError('Unsupported type converter')
         params[name] = param
-    #store_path = path
     global store_path
     store_path = path
     return params
@@ -344,7 +343,7 @@ class Swagger(object):
             https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#specification-extensions
         '''
         exts = {}
-        external_url = url_for('root', _external=True,)[:-1]+store_path
+        external_url = url_for('root', _external=True,)[:-1] + store_path
         for key, value in doc[method].items():
             if key.startswith('x_'):
                 exts.update({key.replace('x_', 'x-'): value})
