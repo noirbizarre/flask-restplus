@@ -57,6 +57,21 @@ class Resource(MethodView):
 
         return resp
 
+    def __validate_payload(self, expect, collection=False):
+        '''
+        :param ModelBase expect: the expected model for the input payload
+        :param bool collection: False if a single object of a resource is
+        expected, True if a collection of objects of a resource is expected.
+        '''
+        # TODO: proper content negotiation
+        data = request.get_json()
+        if collection:
+            data = data if isinstance(data, list) else [data]
+            for obj in data:
+                expect.validate(obj, self.api.refresolver, self.api.format_checker)
+        else:
+            expect.validate(data, self.api.refresolver, self.api.format_checker)
+
     def validate_payload(self, func):
         '''Perform a payload validation on expected model if necessary'''
         if getattr(func, '__apidoc__', False) is not False:
@@ -66,7 +81,8 @@ class Resource(MethodView):
             if validate:
                 for expect in doc.get('expect', []):
                     # TODO: handle third party handlers
+                    if isinstance(expect, list) and len(expect) == 1:
+                        if isinstance(expect[0], ModelBase):
+                            self.__validate_payload(expect[0], collection=True)
                     if isinstance(expect, ModelBase):
-                        # TODO: proper content negotiation
-                        data = request.get_json()
-                        expect.validate(data, self.api.refresolver, self.api.format_checker)
+                        self.__validate_payload(expect, collection=False)
