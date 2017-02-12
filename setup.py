@@ -11,8 +11,6 @@ from setuptools import setup, find_packages
 RE_REQUIREMENT = re.compile(r'^\s*-r\s*(?P<filename>.*)$')
 
 PYPI_RST_FILTERS = (
-    # Replace code-blocks
-    (r'\.\.\s? code-block::\s*(\w|\+)+', '::'),
     # Remove all badges
     (r'\.\. image:: .*', ''),
     (r'\s+:target: .*', ''),
