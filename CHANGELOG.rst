@@ -10,6 +10,8 @@ Current
 - Allow to express models as raw schemas
 - Upgraded to Swagger-UI 2.2.6
 - Support Swagger-UI translations
+- Fix prefix trailing slash stripping in Postman doc generation (:issue:`232`)
+- Add validation for lists in the expect decorator (:issue:`231`)
 
 0.9.2 (2016-04-22)
 ------------------
