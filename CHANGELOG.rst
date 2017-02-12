@@ -3,6 +3,11 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
+Current
+-------
+
+- Nothing yet
+
 0.10.0 (2017-02-12)
 -------------------
 
