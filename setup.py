@@ -11,10 +11,6 @@ from setuptools import setup, find_packages
 RE_REQUIREMENT = re.compile(r'^\s*-r\s*(?P<filename>.*)$')
 
 PYPI_RST_FILTERS = (
-    # Remove all badges
-    (r'\.\. image:: .*', ''),
-    (r'\s+:target: .*', ''),
-    (r'\s+:alt: .*', ''),
     # Replace Python crossreferences by simple monospace
     (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`~(?:\w+\.)*(\w+)`', r'``\1``'),
     (r':(?:class|func|meth|mod|attr|obj|exc|data|const):`([^`]+)`', r'``\1``'),

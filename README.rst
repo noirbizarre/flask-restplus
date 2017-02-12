@@ -2,18 +2,21 @@
 Flask RestPlus
 ==============
 
-.. image:: https://secure.travis-ci.org/noirbizarre/flask-restplus.svg
+.. image:: https://secure.travis-ci.org/noirbizarre/flask-restplus.svg?branch=master
     :target: http://travis-ci.org/noirbizarre/flask-restplus
     :alt: Build status
 .. image:: https://coveralls.io/repos/noirbizarre/flask-restplus/badge.svg?branch=master
     :target: https://coveralls.io/r/noirbizarre/flask-restplus?branch=master
     :alt: Code coverage
-.. image:: https://requires.io/github/noirbizarre/flask-restplus/requirements.svg?branch=master
-    :target: https://requires.io/github/noirbizarre/flask-restplus/requirements/?branch=master
-    :alt: Requirements Status
 .. image:: https://readthedocs.org/projects/flask-restplus/badge/?version=latest
     :target: http://flask-restplus.readthedocs.io/en/latest/
     :alt: Documentation status
+.. image:: https://img.shields.io/pypi/l/flask-restplus.svg
+    :target: https://pypi.python.org/pypi/pelican-frontmark
+    :alt: License
+.. image:: https://img.shields.io/pypi/pyversions/flask-restplus.svg
+    :target: https://pypi.python.org/pypi/pelican-frontmark
+    :alt: Supported Python versions
 .. image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/noirbizarre/flask-restplus
    :target: https://gitter.im/noirbizarre/flask-restplus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
