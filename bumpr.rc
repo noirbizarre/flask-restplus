@@ -3,6 +3,7 @@ file = flask_restplus/__about__.py
 vcs = git
 commit = true
 tag = true
+push = true
 tests = tox
 publish =
     inv assets
@@ -26,3 +27,7 @@ prepare = Current
 
 [readthedoc]
 id = flask-restplus
+
+[replace]
+dev = ?branch=master
+stable = ?tag={version}
