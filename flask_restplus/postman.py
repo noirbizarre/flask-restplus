@@ -38,7 +38,7 @@ class Request(object):
 
     @property
     def url(self):
-        return self.collection.api.base_url[:-1] + self.path
+        return self.collection.api.base_url.rstrip('/') + self.path
 
     @property
     def headers(self):

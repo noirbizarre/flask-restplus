@@ -156,6 +156,40 @@ class PostmanTestCase(TestCase):
             request = list(filter(lambda r: r['id'] == request_id, data['requests']))[0]
             self.assertEqual(request['name'], expected)
 
+    def test_prefix_with_trailing_slash(self):
+        api = restplus.Api(self.app, prefix='/prefix/')
+
+        @api.route('/test/')
+        class Test(restplus.Resource):
+            @api.doc('test_post')
+            def post(self):
+                pass
+
+        data = api.as_postman()
+
+        validate(data, schema)
+
+        self.assertEqual(len(data['requests']), 1)
+        request = data['requests'][0]
+        self.assertEqual(request['url'], 'http://localhost/prefix/test/')
+
+    def test_prefix_without_trailing_slash(self):
+        api = restplus.Api(self.app, prefix='/prefix')
+
+        @api.route('/test/')
+        class Test(restplus.Resource):
+            @api.doc('test_post')
+            def post(self):
+                pass
+
+        data = api.as_postman()
+
+        validate(data, schema)
+
+        self.assertEqual(len(data['requests']), 1)
+        request = data['requests'][0]
+        self.assertEqual(request['url'], 'http://localhost/prefix/test/')
+
     def test_path_variables(self):
         api = restplus.Api(self.app)
 
