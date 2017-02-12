@@ -46,14 +46,16 @@ long_description = '\n'.join((
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
 tests_require = ['nose', 'rednose', 'blinker', 'tzlocal']
-install_requires = ['Flask>=0.8', 'six>=1.3.0', 'jsonschema', 'pytz', 'aniso8601>=0.82']
+install_requires = ['Flask>=0.8', 'six>=1.3.0', 'pytz', 'aniso8601>=0.82']
 doc_require = ['sphinx', 'alabaster', 'sphinx_issues']
 dev_requires = ['flake8', 'minibench', 'tox', 'invoke>=0.13'] + tests_require + doc_require
 
 
 if sys.version_info[0:2] < (2, 7):
-    install_requires += ['ordereddict']
+    install_requires += ['ordereddict', 'jsonschema<2.6']
     tests_require += ['unittest2']
+else:
+    install_requires += ['jsonschema']
 
 try:
     from unittest.mock import Mock
