@@ -12,7 +12,7 @@ Flask RestPlus
     :target: https://requires.io/github/noirbizarre/flask-restplus/requirements/?branch=master
     :alt: Requirements Status
 .. image:: https://readthedocs.org/projects/flask-restplus/badge/?version=latest
-    :target: http://flask-restplus.readthedocs.org/en/latest/
+    :target: http://flask-restplus.readthedocs.io/en/latest/
     :alt: Documentation status
 .. image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/noirbizarre/flask-restplus
@@ -154,7 +154,7 @@ With Flask-Restplus, you only import the api instance to route and document your
 Documentation
 =============
 
-The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs.org/en/latest/>`_
+The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs.io/en/latest/>`_
 
 
 .. _Flask: http://flask.pocoo.org/
