@@ -2,13 +2,13 @@
 Flask RestPlus
 ==============
 
-.. image:: https://secure.travis-ci.org/noirbizarre/flask-restplus.png
+.. image:: https://secure.travis-ci.org/noirbizarre/flask-restplus.svg
     :target: http://travis-ci.org/noirbizarre/flask-restplus
     :alt: Build status
-.. image:: https://coveralls.io/repos/noirbizarre/flask-restplus/badge.png?branch=master
+.. image:: https://coveralls.io/repos/noirbizarre/flask-restplus/badge.svg?branch=master
     :target: https://coveralls.io/r/noirbizarre/flask-restplus?branch=master
     :alt: Code coverage
-.. image:: https://requires.io/github/noirbizarre/flask-restplus/requirements.png?branch=master
+.. image:: https://requires.io/github/noirbizarre/flask-restplus/requirements.svg?branch=master
     :target: https://requires.io/github/noirbizarre/flask-restplus/requirements/?branch=master
     :alt: Requirements Status
 .. image:: https://readthedocs.org/projects/flask-restplus/badge/?version=latest
