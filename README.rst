@@ -12,10 +12,10 @@ Flask RestPlus
     :target: http://flask-restplus.readthedocs.io/en/latest/
     :alt: Documentation status
 .. image:: https://img.shields.io/pypi/l/flask-restplus.svg
-    :target: https://pypi.python.org/pypi/pelican-frontmark
+    :target: https://pypi.python.org/pypi/flask-restplus
     :alt: License
 .. image:: https://img.shields.io/pypi/pyversions/flask-restplus.svg
-    :target: https://pypi.python.org/pypi/pelican-frontmark
+    :target: https://pypi.python.org/pypi/flask-restplus
     :alt: Supported Python versions
 .. image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/noirbizarre/flask-restplus
