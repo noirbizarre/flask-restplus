@@ -3,7 +3,7 @@ Flask RestPlus
 ==============
 
 .. image:: https://secure.travis-ci.org/noirbizarre/flask-restplus.svg?branch=master
-    :target: http://travis-ci.org/noirbizarre/flask-restplus
+    :target: http://travis-ci.org/noirbizarre/flask-restplus?branch=master
     :alt: Build status
 .. image:: https://coveralls.io/repos/noirbizarre/flask-restplus/badge.svg?branch=master
     :target: https://coveralls.io/r/noirbizarre/flask-restplus?branch=master
