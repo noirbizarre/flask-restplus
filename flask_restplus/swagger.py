@@ -325,7 +325,21 @@ class Swagger(object):
                 operation['consumes'] = ['multipart/form-data']
             else:
                 operation['consumes'] = ['application/x-www-form-urlencoded', 'multipart/form-data']
+        for key, value in doc[method].items():
+            if key.startswith('x_'):
+                operation.update(self.vendor_fields(doc, method))
         return not_none(operation)
+
+    def vendor_fields(self, doc, method):
+        '''Extract custom 3rd party Vendor fields prefixed with x-
+            https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#specification-extensions
+        '''
+        exts = {}
+        for key, value in doc[method].items():
+            if key.startswith('x_'):
+                exts.update({key.replace('x_', 'x-'): value})
+        for v_exts in exts.keys():
+            return exts[v_exts]
 
     def description_for(self, doc, method):
         '''Extract the description metadata and fallback on the whole docstring'''
