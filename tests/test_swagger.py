@@ -496,6 +496,26 @@ class SwaggerTests(ApiMixin, TestCase):
         self.assertEqual(parameter['in'], 'path')
         self.assertEqual(parameter['required'], True)
 
+    def test_path_parameter_with_type_with_argument(self):
+        api = self.build_api()
+
+        @api.route('/name/<string(length=2):id>/', endpoint='by-name')
+        class ByNameResource(restplus.Resource):
+            def get(self, id):
+                return {}
+
+        data = self.get_specs()
+        self.assertIn('/name/{id}/', data['paths'])
+
+        path = data['paths']['/name/{id}/']
+        self.assertEqual(len(path['parameters']), 1)
+
+        parameter = path['parameters'][0]
+        self.assertEqual(parameter['name'], 'id')
+        self.assertEqual(parameter['type'], 'string')
+        self.assertEqual(parameter['in'], 'path')
+        self.assertEqual(parameter['required'], True)
+
     def test_path_parameter_with_explicit_details(self):
         api = self.build_api()
 
