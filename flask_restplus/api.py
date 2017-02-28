@@ -21,7 +21,7 @@ from werkzeug import cached_property
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
-from werkzeug.wrappers import Response as ResponseBase
+from werkzeug.wrappers import BaseResponse
 
 from . import apidoc
 from ._compat import OrderedDict
@@ -311,7 +311,7 @@ class Api(object):
         @wraps(resource)
         def wrapper(*args, **kwargs):
             resp = resource(*args, **kwargs)
-            if isinstance(resp, ResponseBase):  # There may be a better way to test
+            if isinstance(resp, BaseResponse):
                 return resp
             data, code, headers = unpack(resp)
             return self.make_response(data, code, headers=headers)
@@ -397,7 +397,7 @@ class Api(object):
         '''
         This method registers resources from namespace for current instance of api.
         You can use argument path for definition custom prefix url for namespace.
-        
+
         :param Namespace ns: the namespace
         :param path: registration prefix of namespace
         '''
