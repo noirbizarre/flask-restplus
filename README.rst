@@ -11,7 +11,7 @@ Flask RestPlus
 .. image:: https://requires.io/github/noirbizarre/flask-restplus/requirements.png?branch=master
     :target: https://requires.io/github/noirbizarre/flask-restplus/requirements/?branch=master
     :alt: Requirements Status
-.. image:: https://readthedocs.org/projects/flask-restplus/badge/?version=0.9.3
+.. image:: https://readthedocs.org/projects/flask-restplus/badge/?version=0.10.0
     :target: http://flask-restplus.readthedocs.org/en/latest/
     :alt: Documentation status
 .. image:: https://badges.gitter.im/Join%20Chat.svg
