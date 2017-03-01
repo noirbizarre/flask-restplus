@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.9.3 (2017-03-01)
+------------------
 
 - Allows to specify a custom mount path on namespace registration
 - Allow to express models as raw schemas
