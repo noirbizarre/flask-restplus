@@ -2789,6 +2789,30 @@ class SwaggerTests(ApiMixin, TestCase):
         self.assertIn('deprecated', post_operation)
         self.assertTrue(post_operation['deprecated'])
 
+    def test_vendor_fields(self):
+        api = self.build_api()
+
+        @api.route('/vendor_fields', endpoint='vendor_fields')
+        class TestResource(restplus.Resource):
+            @api.doc(x_vendor_fields={
+                'x-some-integration': {
+                    'integration1': '1'
+                }
+            })
+            def get(self, age):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('/vendor_fields', data['paths'])
+
+        path = data['paths']['/vendor_fields']['get']
+        self.assertIn('x-some-integration', path)
+
+        path = path['x-some-integration']['integration1']
+        self.assertEqual(path, '1')
+
+
     def test_method_restrictions(self):
         api = self.build_api()
 
