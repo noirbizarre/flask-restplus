@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.10.1 (2017-03-04)
+-------------------
 
 - Fix a typo in ``__init__`` breaking ``from flask_restplus import *`` (:issue:`242`)
 - Basic support for custom URL converters (:issue:`243`)
