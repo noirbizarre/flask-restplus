@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 import difflib
 import inspect
@@ -32,6 +32,7 @@ from .resource import Resource
 from .swagger import Swagger
 from .utils import default_id, camel_to_dash, unpack
 from .representations import output_json
+import collections
 
 RE_RULES = re.compile('(<.*>)')
 
@@ -65,6 +66,7 @@ class Api(object):
     :param str contact: A contact email for the API (used in Swagger documentation)
     :param str license: The license associated to the API (used in Swagger documentation)
     :param str license_url: The license page URL (used in Swagger documentation)
+    :param str host: The host that the api is running on.  Not always the localhost, thought it is the default.
     :param str endpoint: The API base endpoint (default to 'api).
     :param str default: The default namespace base name (default to 'default')
     :param str default_label: The default namespace label (used in Swagger documentation)
@@ -84,7 +86,7 @@ class Api(object):
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,
-            terms_url=None, license=None, license_url=None,
+            terms_url=None, license=None, license_url=None, host=None,
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
@@ -101,6 +103,7 @@ class Api(object):
         self.contact_url = contact_url
         self.license = license
         self.license_url = license_url
+        self.host=host
         self.authorizations = authorizations
         self.security = security
         self.default_id = default_id
@@ -160,7 +163,7 @@ class Api(object):
         :param str contact: A contact email for the API (used in Swagger documentation)
         :param str license: The license associated to the API (used in Swagger documentation)
         :param str license_url: The license page URL (used in Swagger documentation)
-
+        :param str host: The host that the api is running on.  Not always the localhost, thought it is the default.
         '''
         self.title = kwargs.get('title', self.title)
         self.description = kwargs.get('description', self.description)
@@ -170,6 +173,7 @@ class Api(object):
         self.contact_email = kwargs.get('contact_email', self.contact_email)
         self.license = kwargs.get('license', self.license)
         self.license_url = kwargs.get('license_url', self.license_url)
+        self.host = kwargs.get('host', self.host)
         self._add_specs = kwargs.get('add_specs', True)
 
         # If app is a blueprint, defer the initialization
@@ -412,10 +416,10 @@ class Api(object):
         for resource, urls, kwargs in ns.resources:
             self.register_resource(ns, resource, *self.ns_urls(ns, urls), **kwargs)
         # Register models
-        for name, definition in ns.models.items():
+        for name, definition in list(ns.models.items()):
             self.models[name] = definition
         # Register error handlers
-        for exception, handler in ns.error_handlers.items():
+        for exception, handler in list(ns.error_handlers.items()):
             self.error_handlers[exception] = handler
 
     def namespace(self, *args, **kwargs):
@@ -620,7 +624,7 @@ class Api(object):
     def _help_on_404(self, message=None):
         rules = dict([(RE_RULES.sub('', rule.rule), rule.rule)
                       for rule in current_app.url_map.iter_rules()])
-        close_matches = difflib.get_close_matches(request.path, rules.keys())
+        close_matches = difflib.get_close_matches(request.path, list(rules.keys()))
         if close_matches:
             # If we already have a message, add punctuation and continue it.
             message = ''.join((
@@ -670,7 +674,7 @@ class Api(object):
         :param **options: See BlueprintSetupState.add_url_rule
         '''
 
-        if callable(rule):
+        if isinstance(rule, collections.Callable):
             rule = rule(blueprint_setup.url_prefix)
         elif blueprint_setup.url_prefix:
             rule = blueprint_setup.url_prefix + rule
@@ -748,7 +752,7 @@ class Api(object):
 
         if self.serve_challenge_on_401:
             realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restplus")
-            challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+            challenge = "{0} realm=\"{1}\"".format("Basic", realm)
 
             response.headers['WWW-Authenticate'] = challenge
         return response
