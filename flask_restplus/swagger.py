@@ -218,7 +218,7 @@ class Swagger(object):
         if doc is False:
             return False
         doc['name'] = resource.__name__
-        params = merge(self.expected_params(doc), doc.get('params', {}))
+        params = merge(self.expected_params(doc), doc.get('params', OrderedDict()))
         params = merge(params, extract_path_params(url))
         doc['params'] = params
         for method in [m.lower() for m in resource.methods or []]:
@@ -239,7 +239,7 @@ class Swagger(object):
         return doc
 
     def expected_params(self, doc):
-        params = {}
+        params = OrderedDict()
         if 'expect' not in doc:
             return params
 
