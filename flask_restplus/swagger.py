@@ -68,6 +68,9 @@ def extract_path_params(path):
     params = OrderedDict()
     for match in RE_PARAMS.findall(path):
         descriptor, name = match.split(':') if ':' in match else (None, match)
+        if descriptor and '(' in descriptor:  # optional arg e.g. string(length=2)
+            descriptor = descriptor.split('(')[0]
+
         param = {
             'name': name,
             'in': 'path',
@@ -79,7 +82,7 @@ def extract_path_params(path):
         elif descriptor in current_app.url_map.converters:
             param['type'] = 'string'
         else:
-            raise ValueError('Unsupported type converter')
+            raise ValueError('Unsupported type converter: %s' % descriptor)
         params[name] = param
     return params
 
