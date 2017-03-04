@@ -6,7 +6,10 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Fix a typo in ``__init__`` breaking ``from flask_restplus import *`` (:issue:`242`)
+- Basic support for custom URL converters (:issue:`243`)
+- Support custom response classes inheriting from :class:`~werkzeug.wrappers.BaseResponse` (:issue:`245`)
+
 
 0.10.0 (2017-02-12)
 -------------------
