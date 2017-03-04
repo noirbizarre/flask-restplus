@@ -7,7 +7,6 @@ import warnings
 
 from collections import MutableMapping
 from six import iteritems, itervalues
-from werkzeug import cached_property
 
 from .mask import Mask
 from .errors import abort
@@ -15,6 +14,7 @@ from .errors import abort
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
 
+from ._compat import OrderedDict
 from .utils import not_none
 
 
@@ -115,9 +115,9 @@ class ModelBase(object):
     __str__ = __unicode__
 
 
-class Model(ModelBase, dict, MutableMapping):
+class Model(ModelBase, OrderedDict, MutableMapping):
     '''
-    A thin wrapper on fields dict to store API doc metadata.
+    A thin wrapper on ordered fields dict to store API doc metadata.
     Can also be used for response marshalling.
 
     :param str name: The model public name
@@ -136,7 +136,7 @@ class Model(ModelBase, dict, MutableMapping):
 
     @property
     def _schema(self):
-        properties = {}
+        properties = OrderedDict()
         required = set()
         discriminator = None
         for name, field in iteritems(self):
@@ -209,10 +209,17 @@ class Model(ModelBase, dict, MutableMapping):
         :param str name: The new model name
         :param dict parents: The new model extra fields
         '''
-        fields = {}
+        fields = OrderedDict()
         for parent in parents:
             fields.update(copy.deepcopy(parent))
         return cls(name, fields)
+
+    def __deepcopy__(self, memo):
+        obj = self.__class__(self.name,
+                             [(key, copy.deepcopy(value, memo)) for key, value in self.items()],
+                             mask=self.__mask__)
+        obj.__parents__ = self.__parents__
+        return obj
 
 
 class SchemaModel(ModelBase):

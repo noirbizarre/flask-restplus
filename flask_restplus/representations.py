@@ -13,10 +13,9 @@ def output_json(data, code, headers=None):
 
     # If we're in debug mode, and the indent is not set, we set it to a
     # reasonable value here.  Note that this won't override any existing value
-    # that was set.  We also set the "sort_keys" value.
+    # that was set.
     if current_app.debug:
         settings.setdefault('indent', 4)
-        settings.setdefault('sort_keys', True)
 
     # always end the json dumps with a new line
     # see https://github.com/mitsuhiko/flask/pull/1262
