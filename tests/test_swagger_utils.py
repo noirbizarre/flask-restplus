@@ -19,6 +19,10 @@ class ExtractPathTestCase(TestCase):
         path = '/test/<string:parameter>'
         self.assertEqual(extract_path(path), '/test/{parameter}')
 
+    def test_extract_path_with_a_single_typed_parameter_with_arguments(self):
+        path = '/test/<string(length=2):parameter>'
+        self.assertEqual(extract_path(path), '/test/{parameter}')
+
     def test_extract_path_with_multiple_parameters(self):
         path = '/test/<parameter>/<string:other>/'
         self.assertEqual(extract_path(path), '/test/{parameter}/{other}/')
@@ -74,6 +78,17 @@ class ExtractPathParamsTestCase(TestCase):
             'other': {
                 'name': 'other',
                 'type': 'integer',
+                'in': 'path',
+                'required': True
+            }
+        })
+
+    def test_extract_parameter_with_arguments(self):
+        path = '/test/<string(length=2):parameter>'
+        self.assertEqual(extract_path_params(path), {
+            'parameter': {
+                'name': 'parameter',
+                'type': 'string',
                 'in': 'path',
                 'required': True
             }

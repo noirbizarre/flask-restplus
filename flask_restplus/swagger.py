@@ -8,6 +8,7 @@ from collections import Hashable
 from six import string_types, itervalues, iteritems, iterkeys
 
 from flask import current_app
+from werkzeug.routing import parse_rule
 
 from ._compat import OrderedDict
 
@@ -22,7 +23,7 @@ PATH_TYPES = {
     'int': 'integer',
     'float': 'number',
     'string': 'string',
-    None: 'string',
+    'default': 'string',
 }
 
 
@@ -35,7 +36,6 @@ PY_TYPES = {
 }
 
 RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
-RE_PARAMS = re.compile(r'<((?:[^:<>]+:)?[^<>]+)>')
 
 DEFAULT_RESPONSE_DESCRIPTION = 'Success'
 DEFAULT_RESPONSE = {'description': DEFAULT_RESPONSE_DESCRIPTION}
@@ -66,24 +66,22 @@ def extract_path_params(path):
     Extract Flask-style parameters from an URL pattern as Swagger ones.
     '''
     params = OrderedDict()
-    for match in RE_PARAMS.findall(path):
-        descriptor, name = match.split(':') if ':' in match else (None, match)
-        if descriptor and '(' in descriptor:  # optional arg e.g. string(length=2)
-            descriptor = descriptor.split('(')[0]
-
+    for converter, arguments, variable in parse_rule(path):
+        if not converter:
+            continue
         param = {
-            'name': name,
+            'name': variable,
             'in': 'path',
             'required': True
         }
 
-        if descriptor in PATH_TYPES:
-            param['type'] = PATH_TYPES[descriptor]
-        elif descriptor in current_app.url_map.converters:
+        if converter in PATH_TYPES:
+            param['type'] = PATH_TYPES[converter]
+        elif converter in current_app.url_map.converters:
             param['type'] = 'string'
         else:
-            raise ValueError('Unsupported type converter: %s' % descriptor)
-        params[name] = param
+            raise ValueError('Unsupported type converter: %s' % converter)
+        params[variable] = param
     return params
 
 
