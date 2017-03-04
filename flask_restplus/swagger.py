@@ -179,7 +179,7 @@ class Swagger(object):
             'tags': tags,
             'definitions': self.serialize_definitions() or None,
             'responses': responses or None,
-            'host': self.get_host(),
+            'host': self.api.host or self.get_host(),
         }
         return not_none(specs)
 
@@ -306,6 +306,7 @@ class Swagger(object):
                 continue
             path[method] = self.serialize_operation(doc, method)
             path[method]['tags'] = [ns.name]
+            path[method]['tags'].extend(doc[method].get('tags', []))
         return not_none(path)
 
     def serialize_operation(self, doc, method):
@@ -326,8 +327,18 @@ class Swagger(object):
                 operation['consumes'] = ['multipart/form-data']
             else:
                 operation['consumes'] = ['application/x-www-form-urlencoded', 'multipart/form-data']
+        operation.update(self.vendor_fields(doc, method))       
         return not_none(operation)
-
+    
+    def vendor_fields(self, doc, method):
+        '''Extract custom 3rd party Vendor fields prefixed with x-
+           https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#specification-extensions
+        '''
+        exts = {}
+        for key, value in doc[method].iteritems():
+            if key.startswith('x_'):
+                exts.update({key.replace('x_', 'x-'): value})
+        return exts
     def description_for(self, doc, method):
         '''Extract the description metadata and fallback on the whole docstring'''
         parts = []
