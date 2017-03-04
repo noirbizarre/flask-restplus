@@ -23,7 +23,7 @@ __all__ = (
     'marshal_with_field',
     'Mask',
     'Model',
-    'SchemaModel'
+    'SchemaModel',
     'abort',
     'cors',
     'fields',
