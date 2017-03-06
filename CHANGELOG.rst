@@ -6,7 +6,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- add vendor extension support (:issue:`97`)
 
 0.10.1 (2017-03-04)
 -------------------
