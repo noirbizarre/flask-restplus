@@ -2,11 +2,12 @@
 from __future__ import unicode_literals
 
 import difflib
+import httplib
 import inspect
 import operator
 import re
 import sys
-
+from datetime import datetime
 from functools import wraps, partial
 from types import MethodType
 
@@ -18,7 +19,8 @@ from flask.signals import got_request_exception
 from jsonschema import RefResolver, FormatChecker
 
 from werkzeug import cached_property
-from werkzeug.datastructures import Headers
+from werkzeug.datastructures import Headers, ResponseCacheControl
+
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import BaseResponse
@@ -763,6 +765,79 @@ class Api(object):
         if self.blueprint:
             endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
         return url_for(endpoint, **values)
+
+    def cache(self, check_serverside=True, personal=False, client_timeout=0,
+              server_timeout=0):
+        """Add proper cache-related headers to the response.
+
+        Key points:
+        - Generates the cache key using the full path (using the query string).
+        - Uses `Cache-Control`, `ETag` and `Last-Modified` headers.
+        - Respects browser's hard-refresh.
+
+        Parameters:
+        :param bool check_serverside: either the client verifies with the
+            server if its cached versions are still valid or not.
+        :param bool personal: set to `True` if the response contains
+            sensitive informations only pertinent for a given user.
+        :param int client_timeout: time in seconds before the client
+            considers the cache as being invalid.
+        :param int server_timeout: time in seconds before the server
+            considers the cache as being invalid.
+
+        Inspirations:
+        - http://codereview.stackexchange.com/questions/147038/↩︎
+          improving-the-flask-cache-decorator
+        - https://gist.github.com/glenrobertson/954da3acec84606885f5
+
+        Resources:
+        - https://jakearchibald.com/2016/caching-best-practices/
+        - https://developers.google.com/web/fundamentals/performance/↩︎
+          optimizing-content-efficiency/http-caching
+
+        Image:
+        - https://developers.google.com/web/fundamentals/performance/↩︎
+          optimizing-content-efficiency/images/http-cache-decision-tree.png
+        """
+        def _generate_cache_control():
+            cache_control = ResponseCacheControl()
+            # Before you think the logic is reversed, read Jake's article.
+            if check_serverside:
+                cache_control.no_cache = True
+            else:
+                cache_control.must_revalidate = True
+            if personal:
+                cache_control.private = True
+            else:
+                cache_control.public = True
+            cache_control.max_age = client_timeout
+            return cache_control
+
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                headers = Headers()
+                headers.add('Cache-Control', _generate_cache_control())
+                resp = self.make_response(func(*args, **kwargs))
+                # Respect the hard-refresh of the browser.
+                if not request.cache_control.no_cache:
+                    headers.add('X-Cache', 'HIT from Server')
+                    etag, is_weak = resp.get_etag()
+                    if request.if_none_match.contains(etag):
+                        headers.add('X-Cache', 'HIT from Client')
+                        resp = self.make_response('', httplib.NOT_MODIFIED)
+                else:
+                    if (request.method in ('GET', 'HEAD') and
+                            resp.status_code == httplib.OK):
+                        headers.add('X-Cache', 'MISS')
+                        resp.add_etag()
+                        resp.last_modified = datetime.utcnow()
+                    else:
+                        headers.add('X-Cache', 'NOCACHE')
+                resp.headers.extend(headers)
+                return resp
+            return wrapper
+        return decorator
 
 
 class SwaggerView(Resource):
