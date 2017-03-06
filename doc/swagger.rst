@@ -755,6 +755,26 @@ You can disable security on a given resource or method by passing ``None`` or an
             return {}
 
 
+Expose vendor Extensions
+------------------------
+
+Swaggers allows you to expose custom `vendor extensions`_ and you can use them
+in Flask-RESTPlus with the `@api.vendor` decorator.
+
+It supports both extensions as `dict` or `kwargs` and perform automatique `x-` prefix:
+
+.. code-block:: python
+
+    @api.route('/vendor/')
+    @api.vendor(extension1='any authorized value')
+    class Vendor(Resource):
+        @api.vendor({
+            'extension-1': {'works': 'with complex values'},
+            'x-extension-3': 'x- prefix is optionnal',
+        })
+        def get(self):
+            return {}
+
 
 Export Swagger specifications
 -----------------------------
@@ -910,3 +930,6 @@ To disable Swagger UI entirely, set ``doc=False``:
 
     app = Flask(__name__)
     api = Api(app, doc=False)
+
+
+.. _vendor extensions: http://swagger.io/specification/#specification-extensions-128

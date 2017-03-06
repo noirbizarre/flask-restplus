@@ -2789,15 +2789,37 @@ class SwaggerTests(ApiMixin, TestCase):
         self.assertIn('deprecated', post_operation)
         self.assertTrue(post_operation['deprecated'])
 
-    def test_vendor_fields(self):
+    def test_vendor_as_kwargs(self):
         api = self.build_api()
 
         @api.route('/vendor_fields', endpoint='vendor_fields')
         class TestResource(restplus.Resource):
-            @api.doc(x_vendor_fields={
+            @api.vendor(integration={'integration1': '1'})
+            def get(self):
+                return {}
+
+        data = self.get_specs()
+
+        self.assertIn('/vendor_fields', data['paths'])
+
+        path = data['paths']['/vendor_fields']['get']
+
+        self.assertIn('x-integration', path)
+
+        self.assertEqual(path['x-integration'], {'integration1': '1'})
+
+    def test_vendor_as_dict(self):
+        api = self.build_api()
+
+        @api.route('/vendor_fields', endpoint='vendor_fields')
+        class TestResource(restplus.Resource):
+            @api.vendor({
                 'x-some-integration': {
                     'integration1': '1'
-                }
+                },
+                'another-integration': True
+            }, {
+                'third-integration': True
             })
             def get(self, age):
                 return {}
@@ -2808,10 +2830,13 @@ class SwaggerTests(ApiMixin, TestCase):
 
         path = data['paths']['/vendor_fields']['get']
         self.assertIn('x-some-integration', path)
+        self.assertEqual(path['x-some-integration'], {'integration1': '1'})
 
-        path = path['x-some-integration']['integration1']
-        self.assertEqual(path, '1')
+        self.assertIn('x-another-integration', path)
+        self.assertEqual(path['x-another-integration'], True)
 
+        self.assertIn('x-third-integration', path)
+        self.assertEqual(path['x-third-integration'], True)
 
     def test_method_restrictions(self):
         api = self.build_api()

@@ -43,7 +43,7 @@ class Namespace(object):
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
-            
+
     @property
     def path(self):
         return (self._path or ('/' + self.name)).rstrip('/')
@@ -289,6 +289,19 @@ class Namespace(object):
     def deprecated(self, func):
         '''A decorator to mark a resource or a method as deprecated'''
         return self.doc(deprecated=True)(func)
+
+    def vendor(self, *args, **kwargs):
+        '''
+        A decorator to expose vendor extensions.
+
+        Extensions can be submitted as dict or kwargs.
+        The ``x-`` prefix is optionnal and will be added if missing.
+
+        See: http://swagger.io/specification/#specification-extensions-128
+        '''
+        for arg in args:
+            kwargs.update(arg)
+        return self.doc(vendor=kwargs)
 
 
 def unshortcut_params_description(data):
