@@ -230,8 +230,8 @@ class Argument(object):
                     if self.choices and value not in self.choices:
                         msg = '{0} is not a valid choice'.format(value)
                         if bundle_errors:
-                            return self.handle_validation_error(msg, bundle_errors)
-                        self.handle_validation_error(msg, bundle_errors)
+                            return self.handle_validation_error(ValueError(msg), bundle_errors)
+                        self.handle_validation_error(ValueError(msg), bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -245,8 +245,8 @@ class Argument(object):
                 location = ' or '.join(locations)
             error_msg = 'Missing required parameter in {0}'.format(location)
             if bundle_errors:
-                return self.handle_validation_error(error_msg, bundle_errors)
-            self.handle_validation_error(error_msg, bundle_errors)
+                return self.handle_validation_error(ValueError(error_msg), bundle_errors)
+            self.handle_validation_error(ValueError(error_msg), bundle_errors)
 
         if not results:
             if callable(self.default):
@@ -363,7 +363,7 @@ class RequestParser(object):
             if found or arg.store_missing:
                 result[arg.dest or arg.name] = value
         if errors:
-            abort(400, message=errors)
+            abort(400, 'Input payload validation failed', errors=errors)
 
         if strict and req.unparsed_arguments:
             arguments = ', '.join(req.unparsed_arguments.keys())
