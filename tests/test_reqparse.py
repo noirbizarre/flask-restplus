@@ -160,6 +160,33 @@ class ReqParseTestCase(TestCase):
         args = parser.parse_args(req)
         self.assertEqual(args['foo'], ['bar'])
 
+    def test_split_single(self):
+        req = Request.from_values('/bubble?foo=bar')
+
+        parser = RequestParser()
+        parser.add_argument('foo', action='split'),
+
+        args = parser.parse_args(req)
+        self.assertEqual(args['foo'], ['bar'])
+
+    def test_split_multiple(self):
+        req = Request.from_values('/bubble?foo=bar,bat')
+
+        parser = RequestParser()
+        parser.add_argument('foo', action='split'),
+
+        args = parser.parse_args(req)
+        self.assertEqual(args['foo'], ['bar', 'bat'])
+
+    def test_split_multiple_cast(self):
+        req = Request.from_values('/bubble?foo=1,2,3')
+
+        parser = RequestParser()
+        parser.add_argument('foo', type=int, action='split')
+
+        args = parser.parse_args(req)
+        self.assertEqual(args['foo'], [1, 2, 3])
+
     def test_parse_dest(self):
         req = Request.from_values('/bubble?foo=bar')
 
@@ -1006,9 +1033,19 @@ class RequestParserSchemaTest(TestCase):
         self.assertEqual(parser.__schema__, [{
             'name': 'int',
             'in': 'query',
-            'items': True,
             'type': 'array',
             'collectionFormat': 'multi',
+            'items': {'type': 'integer'}
+        }])
+
+    def test_split_lists(self):
+        parser = RequestParser()
+        parser.add_argument('int', type=int, action='split')
+        self.assertEqual(parser.__schema__, [{
+            'name': 'int',
+            'in': 'query',
+            'type': 'array',
+            'collectionFormat': 'csv',
             'items': {'type': 'integer'}
         }])
 

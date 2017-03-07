@@ -68,7 +68,9 @@ just add ``required=True`` to the call to :meth:`~reqparse.RequestParser.add_arg
 Multiple Values & Lists
 -----------------------
 
-If you want to accept multiple values for a key as a list, you can pass ``action='append'`` ::
+If you want to accept multiple values for a key as a list, you can pass ``action='append'``:
+
+.. code-block:: python
 
     parser.add_argument('name', action='append')
 
@@ -76,10 +78,29 @@ This will let you make queries like ::
 
     curl http://api.example.com -d "name=bob" -d "name=sue" -d "name=joe"
 
-And your args will look like this ::
+And your args will look like this :
+
+.. code-block:: python
 
     args = parser.parse_args()
     args['name']    # ['bob', 'sue', 'joe']
+
+If you expect a coma separated list, use the ``action='split'``:
+
+.. code-block:: python
+
+    parser.add_argument('fruits', action='split')
+
+This will let you make queries like ::
+
+    curl http://api.example.com -d "fruits=apple,lemon,cherry"
+
+And your args will look like this :
+
+.. code-block:: python
+
+    args = parser.parse_args()
+    args['fruits']    # ['apple', 'lemon', 'cherry']
 
 Other Destinations
 ------------------

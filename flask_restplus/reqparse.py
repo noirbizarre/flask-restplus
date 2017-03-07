@@ -58,6 +58,8 @@ PY_TYPES = {
     None: 'void'
 }
 
+SPLIT_CHAR = ','
+
 text_type = lambda x: six.text_type(x)
 
 
@@ -216,7 +218,10 @@ class Argument(object):
                             self.choices = [choice.lower() for choice in self.choices]
 
                     try:
-                        value = self.convert(value, operator)
+                        if self.action == 'split':
+                            value = [self.convert(v, operator) for v in value.split(SPLIT_CHAR)]
+                        else:
+                            value = self.convert(value, operator)
                     except Exception as error:
                         if self.ignore:
                             continue
@@ -275,6 +280,10 @@ class Argument(object):
             param['items'] = {'type': param['type']}
             param['type'] = 'array'
             param['collectionFormat'] = 'multi'
+        if self.action == 'split':
+            param['items'] = {'type': param['type']}
+            param['type'] = 'array'
+            param['collectionFormat'] = 'csv'
         if self.choices:
             param['enum'] = self.choices
             param['collectionFormat'] = 'multi'
