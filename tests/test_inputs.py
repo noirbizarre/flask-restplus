@@ -85,6 +85,239 @@ class Rfc822DatetimeTest(InputTest):
             inputs.datetime_from_rfc822('Fake, 01 XXX 2011')
 
 
+class NetlocRegexpTest(InputTest):
+    def test_match(self):
+        netlocs = [
+            ('localhost', {'localhost': 'localhost'}),
+            ('example.com', {'domain': 'example.com'}),
+            ('www.example.com', {'domain': 'www.example.com'}),
+            ('www.example.com:8000', {'domain': 'www.example.com', 'port': '8000'}),
+            ('valid-with-hyphens.com', {'domain': 'valid-with-hyphens.com'}),
+            ('subdomain.example.com', {'domain': 'subdomain.example.com'}),
+            ('200.8.9.10', {'ipv4': '200.8.9.10'}),
+            ('200.8.9.10:8000', {'ipv4': '200.8.9.10', 'port': '8000'}),
+            ('valid-----hyphens.com', {'domain': 'valid-----hyphens.com'}),
+            ('foo:bar@example.com', {'auth': 'foo:bar', 'domain': 'example.com'}),
+            ('foo:@example.com', {'auth': 'foo:', 'domain': 'example.com'}),
+            ('foo@example.com', {'auth': 'foo', 'domain': 'example.com'}),
+            ('foo:@2001:db8:85a3::8a2e:370:7334', {'auth': 'foo:', 'ipv6': '2001:db8:85a3::8a2e:370:7334'}),
+            ('[1fff:0:a88:85a3::ac1f]:8001', {'ipv6': '1fff:0:a88:85a3::ac1f', 'port': '8001'}),
+            ('foo2:qd1%r@example.com', {'auth': 'foo2:qd1%r', 'domain': 'example.com'}),
+        ]
+        for (netloc, kwargs) in netlocs:
+            match = inputs.netloc_regex.match(netloc)
+            assert match, 'Should match {0}'.format(netloc)
+            expected = {'auth': None, 'domain': None, 'ipv4': None, 'ipv6': None, 'localhost': None, 'port': None}
+            expected.update(kwargs)
+            assert_equal(match.groupdict(), expected)
+
+
+class URLTest(InputTest):
+    def assert_bad_url(self, validator, value, details=None):
+        msg = '{0} is not a valid URL'
+        with assert_raises(ValueError) as cm:
+            validator(value)
+        if details:
+            assert_equal(text_type(cm.exception), '. '.join((msg, details)).format(value))
+        else:
+            assert text_type(cm.exception).startswith(msg.format(value))
+
+    def test_valid_values_default(self):
+        urls = [
+            'http://www.djangoproject.com/',
+            'http://example.com/',
+            'http://www.example.com/',
+            'http://www.example.com/test',
+            'http://valid-with-hyphens.com/',
+            'http://subdomain.example.com/',
+            'http://valid-----hyphens.com/',
+            'http://example.com?something=value',
+            'http://example.com/index.php?something=value&another=value2',
+        ]
+        self.assert_values(inputs.URL(), zip(urls, urls))
+
+    def test_bad_urls(self):
+        # Test with everything enabled to ensure bad URL are really detected
+        validator = inputs.URL(ip=True, auth=True, port=True)
+        urls = [
+            'foo',
+            'http://',
+            'http://example',
+            'http://example.',
+            'http://.com',
+            'http://invalid-.com',
+            'http://-invalid.com',
+            'http://inv-.alid-.com',
+            'http://inv-.-alid.com',
+            'foo bar baz',
+            'foo \u2713',
+            'http://@foo:bar@example.com',
+            'http://:bar@example.com',
+            'http://bar:bar:bar@example.com',
+            'http://300:300:300:300',
+            'http://example.com:70000',
+            'http://example.com:0000',
+        ]
+
+        for url in urls:
+            yield self.assert_bad_url, validator, url
+
+    def test_bad_urls_with_suggestion(self):
+        validator = inputs.URL()
+        urls = [
+            'google.com',
+            'domain.google.com',
+            'kevin:pass@google.com/path?query',
+            'google.com/path?\u2713',
+        ]
+        for url in urls:
+            yield self.assert_bad_url, validator, url, 'Did you mean: http://{0}'
+
+    def test_reject_ip(self):
+        validator = inputs.URL()
+        urls = [
+            'http://200.8.9.10/',
+            'http://foo:bar@200.8.9.10/',
+            'http://200.8.9.10:8000/test',
+            'http://2001:db8:85a3::8a2e:370:7334',
+            'http://[1fff:0:a88:85a3::ac1f]:8001'
+        ]
+        for url in urls:
+            yield self.assert_bad_url, validator, url, 'IP is not allowed'
+
+    def test_allow_ip(self):
+        urls = [
+            'http://200.8.9.10/',
+            'http://200.8.9.10/test',
+            'http://2001:db8:85a3::8a2e:370:7334',
+            'http://[1fff:0:a88:85a3::ac1f]',
+        ]
+        self.assert_values(inputs.URL(ip=True), zip(urls, urls))
+
+    def test_reject_auth(self):
+        # Test with IP and port to ensure only auth is rejected
+        validator = inputs.URL(ip=True, port=True)
+        urls = [
+            'http://foo:bar@200.8.9.10/',
+            'http://foo:@2001:db8:85a3::8a2e:370:7334',
+            'http://foo:bar@[1fff:0:a88:85a3::ac1f]:8001',
+            'http://foo:@2001:db8:85a3::8a2e:370:7334',
+            'http://foo2:qd1%r@example.com',
+        ]
+        for url in urls:
+            yield self.assert_bad_url, validator, url, 'Authentication is not allowed'
+
+    def test_allow_auth(self):
+        urls = [
+            'http://foo:bar@example.com',
+            'http://foo:@example.com',
+            'http://foo@example.com',
+        ]
+
+        self.assert_values(inputs.URL(auth=True), zip(urls, urls))
+
+    def test_reject_local(self):
+        # Test with IP and port to ensure only auth is rejected
+        validator = inputs.URL(ip=True)
+        urls = [
+            'http://localhost',
+            'http://127.0.0.1',
+            'http://127.0.1.1',
+            'http://::1',
+        ]
+        for url in urls:
+            yield self.assert_bad_url, validator, url, 'Localhost is not allowed'
+
+    def test_allow_local(self):
+        urls = [
+            'http://localhost',
+            'http://127.0.0.1',
+            'http://127.0.1.1',
+            'http://::1',
+        ]
+
+        self.assert_values(inputs.URL(ip=True, local=True), zip(urls, urls))
+
+    def test_reject_port(self):
+        # Test with auth and port to ensure only port is rejected
+        validator = inputs.URL(ip=True, auth=True)
+        urls = [
+            'http://200.8.9.10:8080/',
+            'http://foo:bar@200.8.9.10:8080/',
+            'http://foo:bar@[1fff:0:a88:85a3::ac1f]:8001'
+        ]
+        for url in urls:
+            yield self.assert_bad_url, validator, url, 'Custom port is not allowed'
+
+    def test_allow_port(self):
+        urls = [
+            'http://example.com:80',
+            'http://example.com:8080',
+            'http://www.example.com:8000/test',
+        ]
+
+        self.assert_values(inputs.URL(port=True), zip(urls, urls))
+
+    def test_restricted_schemes(self):
+        validator = inputs.URL(schemes=('sip', 'irc'))
+        valid = [
+            'sip://somewhere.com',
+            'irc://somewhere.com',
+        ]
+        invalid = [
+            'http://somewhere.com',
+            'https://somewhere.com',
+        ]
+
+        self.assert_values(validator, zip(valid, valid))
+        for url in invalid:
+            yield self.assert_bad_url, validator, url, 'Protocol is not allowed'
+
+    def test_restricted_domains(self):
+        validator = inputs.URL(domains=['example.com', 'www.example.com'])
+        valid = [
+            'http://example.com',
+            'http://example.com/test/',
+            'http://www.example.com/',
+            'http://www.example.com/test',
+        ]
+        invalid = [
+            'http://somewhere.com',
+            'https://somewhere.com',
+        ]
+
+        self.assert_values(validator, zip(valid, valid))
+        for url in invalid:
+            yield self.assert_bad_url, validator, url, 'Domain is not allowed'
+
+    def test_excluded_domains(self):
+        validator = inputs.URL(exclude=['example.com', 'www.example.com'])
+        valid = [
+            'http://somewhere.com',
+            'https://somewhere.com',
+        ]
+        invalid = [
+            'http://example.com',
+            'http://example.com/test/',
+            'http://www.example.com/',
+            'http://www.example.com/test',
+        ]
+
+        self.assert_values(validator, zip(valid, valid))
+        for url in invalid:
+            yield self.assert_bad_url, validator, url, 'Domain is not allowed'
+
+    def test_check(self):
+        validator = inputs.URL(check=True, ip=True)
+        assert validator('http://www.google.com') == 'http://www.google.com', 'Should check domain'
+
+        # This test will fail on a network where this address is defined
+        self.assert_bad_url(validator, 'http://this-domain-should-not-exist.com', 'Domain does not exists')
+
+    def test_schema(self):
+        self.assert_schema(inputs.url, {'type': 'string', 'format': 'url'})
+
+
 class UrlTest(InputTest):
     def test_valid_values(self):
         urls = [
@@ -102,6 +335,7 @@ class UrlTest(InputTest):
             'http://example.com/index.php?something=value&another=value2',
             'http://foo:bar@example.com',
             'http://foo:@example.com',
+            'http://foo@example.com',
             'http://foo:@2001:db8:85a3::8a2e:370:7334',
             'http://foo2:qd1%r@example.com',
         ]
@@ -110,7 +344,7 @@ class UrlTest(InputTest):
     def assert_bad_url(self, value):
         with assert_raises(ValueError) as cm:
             inputs.url(value)
-        assert_equal(text_type(cm.exception), '{0} is not a valid URL'.format(value))
+        assert text_type(cm.exception).startswith('{0} is not a valid URL'.format(value))
 
     def test_bad_urls(self):
         urls = [

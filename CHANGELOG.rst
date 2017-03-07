@@ -10,6 +10,7 @@ Current
 - :class:`~reqparse.RequestParser` arguments now support the ``split`` action
 - Ensure default boolean value as `False` works with :class:`~reqparse.RequestParser` (:issue:`199`)
 - Schema errors are not longuer hidden by `AttributeError: Api does not have __schema__ attribute` (:issue:`194`)
+- Add a new :class:`~inputs.URL` validator, more flexible and precise.
 
 Breaking changes
 ~~~~~~~~~~~~~~~~

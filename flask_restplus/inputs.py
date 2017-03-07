@@ -23,6 +23,7 @@ import socket
 
 from datetime import datetime, time, timedelta
 from email.utils import parsedate_tz, mktime_tz
+from six.moves.urllib.parse import urlparse
 
 import aniso8601
 import pytz
@@ -31,16 +32,17 @@ import pytz
 START_OF_DAY = time(0, 0, 0, tzinfo=pytz.UTC)
 END_OF_DAY = time(23, 59, 59, 999999, tzinfo=pytz.UTC)
 
-url_regex = re.compile(
-    r'^(?:http|ftp)s?://'  # http:// or https://
-    r'(?:[^:@]+?:[^:@]*?@|)'  # basic auth
-    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
-    r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
-    r'localhost|'  # localhost...
-    r'(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|'  # ...or ipv4
-    r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
-    r'(?::(?:6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{1,3}|[0-9]))?'   # optional port
-    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+netloc_regex = re.compile(
+    r'(?:(?P<auth>[^:@]+?(?::[^:@]*?)?)@)?'  # basic auth
+    r'(?:'
+    r'(?P<localhost>localhost)|'  # localhost...
+    r'(?P<ipv4>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|'  # ...or ipv4
+    r'(?:\[?(?P<ipv6>[A-F0-9]*:[A-F0-9:]+)\]?)|'  # ...or ipv6
+    r'(?P<domain>(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))'  # domain...
+    r')'
+    r'(?::(?P<port>\d+))?'  # optional port
+    r'$', re.IGNORECASE)
 
 
 email_regex = re.compile(
@@ -63,6 +65,7 @@ def ipv4(value):
         pass
     raise ValueError('{0} is not a valid ipv4 address'.format(value))
 
+
 ipv4.__schema__ = {'type': 'string', 'format': 'ipv4'}
 
 
@@ -73,6 +76,7 @@ def ipv6(value):
         return value
     except socket.error:
         raise ValueError('{0} is not a valid ipv4 address'.format(value))
+
 
 ipv6.__schema__ = {'type': 'string', 'format': 'ipv6'}
 
@@ -88,26 +92,112 @@ def ip(value):
     except ValueError:
         raise ValueError('{0} is not a valid ip'.format(value))
 
+
 ip.__schema__ = {'type': 'string', 'format': 'ip'}
 
 
-def url(value):
+class URL(object):
     '''
-    Validate a URL.
+    Validate an URL.
 
-    :param value: The URL to validate
-    :type value: str
-    :returns: The URL if valid.
-    :raises: ValueError
+    Example::
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('url', type=inputs.URL(schemes=['http', 'https']))
+
+    Input to the ``URL`` argument will be rejected
+    if it does not match an URL with specified constraints.
+    If ``check`` is True it will also be rejected if the domain does not exists.
+
+    :param bool check: Check the domain exists (perform a DNS resolution)
+    :param bool ip: Allow IP (both ipv4/ipv6) as domain
+    :param bool local: Allow localhost (both string or ip) as domain
+    :param bool port: Allow a port to be present
+    :param bool auth: Allow authentication to be present
+    :param list|tuple schemes: Restrict valid schemes to this list
+    :param list|tuple domains: Restrict valid domains to this list
+    :param list|tuple exclude: Exclude some domains
     '''
-    if not url_regex.search(value):
-        message = '{0} is not a valid URL'
-        if url_regex.search('http://' + value):
-            message += '. Did you mean: http://{0}'
-        raise ValueError(message.format(value))
-    return value
+    def __init__(self, check=False, ip=False, local=False, port=False, auth=False,
+                 schemes=None, domains=None, exclude=None):
+        self.check = check
+        self.ip = ip
+        self.local = local
+        self.port = port
+        self.auth = auth
+        self.schemes = schemes
+        self.domains = domains
+        self.exclude = exclude
 
-url.__schema__ = {'type': 'string', 'format': 'url'}
+    def error(self, value, details=None):
+        msg = '{0} is not a valid URL'
+        if details:
+            msg = '. '.join((msg, details))
+        raise ValueError(msg.format(value))
+
+    def __call__(self, value):
+        parsed = urlparse(value)
+        netloc_match = netloc_regex.match(parsed.netloc)
+        if not all((parsed.scheme, parsed.netloc)):
+            if netloc_regex.match(parsed.netloc or parsed.path.split('/', 1)[0].split('?', 1)[0]):
+                self.error(value, 'Did you mean: http://{0}')
+            self.error(value)
+        if parsed.scheme and self.schemes and parsed.scheme not in self.schemes:
+            self.error(value, 'Protocol is not allowed')
+        if not netloc_match:
+            self.error(value)
+        data = netloc_match.groupdict()
+        if data['ipv4'] or data['ipv6']:
+            if not self.ip:
+                self.error(value, 'IP is not allowed')
+            else:
+                try:
+                    ip(data['ipv4'] or data['ipv6'])
+                except ValueError as e:
+                    self.error(value, str(e))
+            if not self.local:
+                if data['ipv4'] and data['ipv4'].startswith('127.'):
+                    self.error(value, 'Localhost is not allowed')
+                elif data['ipv6'] == '::1':
+                    self.error(value, 'Localhost is not allowed')
+            if self.check:
+                pass
+        if data['auth'] and not self.auth:
+            self.error(value, 'Authentication is not allowed')
+        if data['localhost'] and not self.local:
+            self.error(value, 'Localhost is not allowed')
+        if data['port']:
+            if not self.port:
+                self.error(value, 'Custom port is not allowed')
+            else:
+                port = int(data['port'])
+                if not 0 < port < 65535:
+                    self.error(value, 'Port is out of range')
+        if data['domain']:
+            if self.domains and data['domain'] not in self.domains:
+                self.error(value, 'Domain is not allowed')
+            elif self.exclude and data['domain'] in self.exclude:
+                self.error(value, 'Domain is not allowed')
+            if self.check:
+                try:
+                    socket.getaddrinfo(data['domain'], None)
+                except socket.error:
+                    self.error(value, 'Domain does not exists')
+        return value
+
+    @property
+    def __schema__(self):
+        return {
+            'type': 'string',
+            'format': 'url',
+        }
+
+
+#: Validate an URL
+#:
+#: Legacy validator, allows, auth, port, ip and local
+#: Only allows schemes 'http', 'https', 'ftp' and 'ftps'
+url = URL(ip=True, auth=True, port=True, local=True, schemes=('http', 'https', 'ftp', 'ftps'))
 
 
 class email(object):
@@ -323,6 +413,7 @@ def iso8601interval(value, argument='argument'):
 
     return start, end
 
+
 iso8601interval.__schema__ = {'type': 'string', 'format': 'iso8601-interval'}
 
 
@@ -330,6 +421,7 @@ def date(value):
     '''Parse a valid looking date in the format YYYY-mm-dd'''
     date = datetime.strptime(value, "%Y-%m-%d")
     return date
+
 
 date.__schema__ = {'type': 'string', 'format': 'date'}
 
@@ -349,6 +441,7 @@ def natural(value, argument='argument'):
         raise ValueError(msg.format(arg=argument, value=value))
     return value
 
+
 natural.__schema__ = {'type': 'integer', 'minimum': 0}
 
 
@@ -359,6 +452,7 @@ def positive(value, argument='argument'):
         msg = 'Invalid {arg}: {value}. {arg} must be a positive integer'
         raise ValueError(msg.format(arg=argument, value=value))
     return value
+
 
 positive.__schema__ = {'type': 'integer', 'minimum': 0, 'exclusiveMinimum': True}
 
@@ -408,6 +502,7 @@ def boolean(value):
     if value in ('false', '0',):
         return False
     raise ValueError('Invalid literal for boolean(): {0}'.format(value))
+
 
 boolean.__schema__ = {'type': 'boolean'}
 
@@ -463,6 +558,7 @@ def datetime_from_iso8601(value):
     except:
         raise ValueError('Invalid date literal "{0}"'.format(value))
 
+
 datetime_from_iso8601.__schema__ = {'type': 'string', 'format': 'date-time'}
 
 
@@ -483,5 +579,6 @@ def date_from_iso8601(value):
 
     '''
     return datetime_from_iso8601(value).date()
+
 
 date_from_iso8601.__schema__ = {'type': 'string', 'format': 'date'}
