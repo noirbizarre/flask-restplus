@@ -9,6 +9,7 @@ Current
 - Add vendor extensions support (:issue:`97`)
 - :class:`~reqparse.RequestParser` arguments now support the ``split`` action
 - Ensure default boolean value as `False` works with :class:`~reqparse.RequestParser` (:issue:`199`)
+- Schema errors are not longuer hidden by `AttributeError: Api does not have __schema__ attribute` (:issue:`194`)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~

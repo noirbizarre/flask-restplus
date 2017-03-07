@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import difflib
 import inspect
+import logging
 import operator
 import re
 import sys
@@ -39,6 +40,8 @@ RE_RULES = re.compile('(<.*>)')
 HEADERS_BLACKLIST = ('Content-Length',)
 
 DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
+
+log = logging.getLogger(__name__)
 
 
 class Api(object):
@@ -469,7 +472,14 @@ class Api(object):
         :returns dict: the schema as a serializable dict
         '''
         if not self._schema:
-            self._schema = Swagger(self).as_dict()
+            try:
+                self._schema = Swagger(self).as_dict()
+            except Exception:
+                # Log the source exception for debugging purpose
+                # and return an error message
+                msg = 'Unable to render schema'
+                log.exception(msg)  # This will provide a full traceback
+                return {'error': msg}
         return self._schema
 
     def errorhandler(self, exception):
@@ -768,7 +778,8 @@ class Api(object):
 class SwaggerView(Resource):
     '''Render the Swagger specifications as JSON'''
     def get(self):
-        return self.api.__schema__
+        schema = self.api.__schema__
+        return schema, 500 if 'error' in schema else 200
 
     def mediatypes(self):
         return ['application/json']
