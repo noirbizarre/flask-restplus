@@ -7,6 +7,15 @@ Current
 -------
 
 - Add vendor extensions support (:issue:`97`)
+- :class:`~reqparse.RequestParser` arguments now support the ``split`` action
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+- Improve header handling (:issue:`119`):
+    - `@api.header` only document response headers on all responses
+    - `@api.response` accept an optionnal `headers` argument to document response specific headers
+    - request header are handled by the `@api.expect` decorator
 
 0.10.1 (2017-03-04)
 -------------------

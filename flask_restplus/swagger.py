@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import
 
+import itertools
 import re
 
 from inspect import isclass, getdoc
@@ -88,15 +89,22 @@ def extract_path_params(path):
 def _param_to_header(param):
     param.pop('in', None)
     param.pop('name', None)
+    return _clean_header(param)
 
-    typedef = param.get('type', 'string')
+def _clean_header(header):
+    if isinstance(header, string_types):
+        header = {'description': header}
+    typedef = header.get('type', 'string')
     if isinstance(typedef, Hashable) and typedef in PY_TYPES:
-        param['type'] = PY_TYPES[typedef]
+        header['type'] = PY_TYPES[typedef]
+    elif isinstance(typedef, (list, tuple)) and len(typedef) == 1 and typedef[0] in PY_TYPES:
+        header['type'] = 'array'
+        header['items'] = {'type': PY_TYPES[typedef[0]]}
     elif hasattr(typedef, '__schema__'):
-        param.update(typedef.__schema__)
+        header.update(typedef.__schema__)
     else:
-        param['type'] = typedef
-    return param
+        header['type'] = typedef
+    return not_none(header)
 
 
 def parse_docstring(obj):
@@ -282,11 +290,7 @@ class Swagger(object):
                 'description': doc['summary']
             }
             apidoc = getattr(handler, '__apidoc__', {})
-            if 'params' in apidoc:
-                response['headers'] = dict(
-                    (n, _param_to_header(o))
-                    for n, o in apidoc['params'].items() if o.get('in') == 'header'
-                )
+            self.process_headers(response, apidoc)
             if 'responses' in apidoc:
                 _, model = list(apidoc['responses'].values())[0]
                 response['schema'] = self.serialize_schema(model)
@@ -400,7 +404,17 @@ class Swagger(object):
         for d in doc, doc[method]:
             if 'responses' in d:
                 for code, response in iteritems(d['responses']):
-                    description, model = (response, None) if isinstance(response, string_types) else response
+                    if isinstance(response, string_types):
+                        description = response
+                        model = None
+                        kwargs = {}
+                    elif len(response) == 3:
+                        description, model, kwargs = response
+                    elif len(response) == 2:
+                        description, model = response
+                        kwargs = {}
+                    else:
+                        raise ValueError('Unsupported response specification')
                     description = description or DEFAULT_RESPONSE_DESCRIPTION
                     if code in responses:
                         responses[code].update(description=description)
@@ -408,10 +422,11 @@ class Swagger(object):
                         responses[code] = {'description': description}
                     if model:
                         responses[code]['schema'] = self.serialize_schema(model)
+                    self.process_headers(responses[code], doc, method, kwargs.get('headers'))
             if 'model' in d:
                 code = str(d.get('default_code', 200))
                 if code not in responses:
-                    responses[code] = DEFAULT_RESPONSE.copy()
+                    responses[code] = self.process_headers(DEFAULT_RESPONSE.copy(), doc, method)
                 responses[code]['schema'] = self.serialize_schema(d['model'])
 
             if 'docstring' in d:
@@ -424,8 +439,21 @@ class Swagger(object):
                             break
 
         if not responses:
-            responses['200'] = DEFAULT_RESPONSE.copy()
+            responses['200'] = self.process_headers(DEFAULT_RESPONSE.copy(), doc, method)
         return responses
+
+    def process_headers(self, response, doc, method=None, headers=None):
+        method_doc = doc.get(method, {})
+        if 'headers' in doc or 'headers' in method_doc or headers:
+            response['headers'] = dict(
+                (k, _clean_header(v)) for k, v
+                in itertools.chain(
+                    doc.get('headers', {}).items(),
+                    method_doc.get('headers', {}).items(),
+                    (headers or {}).items()
+                )
+            )
+        return response
 
     def serialize_definitions(self):
         return dict(

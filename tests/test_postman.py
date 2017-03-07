@@ -268,11 +268,14 @@ class PostmanTestCase(TestCase):
     def test_headers(self):
         api = restplus.Api(self.app)
 
+        parser = api.parser()
+        parser.add_argument('X-Header-1', location='headers', default='xxx')
+        parser.add_argument('X-Header-2', location='headers', required=True)
+
         @api.route('/headers/')
         class TestHeaders(restplus.Resource):
             @api.doc('headers')
-            @api.header('X-Header-1', default='xxx')
-            @api.header('X-Header-2', required=True)
+            @api.expect(parser)
             def get(self):
                 pass
 

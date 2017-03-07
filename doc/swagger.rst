@@ -536,17 +536,40 @@ Models can also be specified with a :class:`~flask_restplus.reqparse.RequestPars
 Headers
 ~~~~~~~
 
-You can document headers with the ``@api.header()`` decorator shortcut.
+You can document response headers with the ``@api.header()`` decorator shortcut.
 
 .. code-block:: python
 
     @api.route('/with-headers/')
-    @api.header('X-Header', 'Some expected header', required=True)
+    @api.header('X-Header', 'Some class header')
     class WithHeaderResource(restplus.Resource):
         @api.header('X-Collection', type=[str], collectionType='csv')
         def get(self):
             pass
 
+If you need to specify an header that appear only on a gvien response,
+just use the `@api.response` `headers` parameter.
+
+.. code-block:: python
+
+    @api.route('/response-headers/')
+    class WithHeaderResource(restplus.Resource):
+        @api.response(200, 'Success', headers={'X-Header': 'Some header'})
+        def get(self):
+            pass
+
+
+Documenting expected/request headers is done through the `@api.expect` decorator
+
+.. code-block:: python
+    parser = api.parser()
+    parser.add_argument('Some-Header', location='headers')
+
+    @api.route('/expect-headers/')
+    @api.expect(parser)
+    class ExpectHeaderResource(restplus.Resource):
+        def get(self):
+            pass
 
 Cascading
 ---------

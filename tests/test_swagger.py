@@ -8,6 +8,8 @@ from werkzeug.datastructures import FileStorage
 
 import flask_restplus as restplus
 
+from flask_restplus import inputs
+
 from . import TestCase
 
 
@@ -1152,52 +1154,123 @@ class SwaggerTests(ApiMixin, TestCase):
         api = self.build_api()
 
         @api.route('/test/')
+        @api.header('X-HEADER', 'A class header')
         class TestResource(restplus.Resource):
 
-            @api.header('X-HEADER', 'A required header', required=True)
+            @api.header('X-HEADER-2', 'Another header', type=[int], collectionFormat='csv')
+            @api.header('X-HEADER-3', type=int)
+            @api.header('X-HEADER-4', type='boolean')
             def get(self):
                 pass
 
-            @api.header('X-HEADER-2', 'Another header', type=[int], collectionFormat='csv')
-            def post(self):
-                pass
+        data = self.get_specs('')
+        headers = data['paths']['/test/']['get']['responses']['200']['headers']
 
-            @api.header('X-HEADER-3', type=int)
-            def put(self):
-                pass
+        self.assertIn('X-HEADER', headers)
+        self.assertEqual(headers['X-HEADER'], {
+            'type': 'string',
+            'description': 'A class header',
+        })
 
-            @api.header('X-HEADER-4', type='boolean')
-            def delete(self):
+        self.assertIn('X-HEADER-2', headers)
+        self.assertEqual(headers['X-HEADER-2'], {
+            'type': 'array',
+            'items': {'type': 'integer'},
+            'description': 'Another header',
+            'collectionFormat': 'csv',
+        })
+
+        self.assertIn('X-HEADER-3', headers)
+        self.assertEqual(headers['X-HEADER-3'], {'type': 'integer'})
+
+        self.assertIn('X-HEADER-4', headers)
+        self.assertEqual(headers['X-HEADER-4'], {'type': 'boolean'})
+
+    def test_response_header(self):
+        api = self.build_api()
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+            @api.response(200, 'Success')
+            @api.response(400, 'Validation', headers={'X-HEADER': 'An header'})
+            def get(self):
                 pass
 
         data = self.get_specs('')
-        paths = data['paths']
+        headers = data['paths']['/test/']['get']['responses']['400']['headers']
 
-        def param_for(method):
-            return paths['/test/'][method]['parameters'][0]
+        self.assertIn('X-HEADER', headers)
+        self.assertEqual(headers['X-HEADER'], {
+            'type': 'string',
+            'description': 'An header',
+        })
 
-        parameter = param_for('get')
-        self.assertEqual(parameter['name'], 'X-HEADER')
+    def test_api_and_response_header(self):
+        api = self.build_api()
+
+        @api.route('/test/')
+        @api.header('X-HEADER', 'A class header')
+        class TestResource(restplus.Resource):
+
+            @api.header('X-HEADER-2', type=int)
+            @api.response(200, 'Success')
+            @api.response(400, 'Validation', headers={'X-ERROR': 'An error header'})
+            def get(self):
+                pass
+
+        data = self.get_specs('')
+        headers200 = data['paths']['/test/']['get']['responses']['200']['headers']
+        headers400 = data['paths']['/test/']['get']['responses']['400']['headers']
+
+        for headers in (headers200, headers400):
+            self.assertIn('X-HEADER', headers)
+            self.assertIn('X-HEADER-2', headers)
+
+        self.assertIn('X-ERROR', headers400)
+        self.assertNotIn('X-ERROR', headers200)
+
+    def test_expect_header(self):
+        api = self.build_api()
+
+        parser = api.parser()
+        parser.add_argument('X-Header', location='headers', required=True, help='A required header')
+        parser.add_argument('X-Header-2', location='headers', type=int, action='split', help='Another header')
+        parser.add_argument('X-Header-3', location='headers', type=int)
+        parser.add_argument('X-Header-4', location='headers', type=inputs.boolean)
+
+        @api.route('/test/')
+        class TestResource(restplus.Resource):
+
+            @api.expect(parser)
+            def get(self):
+                pass
+
+        data = self.get_specs('')
+        parameters = data['paths']['/test/']['get']['parameters']
+
+        def get_param(name):
+            candidates = [p for p in parameters if p['name'] == name]
+            self.assertEqual(len(candidates), 1, 'parameter {0} not found'.format(name))
+            return candidates[0]
+
+        parameter = get_param('X-Header')
         self.assertEqual(parameter['type'], 'string')
         self.assertEqual(parameter['in'], 'header')
         self.assertEqual(parameter['required'], True)
         self.assertEqual(parameter['description'], 'A required header')
 
-        parameter = param_for('post')
-        self.assertEqual(parameter['name'], 'X-HEADER-2')
+        parameter = get_param('X-Header-2')
         self.assertEqual(parameter['type'], 'array')
         self.assertEqual(parameter['in'], 'header')
         self.assertEqual(parameter['items']['type'], 'integer')
         self.assertEqual(parameter['description'], 'Another header')
         self.assertEqual(parameter['collectionFormat'], 'csv')
 
-        parameter = param_for('put')
-        self.assertEqual(parameter['name'], 'X-HEADER-3')
+        parameter = get_param('X-Header-3')
         self.assertEqual(parameter['type'], 'integer')
         self.assertEqual(parameter['in'], 'header')
 
-        parameter = param_for('delete')
-        self.assertEqual(parameter['name'], 'X-HEADER-4')
+        parameter = get_param('X-Header-4')
         self.assertEqual(parameter['type'], 'boolean')
         self.assertEqual(parameter['in'], 'header')
 

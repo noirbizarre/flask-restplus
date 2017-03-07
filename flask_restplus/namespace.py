@@ -274,7 +274,7 @@ class Namespace(object):
         :param ModelBase model: an optional response model
 
         '''
-        return self.doc(responses={code: (description, model) if model else description})
+        return self.doc(responses={code: (description, model, kwargs)})
 
     def header(self, name, description=None, **kwargs):
         '''
@@ -284,7 +284,9 @@ class Namespace(object):
         :param str description: a description about the header
 
         '''
-        return self.param(name, description=description, _in='header', **kwargs)
+        header = {'description': description}
+        header.update(kwargs)
+        return self.doc(headers={name: header})
 
     def deprecated(self, func):
         '''A decorator to mark a resource or a method as deprecated'''
