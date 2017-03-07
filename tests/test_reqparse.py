@@ -9,7 +9,7 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.wrappers import Request
 from werkzeug.datastructures import FileStorage, MultiDict
 
-from flask_restplus import Api, Model, fields
+from flask_restplus import Api, Model, fields, inputs
 from flask_restplus.errors import SpecsError
 from flask_restplus.reqparse import Argument, RequestParser, ParseResult
 
@@ -928,6 +928,16 @@ class RequestParserSchemaTest(TestCase):
             'type': 'integer',
             'in': 'query',
             'default': 5,
+        }])
+
+    def test_default_as_false(self):
+        parser = RequestParser()
+        parser.add_argument('bool', type=inputs.boolean, default=False)
+        self.assertEqual(parser.__schema__, [{
+            'name': 'bool',
+            'type': 'boolean',
+            'in': 'query',
+            'default': False,
         }])
 
     def test_choices(self):

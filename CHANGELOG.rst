@@ -8,6 +8,7 @@ Current
 
 - Add vendor extensions support (:issue:`97`)
 - :class:`~reqparse.RequestParser` arguments now support the ``split`` action
+- Ensure default boolean value as `False` works with :class:`~reqparse.RequestParser` (:issue:`199`)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~

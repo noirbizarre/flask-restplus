@@ -274,7 +274,7 @@ class Argument(object):
             param['required'] = True
         if self.help:
             param['description'] = self.help
-        if self.default:
+        if self.default is not None:
             param['default'] = self.default() if callable(self.default) else self.default
         if self.action == 'append':
             param['items'] = {'type': param['type']}
