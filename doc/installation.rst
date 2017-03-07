@@ -20,5 +20,5 @@ The development version can be downloaded from
     pip install -e .[dev,test]
 
 
-Flask-RESTPlus requires Python version 2.6, 2.7, 3.3, 3.4 or 3.5.
+Flask-RESTPlus requires Python version 2.7, 3.3, 3.4 or 3.5.
 It's also working with PyPy and PyPy3.

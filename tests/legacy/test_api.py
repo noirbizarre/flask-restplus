@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import flask
+import six
+
+from collections import OrderedDict
+
 from flask import Blueprint, redirect, views, abort as flask_abort
 from flask.signals import got_request_exception, signals_available
-import flask
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
 from werkzeug.http import quote_etag, unquote_etag
 
 import flask_restplus as restplus
-from flask_restplus._compat import OrderedDict
 from json import dumps, loads, JSONEncoder
 
 from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
-import six
 
 from .. import TestCase, Mock
 

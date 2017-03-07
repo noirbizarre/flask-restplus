@@ -3,12 +3,7 @@ from __future__ import unicode_literals
 
 import json
 import warnings
-
-try:
-    # Python 2.6
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 try:
     from mock import Mock, patch
@@ -20,30 +15,8 @@ from contextlib import contextmanager
 
 from flask import Flask
 
-
 from nose.tools import assert_equal, assert_raises  # noqa
-try:
-    from nose.tools import assert_equal, assert_raises, assert_in, assert_not_in, assert_is_none  # noqa
-except:
-    # Extract unittest2.TestCase methods using the same method than nose (only for Python 2.6)
-    class Dummy(unittest.TestCase):
-        def nop():
-            pass
-    dummy = Dummy('nop')
-
-    assertions = {
-        'assert_equal': 'assertEqual',
-        'assert_raises': 'assertRaises',
-        'assert_in': 'assertIn',
-        'assert_not_in': 'assertNotIn',
-        'assert_is_none': 'assertIsNone',
-    }
-
-    for local_name, unittest_name in assertions.items():
-        vars()[local_name] = getattr(dummy, unittest_name)
-
-    del Dummy
-    del dummy
+from nose.tools import assert_equal, assert_raises, assert_in, assert_not_in, assert_is_none  # noqa
 
 
 def assert_data_equal(tested, expected):

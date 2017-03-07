@@ -8,6 +8,7 @@ import operator
 import re
 import sys
 
+from collections import OrderedDict
 from functools import wraps, partial
 from types import MethodType
 
@@ -16,7 +17,7 @@ from flask import make_response as original_flask_make_response
 from flask.helpers import _endpoint_from_view_func
 from flask.signals import got_request_exception
 
-from jsonschema import RefResolver, FormatChecker
+from jsonschema import RefResolver
 
 from werkzeug import cached_property
 from werkzeug.datastructures import Headers
@@ -25,7 +26,6 @@ from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import BaseResponse
 
 from . import apidoc
-from ._compat import OrderedDict
 from .mask import ParseError, MaskError
 from .namespace import Namespace
 from .postman import PostmanCollectionV1

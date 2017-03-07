@@ -11,10 +11,12 @@ Current
 - Ensure default boolean value as `False` works with :class:`~reqparse.RequestParser` (:issue:`199`)
 - Schema errors are not longuer hidden by `AttributeError: Api does not have __schema__ attribute` (:issue:`194`)
 - Add a new :class:`~inputs.URL` validator, more flexible and precise.
+- Use pytest instead of nosetests
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
 
+- Drop python 2.6 support
 - Improve header handling (:issue:`119`):
     - `@api.header` only document response headers on all responses
     - `@api.response` accept an optionnal `headers` argument to document response specific headers

@@ -5,9 +5,9 @@ import logging
 import re
 import six
 
+from collections import OrderedDict
 from inspect import isclass
 
-from ._compat import OrderedDict
 from .errors import RestError
 
 log = logging.getLogger(__name__)

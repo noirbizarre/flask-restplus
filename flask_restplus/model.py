@@ -5,7 +5,7 @@ import copy
 import re
 import warnings
 
-from collections import MutableMapping
+from collections import OrderedDict, MutableMapping
 from six import iteritems, itervalues
 
 from .mask import Mask
@@ -14,7 +14,6 @@ from .errors import abort
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
 
-from ._compat import OrderedDict
 from .utils import not_none
 
 
