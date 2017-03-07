@@ -79,8 +79,8 @@ class Api(object):
     :param bool serve_challenge_on_401: Serve basic authentication challenge with 401
         responses (default 'False')
     :param FormatChecker format_checker: A jsonschema.FormatChecker object that is hooked into
-    the Model validator. A default or a custom FormatChecker can be provided (e.g., with custom
-    checkers), otherwise the default action is to not enforce any format validation.
+        the Model validator. A default or a custom FormatChecker can be provided (e.g., with custom
+        checkers), otherwise the default action is to not enforce any format validation.
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,

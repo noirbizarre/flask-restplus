@@ -1,4 +1,21 @@
 # -*- coding: utf-8 -*-
+'''
+This module provide some helpers for advanced types parsing.
+
+You can define you own parser using the same pattern:
+
+.. code-block:: python
+
+    def my_type(value):
+        if not condition:
+            raise ValueError('This is not my type')
+        return parse(value)
+
+    # Swagger documntation
+    my_type.__schema__ = {'type': 'string', 'format': 'my-custom-format'}
+
+The last line allows you to document properly the type in the Swagger documentation.
+'''
 from __future__ import unicode_literals
 
 import re

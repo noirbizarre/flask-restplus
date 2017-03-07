@@ -49,11 +49,14 @@ Serialization
 .. autofunction:: flask_restplus.mask.apply
 
 
-Inputs
-------
+Request parsing
+---------------
 
 .. automodule:: flask_restplus.reqparse
     :members:
+
+Inputs
+~~~~~~
 
 .. automodule:: flask_restplus.inputs
     :members:

@@ -562,6 +562,7 @@ just use the `@api.response` `headers` parameter.
 Documenting expected/request headers is done through the `@api.expect` decorator
 
 .. code-block:: python
+
     parser = api.parser()
     parser.add_argument('Some-Header', location='headers')
 

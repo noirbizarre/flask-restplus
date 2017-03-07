@@ -165,6 +165,38 @@ location the argument names will no longer be case insensitive and must match
 their title case names (see :meth:`str.title`). Specifying
 ``location='headers'`` (not as a list) will retain case insensitivity.
 
+Advanced types handling
+-----------------------
+
+Sometimes, you need more than a primitive type to handle input validation.
+The :mod:`~flask_restplus.inputs` module provides some common type handling like:
+
+- :func:`~inputs.boolean` for wider boolean handling
+- :func:`~inputs.ipv4` and :func:`~inputs.ipv6` for IP adresses
+- :func:`~inputs.date_from_iso8601` and :func:`~inputs.datetime_from_iso8601` for ISO8601 date and dateime handling
+
+You just have to use them as `type` argument:
+
+.. code-block:: python
+
+    parser.add_argument('flag', type=inputs.boolean)
+
+See the :mod:`~flask_restplus.inputs` documentation for full list of available inputs.
+
+You can also write your own:
+
+.. code-block:: python
+
+    def my_type(value):
+        '''Parse my type'''
+        if not condition:
+            raise ValueError('This is not my type')
+        return parse(value)
+
+    # Swagger documntation
+    my_type.__schema__ = {'type': 'string', 'format': 'my-custom-format'}
+
+
 Parser Inheritance
 ------------------
 
