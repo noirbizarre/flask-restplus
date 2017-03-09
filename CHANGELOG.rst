@@ -11,6 +11,7 @@ Current
 - Ensure default boolean value as `False` works with :class:`~reqparse.RequestParser` (:issue:`199`)
 - Schema errors are not longuer hidden by `AttributeError: Api does not have __schema__ attribute` (:issue:`194`)
 - Add a new :class:`~inputs.URL` validator, more flexible and precise.
+- Fix error bundling (:issue:`175`, :issue:`144`)
 - Use pytest instead of nosetests
 
 Breaking changes

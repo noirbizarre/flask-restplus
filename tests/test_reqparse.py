@@ -38,22 +38,26 @@ class ReqParseTest(object):
             assert args['todo'] == {'task': 'aaa'}
 
     def test_help_with_error_msg(self, app, mocker):
-        abort = mocker.patch('flask_restplus.reqparse.abort')
+        abort = mocker.patch('flask_restplus.reqparse.abort',
+                           side_effect=BadRequest('Bad Request'))
         parser = RequestParser()
         parser.add_argument('foo', choices=('one', 'two'), help='Bad choice: {error_msg}')
         req = mocker.Mock(['values'])
         req.values = MultiDict([('foo', 'three')])
-        parser.parse_args(req)
+        with pytest.raises(BadRequest):
+            parser.parse_args(req)
         expected = {'foo': 'Bad choice: three is not a valid choice'}
         abort.assert_called_with(400, 'Input payload validation failed', errors=expected)
 
     def test_help_no_error_msg(self, app, mocker):
-        abort = mocker.patch('flask_restplus.reqparse.abort')
+        abort = mocker.patch('flask_restplus.reqparse.abort',
+                             side_effect=BadRequest('Bad Request'))
         parser = RequestParser()
         parser.add_argument('foo', choices=['one', 'two'], help='Please select a valid choice')
         req = mocker.Mock(['values'])
         req.values = MultiDict([('foo', 'three')])
-        parser.parse_args(req)
+        with pytest.raises(BadRequest):
+            parser.parse_args(req)
         expected = {'foo': 'Please select a valid choice'}
         abort.assert_called_with(400, 'Input payload validation failed', errors=expected)
 
@@ -994,8 +998,6 @@ class RequestParserSchemaTest(object):
         assert cm.value.msg == "Can't use formData and body at the same time"
 
     def test_models(self):
-        # app = Flask(__name__)
-        # api = Api(app)
         todo_fields = Model('Todo', {
             'task': fields.String(required=True, description='The task details')
         })
