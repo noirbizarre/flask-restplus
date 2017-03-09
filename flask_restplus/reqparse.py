@@ -173,9 +173,8 @@ class Argument(object):
             dict with the name of the argument and the error message to be
             bundled
         '''
-        help_str = '{0}'.format(self.help) if self.help else ''
         error_str = six.text_type(error)
-        error_msg = ' '.join([help_str, error_str]) if help_str else error_str
+        error_msg = ' '.join([six.text_type(self.help), error_str]) if self.help else error_str
         errors = {self.name: error_msg}
 
         if bundle_errors:
