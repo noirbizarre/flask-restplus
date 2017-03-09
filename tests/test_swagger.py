@@ -309,7 +309,6 @@ class SwaggerTest(object):
 
         data = client.get_specs()
         paths = data['paths']
-        print(paths.keys())
         assert len(paths.keys()) == 1
 
         assert '/test/' in paths

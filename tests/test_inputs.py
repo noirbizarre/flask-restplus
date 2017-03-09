@@ -833,9 +833,7 @@ interval_test_values = [(
         datetime(2013, 2, 17, 19, 0, 0, tzinfo=pytz.utc),
         datetime(2013, 2, 28, 22, 0, 0, tzinfo=pytz.utc),
     ),
-),
-# Resolution expansion for single date(time)
-(
+), (  # Resolution expansion for single date(time)
     # Second with UTC
     '2013-01-01T12:30:45Z',
     (

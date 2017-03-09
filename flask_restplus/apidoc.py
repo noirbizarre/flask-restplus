@@ -17,6 +17,7 @@ class Apidoc(Blueprint):
         super(Apidoc, self).register(*args, **kwargs)
         self.registered = True
 
+
 apidoc = Apidoc('restplus_doc', __name__,
     template_folder='templates',
     static_folder='static',

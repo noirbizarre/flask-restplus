@@ -89,6 +89,7 @@ def _param_to_header(param):
     param.pop('name', None)
     return _clean_header(param)
 
+
 def _clean_header(header):
     if isinstance(header, string_types):
         header = {'description': header}

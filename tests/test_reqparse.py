@@ -803,7 +803,7 @@ class ArgumentTest(object):
 
     def test_convert_default_type_with_null_input(self):
         arg = Argument('foo')
-        assert arg.convert(None is None, None)
+        assert arg.convert(None, None) is None
 
     def test_convert_with_null_input_when_not_nullable(self):
         arg = Argument('foo', nullable=False)

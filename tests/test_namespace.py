@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import flask_restplus as restplus
 
-from flask import url_for
 from flask_restplus import Namespace
 
 

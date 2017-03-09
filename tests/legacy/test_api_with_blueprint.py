@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import flask
-import pytest
 
 from flask import Blueprint, request
 

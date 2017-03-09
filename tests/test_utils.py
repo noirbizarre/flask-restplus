@@ -70,13 +70,12 @@ class MergeTestCase(object):
                 'ab': 'keep'
             }
         }
-        assert utils.merge(a, b) ==  b
+        assert utils.merge(a, b) == b
 
 
 class CamelToDashTestCase(object):
     def test_no_transform(self):
         assert utils.camel_to_dash('test') == 'test'
-
 
     @pytest.mark.parametrize('value,expected', [
         ('aValue', 'a_value'),

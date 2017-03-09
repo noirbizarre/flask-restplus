@@ -50,7 +50,7 @@ def tox(ctx):
 @task
 def qa(ctx):
     '''Run a quality report'''
-    lrun('flake8 flask_restplus')
+    lrun('flake8 flask_restplus tests')
 
 
 @task

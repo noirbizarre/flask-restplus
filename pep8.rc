@@ -1,3 +1,0 @@
-[pep8]
-ignore = E128,E122,E124,E125
-max-line-length = 120

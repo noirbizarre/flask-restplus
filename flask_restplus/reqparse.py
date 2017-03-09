@@ -61,7 +61,7 @@ PY_TYPES = {
 
 SPLIT_CHAR = ','
 
-text_type = lambda x: six.text_type(x)
+text_type = lambda x: six.text_type(x)  # noqa
 
 
 class Argument(object):

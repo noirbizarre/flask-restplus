@@ -122,8 +122,7 @@ class Mask(OrderedDict):
             # Not possible to apply a mask on these remaining fields types
             raise MaskError('Mask is inconsistent with model')
         # Should handle objects
-        elif (not isinstance(data, (dict, OrderedDict))
-                and hasattr(data, '__dict__')):
+        elif (not isinstance(data, (dict, OrderedDict)) and hasattr(data, '__dict__')):
             data = data.__dict__
 
         return self.filter_data(data)
