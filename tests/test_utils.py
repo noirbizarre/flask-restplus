@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import pytest
+
 from flask_restplus import utils
 
-from . import TestCase
 
-
-class MergeTestCase(TestCase):
+class MergeTestCase(object):
     def test_merge_simple_dicts_without_precedence(self):
         a = {'a': 'value'}
         b = {'b': 'other value'}
-        self.assertEqual(utils.merge(a, b), {'a': 'value', 'b': 'other value'})
+        assert utils.merge(a, b) == {'a': 'value', 'b': 'other value'}
 
     def test_merge_simple_dicts_with_precedence(self):
         a = {'a': 'value', 'ab': 'overwritten'}
         b = {'b': 'other value', 'ab': 'keep'}
-        self.assertEqual(utils.merge(a, b), {'a': 'value', 'b': 'other value', 'ab': 'keep'})
+        assert utils.merge(a, b) == {'a': 'value', 'b': 'other value', 'ab': 'keep'}
 
     def test_recursions(self):
         a = {
@@ -40,7 +40,7 @@ class MergeTestCase(TestCase):
                 'ab': 'keep'
             }
         }
-        self.assertEqual(utils.merge(a, b), {
+        assert utils.merge(a, b) == {
             'a': 'value',
             'b': 'other value',
             'ab': 'keep',
@@ -55,7 +55,7 @@ class MergeTestCase(TestCase):
                 'b': 'b only',
                 'ab': 'keep'
             }
-        })
+        }
 
     def test_recursions_with_empty(self):
         a = {}
@@ -70,55 +70,55 @@ class MergeTestCase(TestCase):
                 'ab': 'keep'
             }
         }
-        self.assertEqual(utils.merge(a, b), b)
+        assert utils.merge(a, b) ==  b
 
 
-class CamelToDashTestCase(TestCase):
+class CamelToDashTestCase(object):
     def test_no_transform(self):
-        self.assertEqual(utils.camel_to_dash('test'), 'test')
-
-    def test_transform(self):
-        tests = {
-            'aValue': 'a_value',
-            'aLongValue': 'a_long_value',
-            'Upper': 'upper',
-            'UpperCase': 'upper_case',
-        }
-        for value, expected in tests.items():
-            self.assertEqual(utils.camel_to_dash(value), expected)
+        assert utils.camel_to_dash('test') == 'test'
 
 
-class UnpackTest(TestCase):
+    @pytest.mark.parametrize('value,expected', [
+        ('aValue', 'a_value'),
+        ('aLongValue', 'a_long_value'),
+        ('Upper', 'upper'),
+        ('UpperCase', 'upper_case'),
+    ])
+    def test_transform(self, value, expected):
+        assert utils.camel_to_dash(value) == expected
+
+
+class UnpackTest(object):
     def test_single_value(self):
         data, code, headers = utils.unpack('test')
-        self.assertEqual(data, 'test')
-        self.assertEqual(code, 200)
-        self.assertEqual(headers, {})
+        assert data == 'test'
+        assert code == 200
+        assert headers == {}
 
     def test_single_value_with_default_code(self):
         data, code, headers = utils.unpack('test', 500)
-        self.assertEqual(data, 'test')
-        self.assertEqual(code, 500)
-        self.assertEqual(headers, {})
+        assert data == 'test'
+        assert code == 500
+        assert headers == {}
 
     def test_value_code(self):
         data, code, headers = utils.unpack(('test', 201))
-        self.assertEqual(data, 'test')
-        self.assertEqual(code, 201)
-        self.assertEqual(headers, {})
+        assert data == 'test'
+        assert code == 201
+        assert headers == {}
 
     def test_value_code_headers(self):
         data, code, headers = utils.unpack(('test', 201, {'Header': 'value'}))
-        self.assertEqual(data, 'test')
-        self.assertEqual(code, 201)
-        self.assertEqual(headers, {'Header': 'value'})
+        assert data == 'test'
+        assert code == 201
+        assert headers == {'Header': 'value'}
 
     def test_value_headers_default_code(self):
         data, code, headers = utils.unpack(('test', None, {'Header': 'value'}))
-        self.assertEqual(data, 'test')
-        self.assertEqual(code, 200)
-        self.assertEqual(headers, {'Header': 'value'})
+        assert data == 'test'
+        assert code == 200
+        assert headers == {'Header': 'value'}
 
     def test_too_many_values(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             utils.unpack((None, None, None, None))

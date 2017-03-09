@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import copy
+import pytest
+
 from flask_restplus import fields, Model, SchemaModel
 
-import copy
 
-from . import TestCase
-
-
-class ModelTestCase(TestCase):
+class ModelTest(object):
     def test_model_as_flat_dict(self):
         model = Model('Person', {
             'name': fields.String,
@@ -16,7 +15,7 @@ class ModelTestCase(TestCase):
             'birthdate': fields.DateTime,
         })
 
-        self.assertEqual(model.__schema__, {
+        assert model.__schema__ == {
             'properties': {
                 'name': {
                     'type': 'string'
@@ -30,7 +29,7 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
     def test_model_as_ordered_dict(self):
         model = Model('Person', [
@@ -39,7 +38,7 @@ class ModelTestCase(TestCase):
             ('birthdate', fields.DateTime),
         ])
 
-        self.assertEqual(model.__schema__, {
+        assert model.__schema__ == {
             'type': 'object',
             'properties': {
                 'name': {
@@ -53,7 +52,7 @@ class ModelTestCase(TestCase):
                     'format': 'date-time'
                 }
             }
-        })
+        }
 
     def test_model_as_nested_dict(self):
         address = Model('Address', {
@@ -67,7 +66,7 @@ class ModelTestCase(TestCase):
             'address': fields.Nested(address)
         })
 
-        self.assertEqual(person.__schema__, {
+        assert person.__schema__ == {
             # 'required': ['address'],
             'properties': {
                 'name': {
@@ -85,16 +84,16 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
-        self.assertEqual(address.__schema__, {
+        assert address.__schema__ == {
             'properties': {
                 'road': {
                     'type': 'string'
                 },
             },
             'type': 'object'
-        })
+        }
 
     def test_model_as_dict_with_list(self):
         model = Model('Person', {
@@ -103,7 +102,7 @@ class ModelTestCase(TestCase):
             'tags': fields.List(fields.String),
         })
 
-        self.assertEqual(model.__schema__, {
+        assert model.__schema__ == {
             'properties': {
                 'name': {
                     'type': 'string'
@@ -119,7 +118,7 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
     def test_model_as_nested_dict_with_list(self):
         address = Model('Address', {
@@ -133,7 +132,7 @@ class ModelTestCase(TestCase):
             'addresses': fields.List(fields.Nested(address))
         })
 
-        self.assertEqual(person.__schema__, {
+        assert person.__schema__ == {
             # 'required': ['address'],
             'properties': {
                 'name': {
@@ -154,16 +153,16 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
-        self.assertEqual(address.__schema__, {
+        assert address.__schema__ == {
             'properties': {
                 'road': {
                     'type': 'string'
                 },
             },
             'type': 'object'
-        })
+        }
 
     def test_model_with_required(self):
         model = Model('Person', {
@@ -172,7 +171,7 @@ class ModelTestCase(TestCase):
             'birthdate': fields.DateTime(required=True),
         })
 
-        self.assertEqual(model.__schema__, {
+        assert model.__schema__ == {
             'properties': {
                 'name': {
                     'type': 'string'
@@ -187,7 +186,7 @@ class ModelTestCase(TestCase):
             },
             'required': ['birthdate', 'name'],
             'type': 'object'
-        })
+        }
 
     def test_model_as_nested_dict_and_required(self):
         address = Model('Address', {
@@ -201,7 +200,7 @@ class ModelTestCase(TestCase):
             'address': fields.Nested(address, required=True)
         })
 
-        self.assertEqual(person.__schema__, {
+        assert person.__schema__ == {
             'required': ['address'],
             'properties': {
                 'name': {
@@ -219,16 +218,16 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
-        self.assertEqual(address.__schema__, {
+        assert address.__schema__ == {
             'properties': {
                 'road': {
                     'type': 'string'
                 },
             },
             'type': 'object'
-        })
+        }
 
     def test_model_with_discriminator(self):
         model = Model('Person', {
@@ -236,7 +235,7 @@ class ModelTestCase(TestCase):
             'age': fields.Integer,
         })
 
-        self.assertEqual(model.__schema__, {
+        assert model.__schema__ == {
             'properties': {
                 'name': {'type': 'string'},
                 'age': {'type': 'integer'},
@@ -244,7 +243,7 @@ class ModelTestCase(TestCase):
             'discriminator': 'name',
             'required': ['name'],
             'type': 'object'
-        })
+        }
 
     def test_model_with_discriminator_override_require(self):
         model = Model('Person', {
@@ -252,7 +251,7 @@ class ModelTestCase(TestCase):
             'age': fields.Integer,
         })
 
-        self.assertEqual(model.__schema__, {
+        assert model.__schema__ == {
             'properties': {
                 'name': {'type': 'string'},
                 'age': {'type': 'integer'},
@@ -260,7 +259,7 @@ class ModelTestCase(TestCase):
             'discriminator': 'name',
             'required': ['name'],
             'type': 'object'
-        })
+        }
 
     def test_model_deepcopy(self):
         parent = Model('Person', {
@@ -274,19 +273,19 @@ class ModelTestCase(TestCase):
 
         parent_copy = copy.deepcopy(parent)
 
-        self.assertEqual(parent_copy["age"].description, "foo")
+        assert parent_copy["age"].description == "foo"
 
         parent_copy["age"].description = "bar"
 
-        self.assertEqual(parent["age"].description, "foo")
-        self.assertEqual(parent_copy["age"].description, "bar")
+        assert parent["age"].description == "foo"
+        assert parent_copy["age"].description == "bar"
 
         child = parent.inherit('Child', {
             'extra': fields.String,
         })
 
         child_copy = copy.deepcopy(child)
-        self.assertEqual(child_copy.__parents__[0], parent)
+        assert child_copy.__parents__[0] == parent
 
     def test_clone_from_instance(self):
         parent = Model('Parent', {
@@ -299,7 +298,7 @@ class ModelTestCase(TestCase):
             'extra': fields.String,
         })
 
-        self.assertEqual(child.__schema__, {
+        assert child.__schema__ == {
             'properties': {
                 'name': {
                     'type': 'string'
@@ -316,7 +315,7 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
     def test_clone_from_class(self):
         parent = Model('Parent', {
@@ -329,7 +328,7 @@ class ModelTestCase(TestCase):
             'extra': fields.String,
         })
 
-        self.assertEqual(child.__schema__, {
+        assert child.__schema__ == {
             'properties': {
                 'name': {
                     'type': 'string'
@@ -346,7 +345,7 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
     def test_clone_from_instance_with_multiple_parents(self):
         grand_parent = Model('GrandParent', {
@@ -363,7 +362,7 @@ class ModelTestCase(TestCase):
             'extra': fields.String,
         })
 
-        self.assertEqual(child.__schema__, {
+        assert child.__schema__ == {
             'properties': {
                 'grand_parent': {
                     'type': 'string'
@@ -383,7 +382,7 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
     def test_clone_from_class_with_multiple_parents(self):
         grand_parent = Model('GrandParent', {
@@ -400,7 +399,7 @@ class ModelTestCase(TestCase):
             'extra': fields.String,
         })
 
-        self.assertEqual(child.__schema__, {
+        assert child.__schema__ == {
             'properties': {
                 'grand_parent': {
                     'type': 'string'
@@ -420,7 +419,7 @@ class ModelTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
     def test_inherit_from_instance(self):
         parent = Model('Parent', {
@@ -432,14 +431,14 @@ class ModelTestCase(TestCase):
             'extra': fields.String,
         })
 
-        self.assertEqual(parent.__schema__, {
+        assert parent.__schema__ == {
             'properties': {
                 'name': {'type': 'string'},
                 'age': {'type': 'integer'},
             },
             'type': 'object'
-        })
-        self.assertEqual(child.__schema__, {
+        }
+        assert child.__schema__ == {
             'allOf': [
                 {'$ref': '#/definitions/Parent'},
                 {
@@ -449,7 +448,7 @@ class ModelTestCase(TestCase):
                     'type': 'object'
                 }
             ]
-        })
+        }
 
     def test_inherit_from_class(self):
         parent = Model('Parent', {
@@ -461,14 +460,14 @@ class ModelTestCase(TestCase):
             'extra': fields.String,
         })
 
-        self.assertEqual(parent.__schema__, {
+        assert parent.__schema__ == {
             'properties': {
                 'name': {'type': 'string'},
                 'age': {'type': 'integer'},
             },
             'type': 'object'
-        })
-        self.assertEqual(child.__schema__, {
+        }
+        assert child.__schema__ == {
             'allOf': [
                 {'$ref': '#/definitions/Parent'},
                 {
@@ -478,7 +477,7 @@ class ModelTestCase(TestCase):
                     'type': 'object'
                 }
             ]
-        })
+        }
 
     def test_inherit_from_class_from_multiple_parents(self):
         grand_parent = Model('GrandParent', {
@@ -494,7 +493,7 @@ class ModelTestCase(TestCase):
             'extra': fields.String,
         })
 
-        self.assertEqual(child.__schema__, {
+        assert child.__schema__ == {
             'allOf': [
                 {'$ref': '#/definitions/GrandParent'},
                 {'$ref': '#/definitions/Parent'},
@@ -505,7 +504,7 @@ class ModelTestCase(TestCase):
                     'type': 'object'
                 }
             ]
-        })
+        }
 
     def test_inherit_from_instance_from_multiple_parents(self):
         grand_parent = Model('GrandParent', {
@@ -521,7 +520,7 @@ class ModelTestCase(TestCase):
             'extra': fields.String,
         })
 
-        self.assertEqual(child.__schema__, {
+        assert child.__schema__ == {
             'allOf': [
                 {'$ref': '#/definitions/GrandParent'},
                 {'$ref': '#/definitions/Parent'},
@@ -532,7 +531,7 @@ class ModelTestCase(TestCase):
                     'type': 'object'
                 }
             ]
-        })
+        }
 
     # def test_inherit_inline(self):
     #     parent = Model('Person', {
@@ -582,12 +581,12 @@ class ModelTestCase(TestCase):
         })
 
         # Should use the common ancestor
-        self.assertEqual(output.__schema__, {
+        assert output.__schema__ == {
             'properties': {
                 'child': {'$ref': '#/definitions/Person'},
             },
             'type': 'object'
-        })
+        }
 
     def test_validate(self):
         from jsonschema import FormatChecker
@@ -602,15 +601,15 @@ class ModelTestCase(TestCase):
 
         # Test that validate without a FormatChecker does not check if a
         # primitive type conforms to the defined format property
-        self.assertIsNone(model.validate(data))
+        assert model.validate(data) is None
 
         # Test that validate with a FormatChecker enforces the check of the
         # format property and throws an error if invalid
-        with self.assertRaises(BadRequest):
+        with pytest.raises(BadRequest):
             model.validate(data, format_checker=FormatChecker())
 
 
-class ModelSchemaTestCase(TestCase):
+class ModelSchemaTestCase(object):
     def test_model_schema(self):
         address = SchemaModel('Address', {
             'properties': {
@@ -641,7 +640,7 @@ class ModelSchemaTestCase(TestCase):
             'type': 'object'
         })
 
-        self.assertEqual(person.__schema__, {
+        assert person.__schema__ == {
             # 'required': ['address'],
             'properties': {
                 'name': {
@@ -659,19 +658,19 @@ class ModelSchemaTestCase(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }
 
-        self.assertEqual(address.__schema__, {
+        assert address.__schema__ == {
             'properties': {
                 'road': {
                     'type': 'string'
                 },
             },
             'type': 'object'
-        })
+        }
 
 
-class ModelDeprecattionsTest(TestCase):
+class ModelDeprecattionsTest(object):
     def test_extend_is_deprecated(self):
         parent = Model('Parent', {
             'name': fields.String,
@@ -679,12 +678,12 @@ class ModelDeprecattionsTest(TestCase):
             'birthdate': fields.DateTime,
         })
 
-        with self.assert_warning(DeprecationWarning):
+        with pytest.warns(DeprecationWarning):
             child = parent.extend('Child', {
                 'extra': fields.String,
             })
 
-        self.assertEqual(child.__schema__, {
+        assert child.__schema__ == {
             'properties': {
                 'name': {
                     'type': 'string'
@@ -701,4 +700,4 @@ class ModelDeprecattionsTest(TestCase):
                 }
             },
             'type': 'object'
-        })
+        }

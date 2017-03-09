@@ -16,7 +16,7 @@ def lrun(cmd, *args, **kwargs):
 @task
 def clean(ctx, docs=False, bytecode=False, extra=''):
     '''Cleanup all build artifacts'''
-    patterns = ['build', 'dist', 'cover', 'docs/_build', '**/*.pyc', '*.egg-info', '.tox']
+    patterns = ['build', 'dist', 'cover', 'docs/_build', '**/*.pyc', '*.egg-info', '.tox', '**/__pycache__']
     for pattern in patterns:
         print('Removing {0}'.format(pattern))
         lrun('rm -rf {0}'.format(pattern))
@@ -31,13 +31,14 @@ def demo(ctx):
 @task
 def test(ctx):
     '''Run tests suite'''
-    lrun('nosetests --force-color', pty=True)
+    lrun('pytest', pty=True)
 
 
 @task
-def cover(ctx):
+def cover(ctx, html=False):
     '''Run tests suite with coverage'''
-    lrun('nosetests --force-color --with-coverage --cover-html', pty=True)
+    extra = '--cov-report html' if html else ''
+    lrun('pytest --cov flask_restplus --cov-report term {0}'.format(extra), pty=True)
 
 
 @task

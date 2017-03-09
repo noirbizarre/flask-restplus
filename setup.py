@@ -45,10 +45,12 @@ long_description = '\n'.join((
 
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
-tests_require = ['nose', 'rednose', 'blinker', 'tzlocal']
+tests_require = ['pytest', 'pytest-sugar', 'pytest-flask', 'pytest-mock', 'pytest-faker', 'blinker', 'tzlocal']
 install_requires = ['Flask>=0.8', 'six>=1.3.0', 'pytz', 'aniso8601>=0.82', 'jsonschema']
 doc_require = ['sphinx', 'alabaster', 'sphinx_issues']
-dev_requires = ['flake8', 'minibench', 'tox', 'invoke>=0.13'] + tests_require + doc_require
+qa_require = ['pytest-cover', 'flake8']
+ci_require = ['invoke>=0.13'] + qa_require + tests_require
+dev_require = ['minibench', 'tox'] + ci_require + doc_require
 
 try:
     from unittest.mock import Mock
@@ -70,7 +72,9 @@ setup(
     extras_require={
         'test': tests_require,
         'doc': doc_require,
-        'dev': dev_requires,
+        'qa': qa_require,
+        'ci': ci_require,
+        'dev': dev_require,
     },
     license='MIT',
     use_2to3=True,

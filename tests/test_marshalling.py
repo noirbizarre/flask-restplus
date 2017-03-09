@@ -9,7 +9,6 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
-from . import TestCase
 
 
 # Add a dummy Resource to verify that the app is properly set.
@@ -18,18 +17,18 @@ class HelloWorld(Resource):
         return {}
 
 
-class MarshallingTestCase(TestCase):
+class MarshallingTest(object):
     def test_marshal(self):
         model = OrderedDict([('foo', fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = marshal(marshal_dict, model)
-        self.assertEquals(output, {'foo': 'bar'})
+        assert output == {'foo': 'bar'}
 
     def test_marshal_with_envelope(self):
         model = OrderedDict([('foo', fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = marshal(marshal_dict, model, envelope='hey')
-        self.assertEquals(output, {'hey': {'foo': 'bar'}})
+        assert output == {'hey': {'foo': 'bar'}}
 
     def test_marshal_decorator(self):
         model = OrderedDict([('foo', fields.Raw)])
@@ -37,7 +36,7 @@ class MarshallingTestCase(TestCase):
         @marshal_with(model)
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
-        self.assertEquals(try_me(), {'foo': 'bar'})
+        assert try_me() == {'foo': 'bar'}
 
     def test_marshal_decorator_with_envelope(self):
         model = OrderedDict([('foo', fields.Raw)])
@@ -46,7 +45,7 @@ class MarshallingTestCase(TestCase):
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
 
-        self.assertEquals(try_me(), {'hey': {'foo': 'bar'}})
+        assert try_me() == {'hey': {'foo': 'bar'}}
 
     def test_marshal_decorator_tuple(self):
         model = OrderedDict([('foo', fields.Raw)])
@@ -55,7 +54,7 @@ class MarshallingTestCase(TestCase):
         def try_me():
             headers = {'X-test': 123}
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, headers
-        self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
+        assert try_me() == ({'foo': 'bar'}, 200, {'X-test': 123})
 
     def test_marshal_decorator_tuple_with_envelope(self):
         model = OrderedDict([('foo', fields.Raw)])
@@ -65,8 +64,7 @@ class MarshallingTestCase(TestCase):
             headers = {'X-test': 123}
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, headers
 
-        self.assertEquals(try_me(),
-                          ({'hey': {'foo': 'bar'}}, 200, {'X-test': 123}))
+        assert try_me() == ({'hey': {'foo': 'bar'}}, 200, {'X-test': 123})
 
     def test_marshal_field_decorator(self):
         model = fields.Raw
@@ -74,7 +72,7 @@ class MarshallingTestCase(TestCase):
         @marshal_with_field(model)
         def try_me():
             return 'foo'
-        self.assertEquals(try_me(), 'foo')
+        assert try_me() == 'foo'
 
     def test_marshal_field_decorator_tuple(self):
         model = fields.Raw
@@ -82,25 +80,25 @@ class MarshallingTestCase(TestCase):
         @marshal_with_field(model)
         def try_me():
             return 'foo', 200, {'X-test': 123}
-        self.assertEquals(('foo', 200, {'X-test': 123}), try_me())
+        assert try_me() == ('foo', 200, {'X-test': 123})
 
     def test_marshal_field(self):
         model = OrderedDict({'foo': fields.Raw()})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = marshal(marshal_fields, model)
-        self.assertEquals(output, {'foo': 'bar'})
+        assert output == {'foo': 'bar'}
 
     def test_marshal_tuple(self):
         model = OrderedDict({'foo': fields.Raw})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = marshal((marshal_fields,), model)
-        self.assertEquals(output, [{'foo': 'bar'}])
+        assert output == [{'foo': 'bar'}]
 
     def test_marshal_tuple_with_envelope(self):
         model = OrderedDict({'foo': fields.Raw})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = marshal((marshal_fields,), model, envelope='hey')
-        self.assertEquals(output, {'hey': [{'foo': 'bar'}]})
+        assert output == {'hey': [{'foo': 'bar'}]}
 
     def test_marshal_nested(self):
         model = OrderedDict([
@@ -117,7 +115,7 @@ class MarshallingTestCase(TestCase):
         expected = OrderedDict([
             ('foo', 'bar'), ('fee', OrderedDict([('fye', 'fum')]))
         ])
-        self.assertEquals(output, expected)
+        assert output == expected
 
     def test_marshal_nested_with_non_null(self):
         model = OrderedDict([
@@ -136,7 +134,7 @@ class MarshallingTestCase(TestCase):
             ('foo', 'bar'),
             ('fee', OrderedDict([('fye', None), ('blah', None)]))
         ])]
-        self.assertEquals(output, expected)
+        assert output == expected
 
     def test_marshal_nested_with_null(self):
         model = OrderedDict([
@@ -152,7 +150,7 @@ class MarshallingTestCase(TestCase):
                                       ('fee', None)])
         output = marshal(marshal_fields, model)
         expected = OrderedDict([('foo', 'bar'), ('fee', None)])
-        self.assertEquals(output, expected)
+        assert output == expected
 
     def test_allow_null_presents_data(self):
         model = OrderedDict([
@@ -171,7 +169,7 @@ class MarshallingTestCase(TestCase):
             ('foo', 'bar'),
             ('fee', OrderedDict([('fye', None), ('blah', 'cool')]))
         ])
-        self.assertEquals(output, expected)
+        assert output == expected
 
     def test_marshal_nested_property(self):
         class TestObject(object):
@@ -197,7 +195,7 @@ class MarshallingTestCase(TestCase):
                 ('blah', 'cool')
             ]))
         ])]
-        self.assertEquals(output, expected)
+        assert output == expected
 
     def test_marshal_list(self):
         model = OrderedDict([
@@ -209,7 +207,7 @@ class MarshallingTestCase(TestCase):
                                       ('fee', ['fye', 'fum'])])
         output = marshal(marshal_fields, model)
         expected = OrderedDict([('foo', 'bar'), ('fee', (['fye', 'fum']))])
-        self.assertEquals(output, expected)
+        assert output == expected
 
     def test_marshal_list_of_nesteds(self):
         model = OrderedDict([
@@ -224,7 +222,7 @@ class MarshallingTestCase(TestCase):
         output = marshal(marshal_fields, model)
         expected = OrderedDict([('foo', 'bar'),
                                 ('fee', [OrderedDict([('fye', 'fum')])])])
-        self.assertEquals(output, expected)
+        assert output == expected
 
     def test_marshal_list_of_lists(self):
         model = OrderedDict([
@@ -237,7 +235,7 @@ class MarshallingTestCase(TestCase):
                                       ('fee', [['fye'], ['fum']])])
         output = marshal(marshal_fields, model)
         expected = OrderedDict([('foo', 'bar'), ('fee', [['fye'], ['fum']])])
-        self.assertEquals(output, expected)
+        assert output == expected
 
     def test_marshal_nested_dict(self):
         model = OrderedDict([
@@ -254,11 +252,11 @@ class MarshallingTestCase(TestCase):
         output = marshal(marshal_fields, model)
         expected = OrderedDict([('foo', 'foo-val'),
                                 ('bar', OrderedDict([('a', 1), ('b', 2)]))])
-        self.assertEquals(output, expected)
+        assert output == expected
 
-    def test_will_prettyprint_json_in_debug_mode(self):
-        self.app.config['DEBUG'] = True
-        api = Api(self.app)
+    def test_will_prettyprint_json_in_debug_mode(self, app, client):
+        app.config['DEBUG'] = True
+        api = Api(app)
 
         class Foo1(Resource):
             def get(self):
@@ -266,24 +264,23 @@ class MarshallingTestCase(TestCase):
 
         api.add_resource(Foo1, '/foo', endpoint='bar')
 
-        with self.app.test_client() as client:
-            foo = client.get('/foo')
+        foo = client.get('/foo')
 
-            # Python's dictionaries have random order (as of "new" Pythons,
-            # anyway), so we can't verify the actual output here.  We just
-            # assert that they're properly prettyprinted.
-            lines = foo.data.splitlines()
-            lines = [line.decode() for line in lines]
-            self.assertEquals("{", lines[0])
-            self.assertTrue(lines[1].startswith('    '))
-            self.assertTrue(lines[2].startswith('    '))
-            self.assertEquals("}", lines[3])
+        # Python's dictionaries have random order (as of "new" Pythons,
+        # anyway), so we can't verify the actual output here.  We just
+        # assert that they're properly prettyprinted.
+        lines = foo.data.splitlines()
+        lines = [line.decode() for line in lines]
+        assert "{" == lines[0]
+        assert lines[1].startswith('    ')
+        assert lines[2].startswith('    ')
+        assert "}" == lines[3]
 
-            # Assert our trailing newline.
-            self.assertTrue(foo.data.endswith(b'\n'))
+        # Assert our trailing newline.
+        assert foo.data.endswith(b'\n')
 
-    def test_json_float_marshalled(self):
-        api = Api(self.app)
+    def test_json_float_marshalled(self, app, client):
+        api = Api(app)
 
         class FooResource(Resource):
             fields = {'foo': fields.Float}
@@ -293,7 +290,6 @@ class MarshallingTestCase(TestCase):
 
         api.add_resource(FooResource, '/api')
 
-        app = self.app.test_client()
-        resp = app.get('/api')
-        self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data.decode('utf-8'), '{"foo": 3.0}\n')
+        resp = client.get('/api')
+        assert resp.status_code == 200
+        assert resp.data.decode('utf-8') == '{"foo": 3.0}\n'

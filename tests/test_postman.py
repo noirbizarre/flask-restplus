@@ -10,39 +10,25 @@ from werkzeug.datastructures import FileStorage
 
 import flask_restplus as restplus
 
-from . import TestCase
-
-try:
-    from urlparse import parse_qs, urlparse
-except:
-    from urllib.parse import urlparse, parse_qs
+from six.moves.urllib.parse import parse_qs, urlparse
 
 
 with open(join(dirname(__file__), 'postman-v1.schema.json')) as f:
     schema = json.load(f)
 
 
-class PostmanTestCase(TestCase):
-    def setUp(self):
-        super(PostmanTestCase, self).setUp()
-        self.ctx = self.app.test_request_context()
-        self.ctx.push()
-
-    def tearsDown(self):
-        super(PostmanTestCase, self).tearsDown()
-        self.ctx.pop()
-
-    def test_basic_export(self):
-        api = restplus.Api(self.app)
+class PostmanTest(object):
+    def test_basic_export(self, app):
+        api = restplus.Api(app)
 
         data = api.as_postman()
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 0)
+        assert len(data['requests']) == 0
 
-    def test_export_infos(self):
-        api = restplus.Api(self.app, version='1.0',
+    def test_export_infos(self, app):
+        api = restplus.Api(app, version='1.0',
             title='My API',
             description='This is a testing API',
         )
@@ -51,11 +37,11 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
-        self.assertEqual(data['name'], 'My API 1.0')
-        self.assertEqual(data['description'], 'This is a testing API')
+        assert data['name'] == 'My API 1.0'
+        assert data['description'] == 'This is a testing API'
 
-    def test_export_with_one_entry(self):
-        api = restplus.Api(self.app)
+    def test_export_with_one_entry(self, app):
+        api = restplus.Api(app)
 
         @api.route('/test')
         class Test(restplus.Resource):
@@ -68,20 +54,20 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 1)
+        assert len(data['requests']) == 1
         request = data['requests'][0]
-        self.assertEqual(request['name'], 'test_post')
-        self.assertEqual(request['description'], 'A test post')
+        assert request['name'] == 'test_post'
+        assert request['description'] == 'A test post'
 
-        self.assertEqual(len(data['folders']), 1)
+        assert len(data['folders']) == 1
         folder = data['folders'][0]
-        self.assertEqual(folder['name'], 'default')
-        self.assertEqual(folder['description'], 'Default namespace')
+        assert folder['name'] == 'default'
+        assert folder['description'] == 'Default namespace'
 
-        self.assertEqual(request['folder'], folder['id'])
+        assert request['folder'] == folder['id']
 
-    def test_export_with_namespace(self):
-        api = restplus.Api(self.app)
+    def test_export_with_namespace(self, app):
+        api = restplus.Api(app)
         ns = api.namespace('test', 'A test namespace')
 
         @ns.route('/test')
@@ -95,30 +81,30 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 1)
+        assert len(data['requests']) == 1
         request = data['requests'][0]
-        self.assertEqual(request['name'], 'test_post')
-        self.assertEqual(request['description'], 'A test post')
+        assert request['name'] == 'test_post'
+        assert request['description'] == 'A test post'
 
-        self.assertEqual(len(data['folders']), 2)
+        assert len(data['folders']) == 2
         folder = data['folders'][1]
-        self.assertEqual(folder['name'], 'test')
-        self.assertEqual(folder['description'], 'A test namespace')
+        assert folder['name'] == 'test'
+        assert folder['description'] == 'A test namespace'
 
-        self.assertEqual(request['folder'], folder['id'])
+        assert request['folder'] == folder['id']
 
-    def test_id_is_the_same(self):
-        api = restplus.Api(self.app)
+    def test_id_is_the_same(self, app):
+        api = restplus.Api(app)
 
         first = api.as_postman()
 
         second = api.as_postman()
 
-        self.assertEqual(first['id'], second['id'])
+        assert first['id'] == second['id']
 
-    def test_resources_order_in_folder(self):
+    def test_resources_order_in_folder(self, app):
         '''It should preserve resources order'''
-        api = restplus.Api(self.app)
+        api = restplus.Api(app)
         ns = api.namespace('test', 'A test namespace')
 
         @ns.route('/test1')
@@ -143,38 +129,21 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 3)
+        assert len(data['requests']) == 3
 
-        self.assertEqual(len(data['folders']), 2)
+        assert len(data['folders']) == 2
         folder = data['folders'][1]
-        self.assertEqual(folder['name'], 'test')
+        assert folder['name'] == 'test'
 
         expected_order = ('test_post_z', 'test_post_y', 'test_post_x')
-        self.assertEqual(len(folder['order']), len(expected_order))
+        assert len(folder['order']) == len(expected_order)
 
         for request_id, expected in zip(folder['order'], expected_order):
             request = list(filter(lambda r: r['id'] == request_id, data['requests']))[0]
-            self.assertEqual(request['name'], expected)
+            assert request['name'] == expected
 
-    def test_prefix_with_trailing_slash(self):
-        api = restplus.Api(self.app, prefix='/prefix/')
-
-        @api.route('/test/')
-        class Test(restplus.Resource):
-            @api.doc('test_post')
-            def post(self):
-                pass
-
-        data = api.as_postman()
-
-        validate(data, schema)
-
-        self.assertEqual(len(data['requests']), 1)
-        request = data['requests'][0]
-        self.assertEqual(request['url'], 'http://localhost/prefix/test/')
-
-    def test_prefix_without_trailing_slash(self):
-        api = restplus.Api(self.app, prefix='/prefix')
+    def test_prefix_with_trailing_slash(self, app):
+        api = restplus.Api(app, prefix='/prefix/')
 
         @api.route('/test/')
         class Test(restplus.Resource):
@@ -186,12 +155,29 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 1)
+        assert len(data['requests']) == 1
         request = data['requests'][0]
-        self.assertEqual(request['url'], 'http://localhost/prefix/test/')
+        assert request['url'] == 'http://localhost/prefix/test/'
 
-    def test_path_variables(self):
-        api = restplus.Api(self.app)
+    def test_prefix_without_trailing_slash(self, app):
+        api = restplus.Api(app, prefix='/prefix')
+
+        @api.route('/test/')
+        class Test(restplus.Resource):
+            @api.doc('test_post')
+            def post(self):
+                pass
+
+        data = api.as_postman()
+
+        validate(data, schema)
+
+        assert len(data['requests']) == 1
+        request = data['requests'][0]
+        assert request['url'] == 'http://localhost/prefix/test/'
+
+    def test_path_variables(self, app):
+        api = restplus.Api(app)
 
         @api.route('/test/<id>/<int:integer>/<float:number>/')
         class Test(restplus.Resource):
@@ -203,17 +189,17 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 1)
+        assert len(data['requests']) == 1
         request = data['requests'][0]
-        self.assertEqual(request['url'], 'http://localhost/test/:id/:integer/:number/')
-        self.assertEqual(request['pathVariables'], {
+        assert request['url'] == 'http://localhost/test/:id/:integer/:number/'
+        assert request['pathVariables'] == {
             'id': '',
             'integer': 0,
             'number': 0,
-        })
+        }
 
-    def test_url_variables_disabled(self):
-        api = restplus.Api(self.app)
+    def test_url_variables_disabled(self, app):
+        api = restplus.Api(app)
 
         parser = api.parser()
         parser.add_argument('int', type=int)
@@ -230,12 +216,12 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 1)
+        assert len(data['requests']) == 1
         request = data['requests'][0]
-        self.assertEqual(request['url'], 'http://localhost/test/')
+        assert request['url'] == 'http://localhost/test/'
 
-    def test_url_variables_enabled(self):
-        api = restplus.Api(self.app)
+    def test_url_variables_enabled(self, app):
+        api = restplus.Api(app)
 
         parser = api.parser()
         parser.add_argument('int', type=int)
@@ -252,21 +238,21 @@ class PostmanTestCase(TestCase):
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 1)
+        assert len(data['requests']) == 1
         request = data['requests'][0]
         qs = parse_qs(urlparse(request['url']).query, keep_blank_values=True)
 
-        self.assertIn('int', qs)
-        self.assertEqual(qs['int'][0], '0')
+        assert 'int' in qs
+        assert qs['int'][0] == '0'
 
-        self.assertIn('default', qs)
-        self.assertEqual(qs['default'][0], '5')
+        assert 'default' in qs
+        assert qs['default'][0] == '5'
 
-        self.assertIn('str', qs)
-        self.assertEqual(qs['str'][0], '')
+        assert 'str' in qs
+        assert qs['str'][0] == ''
 
-    def test_headers(self):
-        api = restplus.Api(self.app)
+    def test_headers(self, app):
+        api = restplus.Api(app)
 
         parser = api.parser()
         parser.add_argument('X-Header-1', location='headers', default='xxx')
@@ -285,11 +271,11 @@ class PostmanTestCase(TestCase):
         request = data['requests'][0]
         headers = dict(r.split(':') for r in request['headers'].splitlines())
 
-        self.assertEqual(headers['X-Header-1'], 'xxx')
-        self.assertEqual(headers['X-Header-2'], '')
+        assert headers['X-Header-1'] == 'xxx'
+        assert headers['X-Header-2'] == ''
 
-    def test_content_type_header(self):
-        api = restplus.Api(self.app)
+    def test_content_type_header(self, app):
+        api = restplus.Api(app)
         form_parser = api.parser()
         form_parser.add_argument('param', type=int, help='Some param', location='form')
 
@@ -327,15 +313,15 @@ class PostmanTestCase(TestCase):
         validate(data, schema)
         requests = dict((r['name'], r['headers']) for r in data['requests'])
 
-        self.assertEqual(requests['json'], 'Content-Type:application/json')
-        self.assertEqual(requests['form'], 'Content-Type:multipart/form-data')
-        self.assertEqual(requests['file'], 'Content-Type:multipart/form-data')
+        assert requests['json'] == 'Content-Type:application/json'
+        assert requests['form'] == 'Content-Type:multipart/form-data'
+        assert requests['file'] == 'Content-Type:multipart/form-data'
 
         # No content-type on get
-        self.assertEqual(requests['get'], '')
+        assert requests['get'] == ''
 
-    def test_method_security_headers(self):
-        api = restplus.Api(self.app, authorizations={
+    def test_method_security_headers(self, app):
+        api = restplus.Api(app, authorizations={
             'apikey': {
                 'type': 'apiKey',
                 'in': 'header',
@@ -360,11 +346,11 @@ class PostmanTestCase(TestCase):
         validate(data, schema)
         requests = dict((r['name'], r['headers']) for r in data['requests'])
 
-        self.assertEqual(requests['unsecure'], '')
-        self.assertEqual(requests['secure'], 'X-API:')
+        assert requests['unsecure'] == ''
+        assert requests['secure'] == 'X-API:'
 
-    def test_global_security_headers(self):
-        api = restplus.Api(self.app, security='apikey', authorizations={
+    def test_global_security_headers(self, app):
+        api = restplus.Api(app, security='apikey', authorizations={
             'apikey': {
                 'type': 'apiKey',
                 'in': 'header',
@@ -383,10 +369,10 @@ class PostmanTestCase(TestCase):
         request = data['requests'][0]
         headers = dict(r.split(':') for r in request['headers'].splitlines())
 
-        self.assertEqual(headers['X-API'], '')
+        assert headers['X-API'] == ''
 
-    def test_oauth_security_headers(self):
-        api = restplus.Api(self.app, security='oauth', authorizations={
+    def test_oauth_security_headers(self, app):
+        api = restplus.Api(app, security='oauth', authorizations={
             'oauth': {
                 'type': 'oauth2',
                 'authorizationUrl': 'https://somewhere.com/oauth/authorize',
@@ -409,17 +395,17 @@ class PostmanTestCase(TestCase):
         # request = data['requests'][0]
         # headers = dict(r.split(':') for r in request['headers'].splitlines())
         #
-        # self.assertEqual(headers['X-API'], '')
+        # assert headers['X-API'] == ''
 
-    def test_export_with_swagger(self):
-        api = restplus.Api(self.app)
+    def test_export_with_swagger(self, app):
+        api = restplus.Api(app)
 
         data = api.as_postman(swagger=True)
 
         validate(data, schema)
 
-        self.assertEqual(len(data['requests']), 1)
+        assert len(data['requests']) == 1
         request = data['requests'][0]
-        self.assertEqual(request['name'], 'Swagger specifications')
-        self.assertEqual(request['description'], 'The API Swagger specifications as JSON')
-        self.assertEqual(request['url'], 'http://localhost/swagger.json')
+        assert request['name'] == 'Swagger specifications'
+        assert request['description'] == 'The API Swagger specifications as JSON'
+        assert request['url'] == 'http://localhost/swagger.json'

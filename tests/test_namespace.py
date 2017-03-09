@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from flask import url_for, Blueprint
-
 import flask_restplus as restplus
 
-from flask_restplus import Namespace, Api
+from flask import url_for
+from flask_restplus import Namespace
 
-from . import TestCase
 
-
-class NamespaceTest(TestCase):
+class NamespaceTest(object):
     def test_parser(self):
         api = Namespace('test')
-        self.assertIsInstance(api.parser(), restplus.reqparse.RequestParser)
+        assert isinstance(api.parser(), restplus.reqparse.RequestParser)
 
     def test_doc_decorator(self):
         api = Namespace('test')
@@ -23,8 +20,8 @@ class NamespaceTest(TestCase):
         class TestResource(restplus.Resource):
             pass
 
-        self.assertTrue(hasattr(TestResource, '__apidoc__'))
-        self.assertEqual(TestResource.__apidoc__, {'params': params})
+        assert hasattr(TestResource, '__apidoc__')
+        assert TestResource.__apidoc__ == {'params': params}
 
     def test_doc_with_inheritance(self):
         api = Namespace('test')
@@ -39,32 +36,32 @@ class NamespaceTest(TestCase):
         class TestResource(BaseResource):
             pass
 
-        self.assertEqual(TestResource.__apidoc__, {'params': {
+        assert TestResource.__apidoc__ == {'params': {
             'q': {
                 'description': 'some new description',
                 'type': 'string',
                 'paramType': 'query'
             },
             'other': {'description': 'another param'},
-        }})
+        }}
 
     def test_model(self):
         api = Namespace('test')
         api.model('Person', {})
-        self.assertIn('Person', api.models)
+        assert 'Person' in api.models
 
     def test_schema_model(self):
         api = Namespace('test')
         api.schema_model('Person', {})
-        self.assertIn('Person', api.models)
+        assert 'Person' in api.models
 
     def test_clone(self):
         api = Namespace('test')
         parent = api.model('Parent', {})
         api.clone('Child', parent, {})
 
-        self.assertIn('Child', api.models)
-        self.assertIn('Parent', api.models)
+        assert 'Child' in api.models
+        assert 'Parent' in api.models
 
     def test_clone_with_multiple_parents(self):
         api = Namespace('test')
@@ -72,17 +69,17 @@ class NamespaceTest(TestCase):
         parent = api.model('Parent', {})
         api.clone('Child', grand_parent, parent, {})
 
-        self.assertIn('Child', api.models)
-        self.assertIn('Parent', api.models)
-        self.assertIn('GrandParent', api.models)
+        assert 'Child' in api.models
+        assert 'Parent' in api.models
+        assert 'GrandParent' in api.models
 
     def test_inherit(self):
         api = Namespace('test')
         parent = api.model('Parent', {})
         api.inherit('Child', parent, {})
 
-        self.assertIn('Parent', api.models)
-        self.assertIn('Child', api.models)
+        assert 'Parent' in api.models
+        assert 'Child' in api.models
 
     def test_inherit_from_multiple_parents(self):
         api = Namespace('test')
@@ -90,6 +87,6 @@ class NamespaceTest(TestCase):
         parent = api.model('Parent', {})
         api.inherit('Child', grand_parent, parent, {})
 
-        self.assertIn('GrandParent', api.models)
-        self.assertIn('Parent', api.models)
-        self.assertIn('Child', api.models)
+        assert 'GrandParent' in api.models
+        assert 'Parent' in api.models
+        assert 'Child' in api.models

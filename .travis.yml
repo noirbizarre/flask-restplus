@@ -8,11 +8,11 @@ python:
   - pypy
   - pypy3
 install:
-  - pip install -e .[test]
-  - pip install coverage coveralls
+  - pip install -e .[ci]
 script:
-  - nosetests --with-coverage
+  - inv cover qa
 after_success:
+  - pip install coveralls
   - coveralls --rcfile=coverage.rc
 matrix:
   allow_failures:

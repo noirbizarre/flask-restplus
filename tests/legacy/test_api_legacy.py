@@ -2,21 +2,18 @@
 from __future__ import unicode_literals
 
 import flask
+import pytest
 import six
 
 from collections import OrderedDict
+from json import dumps, loads, JSONEncoder
 
 from flask import Blueprint, redirect, views, abort as flask_abort
-from flask.signals import got_request_exception, signals_available
+from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
 from werkzeug.http import quote_etag, unquote_etag
 
 import flask_restplus as restplus
-from json import dumps, loads, JSONEncoder
-
-from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
-
-from .. import TestCase, Mock
 
 
 # Add a dummy Resource to verify that the app is properly set.
@@ -25,83 +22,68 @@ class HelloWorld(restplus.Resource):
         return {}
 
 
-class APITestCase(TestCase):
-    def test_unauthorized_no_challenge_by_default(self):
-        api = restplus.Api(self.app)
-        response = Mock()
+class APITest(object):
+    def test_unauthorized_no_challenge_by_default(self, api, mocker):
+        response = mocker.Mock()
         response.headers = {}
-        with self.app.test_request_context('/foo'):
-            response = api.unauthorized(response)
-        assert_false('WWW-Authenticate' in response.headers)
+        response = api.unauthorized(response)
+        assert 'WWW-Authenticate' not in response.headers
 
-    def test_unauthorized(self):
-        api = restplus.Api(self.app, serve_challenge_on_401=True)
-        response = Mock()
+    @pytest.mark.api(serve_challenge_on_401=True)
+    def test_unauthorized(self, api, mocker):
+        response = mocker.Mock()
         response.headers = {}
-        with self.app.test_request_context('/foo'):
-            response = api.unauthorized(response)
-        self.assertEqual(response.headers['WWW-Authenticate'],
-                         'Basic realm="flask-restplus"')
+        response = api.unauthorized(response)
+        assert response.headers['WWW-Authenticate'] == 'Basic realm="flask-restplus"'
 
-    def test_unauthorized_custom_realm(self):
-        self.app.config['HTTP_BASIC_AUTH_REALM'] = 'Foo'
-        api = restplus.Api(self.app, serve_challenge_on_401=True)
-        response = Mock()
+    @pytest.mark.options(HTTP_BASIC_AUTH_REALM='Foo')
+    @pytest.mark.api(serve_challenge_on_401=True)
+    def test_unauthorized_custom_realm(self, api, mocker):
+        response = mocker.Mock()
         response.headers = {}
-        with self.app.test_request_context('/foo'):
-            response = api.unauthorized(response)
-        self.assertEqual(response.headers['WWW-Authenticate'], 'Basic realm="Foo"')
+        response = api.unauthorized(response)
+        assert response.headers['WWW-Authenticate'] == 'Basic realm="Foo"'
 
-    def test_handle_error_401_no_challenge_by_default(self):
-        api = restplus.Api(self.app)
+    def test_handle_error_401_no_challenge_by_default(self, api):
+        resp = api.handle_error(Unauthorized())
+        assert resp.status_code == 401
+        assert 'WWW-Autheneticate' not in resp.headers
 
-        with self.app.test_request_context('/foo'):
-            resp = api.handle_error(Unauthorized())
-            self.assertEqual(resp.status_code, 401)
-            assert_false('WWW-Autheneticate' in resp.headers)
-
-    def test_handle_error_401_sends_challege_default_realm(self):
-        api = restplus.Api(self.app, serve_challenge_on_401=True)
+    @pytest.mark.api(serve_challenge_on_401=True)
+    def test_handle_error_401_sends_challege_default_realm(self, api):
         exception = HTTPException()
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
-        with self.app.test_request_context('/foo'):
-            resp = api.handle_error(exception)
-            self.assertEqual(resp.status_code, 401)
-            self.assertEqual(resp.headers['WWW-Authenticate'],
-                             'Basic realm="flask-restplus"')
+        resp = api.handle_error(exception)
+        assert resp.status_code == 401
+        assert resp.headers['WWW-Authenticate'] == 'Basic realm="flask-restplus"'
 
-    def test_handle_error_401_sends_challege_configured_realm(self):
-        self.app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
-        api = restplus.Api(self.app, serve_challenge_on_401=True)
+    @pytest.mark.api(serve_challenge_on_401=True)
+    @pytest.mark.options(HTTP_BASIC_AUTH_REALM='test-realm')
+    def test_handle_error_401_sends_challege_configured_realm(self, api):
+        resp = api.handle_error(Unauthorized())
+        assert resp.status_code == 401
+        assert resp.headers['WWW-Authenticate'] == 'Basic realm="test-realm"'
 
-        with self.app.test_request_context('/foo'):
-            resp = api.handle_error(Unauthorized())
-            self.assertEqual(resp.status_code, 401)
-            self.assertEqual(resp.headers['WWW-Authenticate'],
-                             'Basic realm="test-realm"')
-
-    def test_handle_error_does_not_swallow_exceptions(self):
-        api = restplus.Api(self.app)
+    def test_handle_error_does_not_swallow_exceptions(self, api):
         exception = BadRequest('x')
 
-        with self.app.test_request_context('/foo'):
-            resp = api.handle_error(exception)
-            self.assertEqual(resp.status_code, 400)
-            self.assertEqual(resp.get_data(), b'{"message": "x"}\n')
+        resp = api.handle_error(exception)
+        assert resp.status_code == 400
+        assert resp.get_data() == b'{"message": "x"}\n'
 
     def test_marshal(self):
         fields = OrderedDict([('foo', restplus.fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = restplus.marshal(marshal_dict, fields)
-        self.assertEqual(output, {'foo': 'bar'})
+        assert output == {'foo': 'bar'}
 
     def test_marshal_with_envelope(self):
         fields = OrderedDict([('foo', restplus.fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = restplus.marshal(marshal_dict, fields, envelope='hey')
-        self.assertEqual(output, {'hey': {'foo': 'bar'}})
+        assert output == {'hey': {'foo': 'bar'}}
 
     def test_marshal_decorator(self):
         fields = OrderedDict([('foo', restplus.fields.Raw)])
@@ -109,7 +91,7 @@ class APITestCase(TestCase):
         @restplus.marshal_with(fields)
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
-        self.assertEqual(try_me(), {'foo': 'bar'})
+        assert try_me() == {'foo': 'bar'}
 
     def test_marshal_decorator_with_envelope(self):
         fields = OrderedDict([('foo', restplus.fields.Raw)])
@@ -118,7 +100,7 @@ class APITestCase(TestCase):
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
 
-        self.assertEqual(try_me(), {'hey': {'foo': 'bar'}})
+        assert try_me() == {'hey': {'foo': 'bar'}}
 
     def test_marshal_decorator_tuple(self):
         fields = OrderedDict([('foo', restplus.fields.Raw)])
@@ -126,7 +108,7 @@ class APITestCase(TestCase):
         @restplus.marshal_with(fields)
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
-        self.assertEqual(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
+        assert try_me() == ({'foo': 'bar'}, 200, {'X-test': 123})
 
     def test_marshal_decorator_tuple_with_envelope(self):
         fields = OrderedDict([('foo', restplus.fields.Raw)])
@@ -135,7 +117,7 @@ class APITestCase(TestCase):
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
 
-        self.assertEqual(try_me(), ({'hey': {'foo': 'bar'}}, 200, {'X-test': 123}))
+        assert try_me() == ({'hey': {'foo': 'bar'}}, 200, {'X-test': 123})
 
     def test_marshal_field_decorator(self):
         field = restplus.fields.Raw
@@ -143,7 +125,7 @@ class APITestCase(TestCase):
         @restplus.marshal_with_field(field)
         def try_me():
             return 'foo'
-        self.assertEqual(try_me(), 'foo')
+        assert try_me() == 'foo'
 
     def test_marshal_field_decorator_tuple(self):
         field = restplus.fields.Raw
@@ -151,25 +133,25 @@ class APITestCase(TestCase):
         @restplus.marshal_with_field(field)
         def try_me():
             return 'foo', 200, {'X-test': 123}
-        self.assertEqual(('foo', 200, {'X-test': 123}), try_me())
+        assert try_me() == ('foo', 200, {'X-test': 123})
 
     def test_marshal_field(self):
         fields = OrderedDict({'foo': restplus.fields.Raw()})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = restplus.marshal(marshal_fields, fields)
-        self.assertEqual(output, {'foo': 'bar'})
+        assert output == {'foo': 'bar'}
 
     def test_marshal_tuple(self):
         fields = OrderedDict({'foo': restplus.fields.Raw})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = restplus.marshal((marshal_fields,), fields)
-        self.assertEqual(output, [{'foo': 'bar'}])
+        assert output == [{'foo': 'bar'}]
 
     def test_marshal_tuple_with_envelope(self):
         fields = OrderedDict({'foo': restplus.fields.Raw})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = restplus.marshal((marshal_fields,), fields, envelope='hey')
-        self.assertEqual(output, {'hey': [{'foo': 'bar'}]})
+        assert output == {'hey': [{'foo': 'bar'}]}
 
     def test_marshal_nested(self):
         fields = OrderedDict([
@@ -182,7 +164,7 @@ class APITestCase(TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz'), ('fee', {'fye': 'fum'})])
         output = restplus.marshal(marshal_fields, fields)
         expected = OrderedDict([('foo', 'bar'), ('fee', OrderedDict([('fye', 'fum')]))])
-        self.assertEqual(output, expected)
+        assert output == expected
 
     def test_marshal_nested_with_non_null(self):
         fields = OrderedDict([
@@ -196,7 +178,7 @@ class APITestCase(TestCase):
         marshal_fields = [OrderedDict([('foo', 'bar'), ('bat', 'baz'), ('fee', None)])]
         output = restplus.marshal(marshal_fields, fields)
         expected = [OrderedDict([('foo', 'bar'), ('fee', OrderedDict([('fye', None), ('blah', None)]))])]
-        self.assertEqual(output, expected)
+        assert output == expected
 
     def test_marshal_nested_with_null(self):
         fields = OrderedDict([
@@ -210,7 +192,7 @@ class APITestCase(TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz'), ('fee', None)])
         output = restplus.marshal(marshal_fields, fields)
         expected = OrderedDict([('foo', 'bar'), ('fee', None)])
-        self.assertEqual(output, expected)
+        assert output == expected
 
     def test_allow_null_presents_data(self):
         fields = OrderedDict([
@@ -224,7 +206,7 @@ class APITestCase(TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz'), ('fee', {'blah': 'cool'})])
         output = restplus.marshal(marshal_fields, fields)
         expected = OrderedDict([('foo', 'bar'), ('fee', OrderedDict([('fye', None), ('blah', 'cool')]))])
-        self.assertEqual(output, expected)
+        assert output == expected
 
     def test_marshal_nested_property(self):
         class TestObject(object):
@@ -244,7 +226,7 @@ class APITestCase(TestCase):
         obj.bat = 'baz'
         output = restplus.marshal([obj], fields)
         expected = [OrderedDict([('foo', 'bar'), ('fee', OrderedDict([('fye', None), ('blah', 'cool')]))])]
-        self.assertEqual(output, expected)
+        assert output == expected
 
     def test_marshal_list(self):
         fields = OrderedDict([
@@ -254,7 +236,7 @@ class APITestCase(TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz'), ('fee', ['fye', 'fum'])])
         output = restplus.marshal(marshal_fields, fields)
         expected = OrderedDict([('foo', 'bar'), ('fee', (['fye', 'fum']))])
-        self.assertEqual(output, expected)
+        assert output == expected
 
     def test_marshal_list_of_nesteds(self):
         fields = OrderedDict([
@@ -266,7 +248,7 @@ class APITestCase(TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz'), ('fee', {'fye': 'fum'})])
         output = restplus.marshal(marshal_fields, fields)
         expected = OrderedDict([('foo', 'bar'), ('fee', [OrderedDict([('fye', 'fum')])])])
-        self.assertEqual(output, expected)
+        assert output == expected
 
     def test_marshal_list_of_lists(self):
         fields = OrderedDict([
@@ -277,7 +259,7 @@ class APITestCase(TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz'), ('fee', [['fye'], ['fum']])])
         output = restplus.marshal(marshal_fields, fields)
         expected = OrderedDict([('foo', 'bar'), ('fee', [['fye'], ['fum']])])
-        self.assertEqual(output, expected)
+        assert output == expected
 
     def test_marshal_nested_dict(self):
         fields = OrderedDict([
@@ -291,104 +273,86 @@ class APITestCase(TestCase):
                                       ('a', 1), ('b', 2), ('c', 3)])
         output = restplus.marshal(marshal_fields, fields)
         expected = OrderedDict([('foo', 'foo-val'), ('bar', OrderedDict([('a', 1), ('b', 2)]))])
-        self.assertEqual(output, expected)
+        assert output == expected
 
-    def test_api_representation(self):
-        api = restplus.Api(self.app)
-
+    def test_api_representation(self, api):
         @api.representation('foo')
         def foo():
             pass
 
-        self.assertEqual(api.representations['foo'], foo)
+        assert api.representations['foo'] == foo
 
-    def test_api_base(self):
-        api = restplus.Api(self.app)
-        self.assertEqual(api.urls, {})
-        self.assertEqual(api.prefix, '')
-        self.assertEqual(api.default_mediatype, 'application/json')
+    def test_api_base(self, app):
+        api = restplus.Api(app)
+        assert api.urls == {}
+        assert api.prefix == ''
+        assert api.default_mediatype == 'application/json'
 
-    def test_api_delayed_initialization(self):
+    def test_api_delayed_initialization(self, app, client):
         api = restplus.Api()
         api.add_resource(HelloWorld, '/', endpoint="hello")
-        api.init_app(self.app)
-        with self.app.test_client() as client:
-            self.assertEqual(client.get('/').status_code, 200)
+        api.init_app(app)
+        assert client.get('/').status_code == 200
 
-    def test_api_prefix(self):
-        api = restplus.Api(self.app, prefix='/foo')
-        self.assertEqual(api.prefix, '/foo')
+    def test_api_prefix(self, app):
+        api = restplus.Api(app, prefix='/foo')
+        assert api.prefix == '/foo'
 
-    def test_handle_server_error(self):
-        api = restplus.Api(self.app)
+    def test_handle_server_error(self, api):
+        resp = api.handle_error(Exception())
+        assert resp.status_code == 500
+        assert resp.data.decode() == dumps({
+            "message": "Internal Server Error"
+        }) + "\n"
 
-        with self.app.test_request_context("/foo"):
-            resp = api.handle_error(Exception())
-            self.assertEqual(resp.status_code, 500)
-            self.assertEqual(resp.data.decode(), dumps({
-                "message": "Internal Server Error"
-            }) + "\n")
-
-    def test_handle_error_with_code(self):
-        api = restplus.Api(self.app, serve_challenge_on_401=True)
+    def test_handle_error_with_code(self, app):
+        api = restplus.Api(app, serve_challenge_on_401=True)
 
         exception = Exception()
         exception.code = "Not an integer"
         exception.data = {'foo': 'bar'}
 
-        with self.app.test_request_context("/foo"):
-            resp = api.handle_error(exception)
-            self.assertEqual(resp.status_code, 500)
-            self.assertEqual(resp.data.decode(), dumps({"foo": "bar"}) + "\n")
+        resp = api.handle_error(exception)
+        assert resp.status_code == 500
+        assert resp.data.decode() == dumps({"foo": "bar"}) + "\n"
 
-    def test_handle_auth(self):
-        api = restplus.Api(self.app, serve_challenge_on_401=True)
+    @pytest.mark.api(serve_challenge_on_401=True)
+    def test_handle_auth(self, api):
+        resp = api.handle_error(Unauthorized())
+        assert resp.status_code == 401
+        expected_data = dumps({'message': Unauthorized.description}) + "\n"
+        assert resp.data.decode() == expected_data
 
-        with self.app.test_request_context("/foo"):
-            resp = api.handle_error(Unauthorized())
-            self.assertEqual(resp.status_code, 401)
-            expected_data = dumps({'message': Unauthorized.description}) + "\n"
-            self.assertEqual(resp.data.decode(), expected_data)
+        assert 'WWW-Authenticate' in resp.headers
 
-            self.assertTrue('WWW-Authenticate' in resp.headers)
-
-    def test_handle_api_error(self):
-        api = restplus.Api(self.app)
-
+    def test_handle_api_error(self, api, client):
         class Test(restplus.Resource):
             def get(self):
                 flask.abort(404)
 
         api.add_resource(Test(), '/api', endpoint='api')
-        # app = self.app.test_client()
+        # app = app.test_client()
 
-        resp = self.get("/api")
-        assert_equals(resp.status_code, 404)
-        assert_equals('application/json', resp.headers['Content-Type'])
+        resp = client.get("/api")
+        assert resp.status_code == 404
+        assert 'application/json' == resp.headers['Content-Type']
         data = loads(resp.data.decode())
-        assert_true('message' in data)
+        assert 'message' in data
 
-    def test_handle_non_api_error(self):
-        restplus.Api(self.app)
-        # app = self.app.test_client()
+    def test_handle_non_api_error(self, api, client):
+        resp = client.get("/foo")
+        assert resp.status_code == 404
+        assert 'text/html' == resp.headers['Content-Type']
 
-        resp = self.get("/foo")
-        self.assertEqual(resp.status_code, 404)
-        self.assertEqual('text/html', resp.headers['Content-Type'])
+    def test_non_api_error_404_catchall(self, app, client):
+        api = restplus.Api(app, catch_all_404s=True)
+        # app = app.test_client()
 
-    def test_non_api_error_404_catchall(self):
-        api = restplus.Api(self.app, catch_all_404s=True)
-        # app = self.app.test_client()
+        resp = client.get("/foo")
+        assert api.default_mediatype == resp.headers['Content-Type']
 
-        resp = self.get("/foo")
-        self.assertEqual(api.default_mediatype, resp.headers['Content-Type'])
-
-    def test_handle_error_signal(self):
-        if not signals_available:
-            # This test requires the blinker lib to run.
-            print("Can't test signals without signal support")
-            return
-        api = restplus.Api(self.app)
+    def test_handle_error_signal(self, app):
+        api = restplus.Api(app)
 
         exception = BadRequest()
 
@@ -397,121 +361,116 @@ class APITestCase(TestCase):
         def record(sender, exception):
             recorded.append(exception)
 
-        got_request_exception.connect(record, self.app)
+        got_request_exception.connect(record, app)
         try:
-            with self.app.test_request_context("/foo"):
+            with app.test_request_context("/foo"):
                 api.handle_error(exception)
-                self.assertEqual(len(recorded), 1)
-                self.assertTrue(exception is recorded[0])
+                assert len(recorded) == 1
+                assert exception is recorded[0]
         finally:
-            got_request_exception.disconnect(record, self.app)
+            got_request_exception.disconnect(record, app)
 
-    def test_handle_error(self):
-        api = restplus.Api(self.app)
+    def test_handle_error(self, api):
+        resp = api.handle_error(BadRequest())
+        assert resp.status_code == 400
+        assert resp.data.decode() == dumps({
+            'message': BadRequest.description,
+        }) + "\n"
 
-        with self.app.test_request_context("/foo"):
-            resp = api.handle_error(BadRequest())
-            self.assertEqual(resp.status_code, 400)
-            self.assertEqual(resp.data.decode(), dumps({
-                'message': BadRequest.description,
-            }) + "\n")
-
-    def test_handle_smart_errors(self):
-        api = restplus.Api(self.app)
+    def test_handle_smart_errors(self, app):
+        api = restplus.Api(app)
         view = restplus.Resource
 
         api.add_resource(view, '/foo', endpoint='bor')
         api.add_resource(view, '/fee', endpoint='bir')
         api.add_resource(view, '/fii', endpoint='ber')
 
-        with self.app.test_request_context("/faaaaa"):
+        with app.test_request_context("/faaaaa"):
             resp = api.handle_error(NotFound())
-            self.assertEqual(resp.status_code, 404)
-            self.assertEqual(resp.data.decode(), dumps({
+            assert resp.status_code == 404
+            assert resp.data.decode() == dumps({
                 "message": NotFound.description,
-            }) + "\n")
+            }) + "\n"
 
-        with self.app.test_request_context("/fOo"):
+        with app.test_request_context("/fOo"):
             resp = api.handle_error(NotFound())
-            self.assertEqual(resp.status_code, 404)
-            self.assertTrue('did you mean /foo ?' in resp.data.decode())
+            assert resp.status_code == 404
+            assert 'did you mean /foo ?' in resp.data.decode()
 
-        self.app.config['ERROR_404_HELP'] = False
+        app.config['ERROR_404_HELP'] = False
 
-        with self.app.test_request_context("/fOo"):
+        with app.test_request_context("/fOo"):
             resp = api.handle_error(NotFound())
-            self.assertEqual(resp.status_code, 404)
-            self.assertEqual(resp.data.decode(), dumps({
+            assert resp.status_code == 404
+            assert resp.data.decode() == dumps({
                 "message": NotFound.description
-            }) + "\n")
+            }) + "\n"
 
-    def test_error_router_falls_back_to_original(self):
+    def test_error_router_falls_back_to_original(self, app, mocker):
         """Verify that if an exception occurs in the Flask-RESTPlus error handler,
         the error_router will call the original flask error handler instead.
         """
-        api = restplus.Api(self.app)
-        self.app.handle_exception = Mock()
-        api.handle_error = Mock(side_effect=Exception())
-        api._has_fr_route = Mock(return_value=True)
-        exception = Mock(spec=HTTPException)
+        api = restplus.Api(app)
+        app.handle_exception = mocker.Mock()
+        api.handle_error = mocker.Mock(side_effect=Exception())
+        api._has_fr_route = mocker.Mock(return_value=True)
+        exception = mocker.Mock(spec=HTTPException)
 
-        with self.app.test_request_context('/foo'):
-            api.error_router(exception, self.app.handle_exception)
+        with app.test_request_context('/foo'):
+            api.error_router(exception, app.handle_exception)
 
-        self.assertTrue(self.app.handle_exception.called_with(exception))
+        assert app.handle_exception.called_with(exception is True)
 
-    def test_media_types(self):
-        api = restplus.Api(self.app)
+    def test_media_types(self, app):
+        api = restplus.Api(app)
 
-        with self.app.test_request_context("/foo", headers={
+        with app.test_request_context("/foo", headers={
             'Accept': 'application/json'
         }):
-            self.assertEqual(api.mediatypes(), ['application/json'])
+            assert api.mediatypes() == ['application/json']
 
-    def test_media_types_method(self):
-        api = restplus.Api(self.app)
+    def test_media_types_method(self, app, mocker):
+        api = restplus.Api(app)
 
-        with self.app.test_request_context("/foo", headers={
+        with app.test_request_context("/foo", headers={
             'Accept': 'application/xml; q=.5'
         }):
-            self.assertEqual(api.mediatypes_method()(Mock()),
-                             ['application/xml', 'application/json'])
+            assert api.mediatypes_method()(mocker.Mock()) == ['application/xml', 'application/json']
 
-    def test_media_types_q(self):
-        api = restplus.Api(self.app)
+    def test_media_types_q(self, app):
+        api = restplus.Api(app)
 
-        with self.app.test_request_context("/foo", headers={
+        with app.test_request_context("/foo", headers={
             'Accept': 'application/json; q=1, application/xml; q=.5'
         }):
-            self.assertEqual(api.mediatypes(),
-                             ['application/json', 'application/xml'])
+            assert api.mediatypes() == ['application/json', 'application/xml']
 
-    def test_decorator(self):
+    def test_decorator(self, mocker):
         def return_zero(func):
             return 0
 
-        app = Mock(flask.Flask)
+        app = mocker.Mock(flask.Flask)
         app.view_functions = {}
         app.extensions = {}
         app.config = {}
-        view = Mock()
+        view = mocker.Mock()
         api = restplus.Api(app)
         api.decorators.append(return_zero)
-        api.output = Mock()
+        api.output = mocker.Mock()
         api.add_resource(view, '/foo', endpoint='bar')
 
         app.add_url_rule.assert_called_with('/foo', view_func=0)
 
-    def test_add_resource_endpoint(self):
-        view = Mock(**{'as_view.return_value.__name__': str('test_view')})
+    def test_add_resource_endpoint(self, app, mocker):
+        view = mocker.Mock(**{'as_view.return_value.__name__': str('test_view')})
 
-        api = restplus.Api(self.app)
+        api = restplus.Api(app)
         api.add_resource(view, '/foo', endpoint='bar')
 
         view.as_view.assert_called_with('bar', api)
 
-    def test_add_two_conflicting_resources_on_same_endpoint(self):
-        api = restplus.Api(self.app)
+    def test_add_two_conflicting_resources_on_same_endpoint(self, app):
+        api = restplus.Api(app)
 
         class Foo1(restplus.Resource):
             def get(self):
@@ -522,10 +481,11 @@ class APITestCase(TestCase):
                 return 'foo2'
 
         api.add_resource(Foo1, '/foo', endpoint='bar')
-        self.assertRaises(ValueError, api.add_resource, Foo2, '/foo/toto', endpoint='bar')
+        with pytest.raises(ValueError):
+            api.add_resource(Foo2, '/foo/toto', endpoint='bar')
 
-    def test_add_the_same_resource_on_same_endpoint(self):
-        api = restplus.Api(self.app)
+    def test_add_the_same_resource_on_same_endpoint(self, app):
+        api = restplus.Api(app)
 
         class Foo1(restplus.Resource):
             def get(self):
@@ -534,39 +494,39 @@ class APITestCase(TestCase):
         api.add_resource(Foo1, '/foo', endpoint='bar')
         api.add_resource(Foo1, '/foo/toto', endpoint='blah')
 
-        with self.app.test_client() as client:
+        with app.test_client() as client:
             foo1 = client.get('/foo')
-            self.assertEqual(foo1.data, b'"foo1"\n')
+            assert foo1.data == b'"foo1"\n'
             foo2 = client.get('/foo/toto')
-            self.assertEqual(foo2.data, b'"foo1"\n')
+            assert foo2.data == b'"foo1"\n'
 
-    def test_add_resource(self):
-        app = Mock(flask.Flask)
+    def test_add_resource(self, mocker):
+        app = mocker.Mock(flask.Flask)
         app.view_functions = {}
         app.extensions = {}
         app.config = {}
         api = restplus.Api(app)
-        api.output = Mock()
+        api.output = mocker.Mock()
         api.add_resource(views.MethodView, '/foo')
 
         app.add_url_rule.assert_called_with('/foo',
                                             view_func=api.output())
 
-    def test_add_resource_kwargs(self):
-        app = Mock(flask.Flask)
+    def test_add_resource_kwargs(self, mocker):
+        app = mocker.Mock(flask.Flask)
         app.view_functions = {}
         app.extensions = {}
         app.config = {}
         api = restplus.Api(app)
-        api.output = Mock()
+        api.output = mocker.Mock()
         api.add_resource(views.MethodView, '/foo', defaults={"bar": "baz"})
 
         app.add_url_rule.assert_called_with('/foo',
                                             view_func=api.output(),
                                             defaults={"bar": "baz"})
 
-    def test_add_resource_forward_resource_class_parameters(self):
-        api = restplus.Api(self.app)
+    def test_add_resource_forward_resource_class_parameters(self, app, client):
+        api = restplus.Api(app)
 
         class Foo(restplus.Resource):
             def __init__(self, api, *args, **kwargs):
@@ -581,49 +541,49 @@ class APITestCase(TestCase):
                 resource_class_args=('wonderful',),
                 resource_class_kwargs={'secret_state': 'slurm'})
 
-        foo = self.get('/foo')
-        self.assertEqual(foo.data, b'"wonderful slurm"\n')
+        foo = client.get('/foo')
+        assert foo.data == b'"wonderful slurm"\n'
 
-    def test_output_unpack(self):
+    def test_output_unpack(self, app):
 
         def make_empty_response():
             return {'foo': 'bar'}
 
-        api = restplus.Api(self.app)
+        api = restplus.Api(app)
 
-        with self.app.test_request_context("/foo"):
+        with app.test_request_context("/foo"):
             wrapper = api.output(make_empty_response)
             resp = wrapper()
-            self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.data.decode(), '{"foo": "bar"}\n')
+            assert resp.status_code == 200
+            assert resp.data.decode() == '{"foo": "bar"}\n'
 
-    def test_output_func(self):
+    def test_output_func(self, app):
 
         def make_empty_resposne():
             return flask.make_response('')
 
-        api = restplus.Api(self.app)
+        api = restplus.Api(app)
 
-        with self.app.test_request_context("/foo"):
+        with app.test_request_context("/foo"):
             wrapper = api.output(make_empty_resposne)
             resp = wrapper()
-            self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.data.decode(), '')
+            assert resp.status_code == 200
+            assert resp.data.decode() == ''
 
-    def test_resource(self):
+    def test_resource(self, app, mocker):
         resource = restplus.Resource()
-        resource.get = Mock()
-        with self.app.test_request_context("/foo"):
+        resource.get = mocker.Mock()
+        with app.test_request_context("/foo"):
             resource.dispatch_request()
 
-    def test_resource_resp(self):
+    def test_resource_resp(self, app, mocker):
         resource = restplus.Resource()
-        resource.get = Mock()
-        with self.app.test_request_context("/foo"):
+        resource.get = mocker.Mock()
+        with app.test_request_context("/foo"):
             resource.get.return_value = flask.make_response('')
             resource.dispatch_request()
 
-    def test_resource_text_plain(self):
+    def test_resource_text_plain(self, app):
         def text(data, code, headers=None):
             return flask.make_response(six.text_type(data))
 
@@ -635,88 +595,82 @@ class APITestCase(TestCase):
             def get(self):
                 return 'hello'
 
-        with self.app.test_request_context("/foo", headers={'Accept': 'text/plain'}):
+        with app.test_request_context("/foo", headers={'Accept': 'text/plain'}):
             resource = Foo(None)
             resp = resource.dispatch_request()
-            self.assertEqual(resp.data.decode(), 'hello')
+            assert resp.data.decode() == 'hello'
 
-    def test_resource_error(self):
+    @pytest.mark.request_context('/foo')
+    def test_resource_error(self, app):
         resource = restplus.Resource()
-        with self.app.test_request_context("/foo"):
-            self.assertRaises(AssertionError, lambda: resource.dispatch_request())
+        with pytest.raises(AssertionError):
+            resource.dispatch_request()
 
-    def test_resource_head(self):
+    @pytest.mark.request_context('/foo', method='HEAD')
+    def test_resource_head(self, app):
         resource = restplus.Resource()
-        with self.app.test_request_context("/foo", method="HEAD"):
-            self.assertRaises(AssertionError, lambda: resource.dispatch_request())
+        with pytest.raises(AssertionError):
+            resource.dispatch_request()
 
     def test_abort_data(self):
-        try:
+        with pytest.raises(Exception) as cm:
             restplus.abort(404, foo='bar')
-            assert False  # We should never get here
-        except Exception as e:
-            self.assertEqual(e.data, {'foo': 'bar'})
+        assert cm.value.data == {'foo': 'bar'}
 
     def test_abort_no_data(self):
-        try:
+        with pytest.raises(Exception) as cm:
             restplus.abort(404)
-            assert False  # We should never get here
-        except Exception as e:
-            self.assertEqual(False, hasattr(e, "data"))
+        assert not hasattr(cm.value, 'data')
 
     def test_abort_custom_message(self):
-        try:
+        with pytest.raises(Exception) as cm:
             restplus.abort(404, message="no user")
-            assert False  # We should never get here
-        except Exception as e:
-            assert_equals(e.data['message'], "no user")
+        assert cm.value.data['message'] == "no user"
 
     def test_abort_type(self):
-        self.assertRaises(HTTPException, lambda: restplus.abort(404))
+        with pytest.raises(HTTPException):
+            restplus.abort(404)
 
-    def test_endpoints(self):
-        api = restplus.Api(self.app)
+    def test_endpoints(self, app):
+        api = restplus.Api(app)
         api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
-        with self.app.test_request_context('/foo'):
-            self.assertFalse(api._has_fr_route())
+        with app.test_request_context('/foo'):
+            assert api._has_fr_route() is False
 
-        with self.app.test_request_context('/ids/3'):
-            self.assertTrue(api._has_fr_route())
+        with app.test_request_context('/ids/3'):
+            assert api._has_fr_route() is True
 
-    def test_url_for(self):
-        api = restplus.Api(self.app)
+    def test_url_for(self, app):
+        api = restplus.Api(app)
         api.add_resource(HelloWorld, '/ids/<int:id>')
-        with self.app.test_request_context('/foo'):
-            self.assertEqual(api.url_for(HelloWorld, id=123), '/ids/123')
+        with app.test_request_context('/foo'):
+            assert api.url_for(HelloWorld, id=123) == '/ids/123'
 
-    def test_url_for_with_blueprint(self):
+    def test_url_for_with_blueprint(self, app):
         """Verify that url_for works when an Api object is mounted on a
         Blueprint.
         """
         api_bp = Blueprint('api', __name__)
         api = restplus.Api(api_bp)
         api.add_resource(HelloWorld, '/foo/<string:bar>')
-        self.app.register_blueprint(api_bp)
-        with self.app.test_request_context('/foo'):
-            self.assertEqual(api.url_for(HelloWorld, bar='baz'), '/foo/baz')
+        app.register_blueprint(api_bp)
+        with app.test_request_context('/foo'):
+            assert api.url_for(HelloWorld, bar='baz') == '/foo/baz'
 
-    def test_fr_405(self):
-        api = restplus.Api(self.app)
+    def test_fr_405(self, app, client):
+        api = restplus.Api(app)
         api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
-        resp = self.post('/ids/3')
-        self.assertEqual(resp.status_code, 405)
-        self.assertEqual(resp.content_type, api.default_mediatype)
+        resp = client.post('/ids/3')
+        assert resp.status_code == 405
+        assert resp.content_type == api.default_mediatype
         # Allow can be of the form 'GET, PUT, POST'
         allow = ', '.join(set(resp.headers.get_all('Allow')))
         allow = set(method.strip() for method in allow.split(','))
-        self.assertEqual(allow,
-                         set(['HEAD', 'OPTIONS'] + HelloWorld.methods))
+        assert allow == set(['HEAD', 'OPTIONS'] + HelloWorld.methods)
 
-    def test_exception_header_forwarded(self):
+    @pytest.mark.options(debug=True)
+    def test_exception_header_forwarded(self, api, client):
         """Test that HTTPException's headers are extended properly"""
-        self.app.config['DEBUG'] = True
-        api = restplus.Api(self.app)
-
         class NotModified(HTTPException):
             code = 304
 
@@ -735,58 +689,49 @@ class APITestCase(TestCase):
         api.add_resource(Foo1, '/foo')
         flask_abort.mapping.update({304: NotModified})
 
-        with self.app.test_client() as client:
-            foo = client.get('/foo')
-            self.assertEqual(foo.get_etag(),
-                             unquote_etag(quote_etag('myETag')))
+        foo = client.get('/foo')
+        assert foo.get_etag() == unquote_etag(quote_etag('myETag'))
 
-    def test_exception_header_forwarding_doesnt_duplicate_headers(self):
+    def test_exception_header_forwarding_doesnt_duplicate_headers(self, api):
         """Test that HTTPException's headers do not add a duplicate
         Content-Length header
 
         https://github.com/flask-restful/flask-restful/issues/534
         """
-        api = restplus.Api(self.app)
+        r = api.handle_error(BadRequest())
+        assert len(r.headers.getlist('Content-Length')) == 1
 
-        with self.app.test_request_context('/'):
-            r = api.handle_error(BadRequest())
-
-        self.assertEqual(len(r.headers.getlist('Content-Length')), 1)
-
-    def test_will_prettyprint_json_in_debug_mode(self):
-        self.app.config['DEBUG'] = True
-        api = restplus.Api(self.app)
-
+    @pytest.mark.options(debug=True)
+    def test_will_prettyprint_json_in_debug_mode(self, api, client):
         class Foo1(restplus.Resource):
             def get(self):
                 return {'foo': 'bar', 'baz': 'asdf'}
 
         api.add_resource(Foo1, '/foo', endpoint='bar')
 
-        with self.app.test_client() as client:
-            foo = client.get('/foo')
+        foo = client.get('/foo')
 
-            # Python's dictionaries have random order (as of "new" Pythons,
-            # anyway), so we can't verify the actual output here.  We just
-            # assert that they're properly prettyprinted.
-            lines = foo.data.splitlines()
-            lines = [line.decode() for line in lines]
-            self.assertEqual("{", lines[0])
-            self.assertTrue(lines[1].startswith('    '))
-            self.assertTrue(lines[2].startswith('    '))
-            self.assertEqual("}", lines[3])
+        # Python's dictionaries have random order (as of "new" Pythons,
+        # anyway), so we can't verify the actual output here.  We just
+        # assert that they're properly prettyprinted.
+        lines = foo.data.splitlines()
+        lines = [line.decode() for line in lines]
+        assert "{" == lines[0]
+        assert lines[1].startswith('    ')
+        assert lines[2].startswith('    ')
+        assert "}" == lines[3]
 
-            # Assert our trailing newline.
-            self.assertTrue(foo.data.endswith(b'\n'))
+        # Assert our trailing newline.
+        assert foo.data.endswith(b'\n')
 
-    def test_read_json_settings_from_config(self):
+    def test_read_json_settings_from_config(self, app, client):
         class TestConfig(object):
             RESTPLUS_JSON = {'indent': 2,
                              'sort_keys': True,
                              'separators': (', ', ': ')}
 
-        self.app.config.from_object(TestConfig)
-        api = restplus.Api(self.app)
+        app.config.from_object(TestConfig)
+        api = restplus.Api(app)
 
         class Foo(restplus.Resource):
             def get(self):
@@ -794,14 +739,13 @@ class APITestCase(TestCase):
 
         api.add_resource(Foo, '/foo')
 
-        with self.app.test_client() as client:
-            data = client.get('/foo').data
+        data = client.get('/foo').data
 
         expected = b'{\n  "baz": "qux", \n  "foo": "bar"\n}\n'
 
-        self.assertEqual(data, expected)
+        assert data == expected
 
-    def test_use_custom_jsonencoder(self):
+    def test_use_custom_jsonencoder(self, app, client):
         class CabageEncoder(JSONEncoder):
             def default(self, obj):
                 return 'cabbage'
@@ -809,8 +753,8 @@ class APITestCase(TestCase):
         class TestConfig(object):
             RESTPLUS_JSON = {'cls': CabageEncoder}
 
-        self.app.config.from_object(TestConfig)
-        api = restplus.Api(self.app)
+        app.config.from_object(TestConfig)
+        api = restplus.Api(app)
 
         class Cabbage(restplus.Resource):
             def get(self):
@@ -818,43 +762,35 @@ class APITestCase(TestCase):
 
         api.add_resource(Cabbage, '/cabbage')
 
-        with self.app.test_client() as client:
-            data = client.get('/cabbage').data
+        data = client.get('/cabbage').data
 
         expected = b'{"frob": "cabbage"}\n'
-        self.assertEqual(data, expected)
+        assert data == expected
 
-    def test_json_with_no_settings(self):
-        api = restplus.Api(self.app)
-
+    def test_json_with_no_settings(self, api, client):
         class Foo(restplus.Resource):
             def get(self):
                 return {'foo': 'bar'}
 
         api.add_resource(Foo, '/foo')
 
-        with self.app.test_client() as client:
-            data = client.get('/foo').data
+        data = client.get('/foo').data
 
         expected = b'{"foo": "bar"}\n'
-        self.assertEqual(data, expected)
+        assert data == expected
 
-    def test_redirect(self):
-        api = restplus.Api(self.app)
-
+    def test_redirect(self, api, client):
         class FooResource(restplus.Resource):
             def get(self):
                 return redirect('/')
 
         api.add_resource(FooResource, '/api')
 
-        resp = self.get('/api')
-        self.assertEqual(resp.status_code, 302)
-        self.assertEqual(resp.headers['Location'], 'http://localhost/')
+        resp = client.get('/api')
+        assert resp.status_code == 302
+        assert resp.headers['Location'] == 'http://localhost/'
 
-    def test_json_float_marshalled(self):
-        api = restplus.Api(self.app)
-
+    def test_json_float_marshalled(self, api, client):
         class FooResource(restplus.Resource):
             fields = {'foo': restplus.fields.Float}
 
@@ -863,14 +799,14 @@ class APITestCase(TestCase):
 
         api.add_resource(FooResource, '/api')
 
-        resp = self.get('/api')
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.data.decode('utf-8'), '{"foo": 3.0}\n')
+        resp = client.get('/api')
+        assert resp.status_code == 200
+        assert resp.data.decode('utf-8') == '{"foo": 3.0}\n'
 
     def test_calling_owns_endpoint_before_api_init(self):
         api = restplus.Api()
-
-        try:
-            api.owns_endpoint('endpoint')
-        except AttributeError as ae:
-            self.fail(ae.message)
+        api.owns_endpoint('endpoint')
+        # with pytest.raises(AttributeError):
+        # try:
+        # except AttributeError as ae:
+        #     self.fail(ae.message)

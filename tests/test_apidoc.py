@@ -1,176 +1,144 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import pytest
 
 from flask import url_for, Blueprint
 from werkzeug.routing import BuildError
 
 import flask_restplus as restplus
 
-from . import TestCase
 
+class APIDocTest(object):
+    def test_default_apidoc_on_root(self, app, client):
+        restplus.Api(app, version='1.0')
 
-class APIDocTestCase(TestCase):
-    def test_default_apidoc_on_root(self):
-        restplus.Api(self.app, version='1.0')
+        assert url_for('doc') == url_for('root')
 
-        with self.context():
-            self.assertEqual(url_for('doc'), url_for('root'))
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.content_type, 'text/html; charset=utf-8')
+        response = client.get(url_for('doc'))
+        assert response.status_code == 200
+        assert response.content_type == 'text/html; charset=utf-8'
 
-    def test_default_apidoc_on_root_lazy(self):
+    def test_default_apidoc_on_root_lazy(self, app, client):
         api = restplus.Api(version='1.0')
-        api.init_app(self.app)
+        api.init_app(app)
 
-        with self.context():
-            self.assertEqual(url_for('doc'), url_for('root'))
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.content_type, 'text/html; charset=utf-8')
+        assert url_for('doc') == url_for('root')
 
-    def test_default_apidoc_on_root_with_blueprint(self):
+        response = client.get(url_for('doc'))
+        assert response.status_code == 200
+        assert response.content_type == 'text/html; charset=utf-8'
+
+    def test_default_apidoc_on_root_with_blueprint(self, app, client):
         blueprint = Blueprint('api', __name__, url_prefix='/api')
         restplus.Api(blueprint, version='1.0')
-        self.app.register_blueprint(blueprint)
+        app.register_blueprint(blueprint)
 
-        with self.context():
-            self.assertEqual(url_for('api.doc'), url_for('api.root'))
-            with self.app.test_client() as client:
-                response = client.get(url_for('api.doc'))
-                self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.content_type, 'text/html; charset=utf-8')
+        assert url_for('api.doc') == url_for('api.root')
 
-    def test_apidoc_with_custom_validator(self):
-        self.app.config['SWAGGER_VALIDATOR_URL'] = 'http://somewhere.com/validator'
-        restplus.Api(self.app, version='1.0')
+        response = client.get(url_for('api.doc'))
+        assert response.status_code == 200
+        assert response.content_type == 'text/html; charset=utf-8'
 
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.content_type, 'text/html; charset=utf-8')
-                self.assertIn('validatorUrl: "http://somewhere.com/validator" || null,', str(response.data))
+    def test_apidoc_with_custom_validator(self, app, client):
+        app.config['SWAGGER_VALIDATOR_URL'] = 'http://somewhere.com/validator'
+        restplus.Api(app, version='1.0')
 
-    def test_apidoc_doc_expansion_parameter(self):
-        restplus.Api(self.app)
+        response = client.get(url_for('doc'))
+        assert response.status_code == 200
+        assert response.content_type == 'text/html; charset=utf-8'
+        assert 'validatorUrl: "http://somewhere.com/validator" || null,' in str(response.data)
 
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('docExpansion: "none"', str(response.data))
+    def test_apidoc_doc_expansion_parameter(self, app, client):
+        restplus.Api(app)
 
-        self.app.config['SWAGGER_UI_DOC_EXPANSION'] = 'list'
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('docExpansion: "list"', str(response.data))
+        response = client.get(url_for('doc'))
+        assert 'docExpansion: "none"' in str(response.data)
 
-        self.app.config['SWAGGER_UI_DOC_EXPANSION'] = 'full'
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('docExpansion: "full"', str(response.data))
+        app.config['SWAGGER_UI_DOC_EXPANSION'] = 'list'
+        response = client.get(url_for('doc'))
+        assert 'docExpansion: "list"' in str(response.data)
 
-    def test_apidoc_doc_jsoneditor_parameter(self):
-        restplus.Api(self.app)
+        app.config['SWAGGER_UI_DOC_EXPANSION'] = 'full'
+        response = client.get(url_for('doc'))
+        assert 'docExpansion: "full"' in str(response.data)
 
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('jsonEditor: false', str(response.data))
+    def test_apidoc_doc_jsoneditor_parameter(self, app, client):
+        restplus.Api(app)
 
-        self.app.config['SWAGGER_UI_JSONEDITOR'] = False
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('jsonEditor: false', str(response.data))
+        response = client.get(url_for('doc'))
+        assert 'jsonEditor: false' in str(response.data)
 
-        self.app.config['SWAGGER_UI_JSONEDITOR'] = True
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('jsonEditor: true', str(response.data))
+        app.config['SWAGGER_UI_JSONEDITOR'] = False
+        response = client.get(url_for('doc'))
+        assert 'jsonEditor: false' in str(response.data)
 
-    def test_apidoc_doc_language_parameter(self):
-        restplus.Api(self.app)
+        app.config['SWAGGER_UI_JSONEDITOR'] = True
+        response = client.get(url_for('doc'))
+        assert 'jsonEditor: true' in str(response.data)
 
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertNotIn('lang/translator.js', str(response.data))
-                self.assertNotIn('lang/en.js', str(response.data))
-                self.assertNotIn('lang/fr.js', str(response.data))
-                self.assertNotIn('window.SwaggerTranslator', str(response.data))
+    def test_apidoc_doc_language_parameter(self, app, client):
+        restplus.Api(app)
 
-        self.app.config['SWAGGER_UI_LANGUAGES'] = ['en', 'fr']
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('lang/translator.js', str(response.data))
-                self.assertIn('lang/en.js', str(response.data))
-                self.assertIn('lang/fr.js', str(response.data))
-                self.assertIn('window.SwaggerTranslator', str(response.data))
+        response = client.get(url_for('doc'))
+        assert 'lang/translator.js' not in str(response.data)
+        assert 'lang/en.js' not in str(response.data)
+        assert 'lang/fr.js' not in str(response.data)
+        assert 'window.SwaggerTranslator' not in str(response.data)
 
-    def test_apidoc_doc_minified(self):
-        restplus.Api(self.app)
+        app.config['SWAGGER_UI_LANGUAGES'] = ['en', 'fr']
+        response = client.get(url_for('doc'))
+        assert 'lang/translator.js' in str(response.data)
+        assert 'lang/en.js' in str(response.data)
+        assert 'lang/fr.js' in str(response.data)
+        assert 'window.SwaggerTranslator' in str(response.data)
 
-        self.app.config['DEBUG'] = True
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('swagger-ui.js', str(response.data))
+    def test_apidoc_doc_minified(self, app, client):
+        restplus.Api(app)
 
-        self.app.config['DEBUG'] = False
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertIn('swagger-ui.min.js', str(response.data))
+        app.config['DEBUG'] = True
+        response = client.get(url_for('doc'))
+        assert 'swagger-ui.js' in str(response.data)
 
-    def test_custom_apidoc_url(self):
-        restplus.Api(self.app, version='1.0', doc='/doc/')
+        app.config['DEBUG'] = False
+        response = client.get(url_for('doc'))
+        assert 'swagger-ui.min.js' in str(response.data)
 
-        with self.context():
-            with self.app.test_client() as client:
-                doc_url = url_for('doc')
-                root_url = url_for('root')
+    def test_custom_apidoc_url(self, app, client):
+        restplus.Api(app, version='1.0', doc='/doc/')
 
-                self.assertNotEqual(doc_url, root_url)
+        doc_url = url_for('doc')
+        root_url = url_for('root')
 
-                response = client.get(root_url)
-                self.assertEquals(response.status_code, 404)
+        assert doc_url != root_url
 
-                self.assertEqual(doc_url, '/doc/')
-                response = client.get(doc_url)
-                self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.content_type, 'text/html; charset=utf-8')
+        response = client.get(root_url)
+        assert response.status_code == 404
 
-    def test_custom_api_prefix(self):
+        assert doc_url == '/doc/'
+        response = client.get(doc_url)
+        assert response.status_code == 200
+        assert response.content_type == 'text/html; charset=utf-8'
+
+    def test_custom_api_prefix(self, app, client):
         prefix = '/api'
-        api = restplus.Api(self.app, prefix=prefix)
+        api = restplus.Api(app, prefix=prefix)
         api.namespace('resource')
-        with self.context():
-            root_url = url_for('root')
-            self.assertEqual(root_url, prefix)
+        assert url_for('root') == prefix
 
-    def test_custom_apidoc_page(self):
-        api = restplus.Api(self.app, version='1.0')
+    def test_custom_apidoc_page(self, app, client):
+        api = restplus.Api(app, version='1.0')
         content = 'My Custom API Doc'
 
         @api.documentation
         def api_doc():
             return content
 
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('doc'))
-                self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.data.decode('utf8'), content)
+        response = client.get(url_for('doc'))
+        assert response.status_code == 200
+        assert response.data.decode('utf8') == content
 
-    def test_custom_apidoc_page_lazy(self):
+    def test_custom_apidoc_page_lazy(self, app, client):
         blueprint = Blueprint('api', __name__, url_prefix='/api')
         api = restplus.Api(blueprint, version='1.0')
         content = 'My Custom API Doc'
@@ -179,21 +147,17 @@ class APIDocTestCase(TestCase):
         def api_doc():
             return content
 
-        self.app.register_blueprint(blueprint)
+        app.register_blueprint(blueprint)
 
-        with self.context():
-            with self.app.test_client() as client:
-                response = client.get(url_for('api.doc'))
-                self.assertEquals(response.status_code, 200)
-                self.assertEquals(response.data.decode('utf8'), content)
+        response = client.get(url_for('api.doc'))
+        assert response.status_code == 200
+        assert response.data.decode('utf8') == content
 
-    def test_disabled_apidoc(self):
-        restplus.Api(self.app, version='1.0', doc=False)
+    def test_disabled_apidoc(self, app, client):
+        restplus.Api(app, version='1.0', doc=False)
 
-        with self.context():
-            with self.app.test_client() as client:
-                with self.assertRaises(BuildError):
-                    url_for('doc')
+        with pytest.raises(BuildError):
+            url_for('doc')
 
-                response = client.get(url_for('root'))
-                self.assertEquals(response.status_code, 404)
+        response = client.get(url_for('root'))
+        assert response.status_code == 404
