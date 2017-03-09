@@ -45,7 +45,7 @@ long_description = '\n'.join((
 
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
-tests_require = ['pytest', 'pytest-sugar', 'pytest-flask', 'pytest-mock', 'pytest-faker', 'blinker', 'tzlocal']
+tests_require = ['pytest', 'pytest-sugar', 'pytest-flask', 'pytest-mock', 'pytest-faker', 'blinker', 'tzlocal', 'mock']
 install_requires = ['Flask>=0.8', 'six>=1.3.0', 'pytz', 'aniso8601>=0.82', 'jsonschema']
 doc_require = ['sphinx', 'alabaster', 'sphinx_issues']
 qa_require = ['pytest-cover', 'flake8']
