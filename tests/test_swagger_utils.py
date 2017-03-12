@@ -122,9 +122,7 @@ class ParseDocstringTest(object):
         assert parsed['raw'] is None
         assert parsed['summary'] is None
         assert parsed['details'] is None
-        assert parsed['returns'] is None
         assert parsed['raises'] == {}
-        assert parsed['params'] == []
 
     def test_single_line(self):
         def func():
@@ -136,59 +134,73 @@ class ParseDocstringTest(object):
         assert parsed['raw'] == 'Some summary'
         assert parsed['summary'] == 'Some summary'
         assert parsed['details'] is None
-        assert parsed['returns'] is None
         assert parsed['raises'] == {}
-        assert parsed['params'] == []
 
     def test_multi_line(self):
         def func():
             '''
             Some summary
-            Some details
+            Some more summary
             '''
             pass
 
         parsed = parse_docstring(func)
 
-        assert parsed['raw'] == 'Some summary\nSome details'
-        assert parsed['summary'] == 'Some summary'
-        assert parsed['details'] == 'Some details'
-        assert parsed['returns'] is None
+        assert parsed['raw'] == 'Some summary\nSome more summary'
+        assert parsed['summary'] == 'Some summary\nSome more summary'
+        assert parsed['details'] is None
         assert parsed['raises'] == {}
-        assert parsed['params'] == []
 
-    def test_multi_line_and_dot(self):
+    def test_multi_paragraph(self):
         def func():
             '''
-            Some summary. bla bla
-            Some details
+            Some summary. Some more summary
+
+            Some details. Some more details
+
+            Even more details
             '''
             pass
 
         parsed = parse_docstring(func)
 
-        assert parsed['raw'] == 'Some summary. bla bla\nSome details'
-        assert parsed['summary'] == 'Some summary'
-        assert parsed['details'] == 'bla bla\nSome details'
-        assert parsed['returns'] is None
+        assert parsed['raw'] == 'Some summary. Some more summary\n\nSome details. Some more details\n\n' \
+            'Even more details'
+        assert parsed['summary'] == 'Some summary. Some more summary'
+        assert parsed['details'] == 'Some details. Some more details\n\nEven more details'
         assert parsed['raises'] == {}
-        assert parsed['params'] == []
 
     def test_raises(self):
         def func():
             '''
-            Some summary.
+            Some summary
+
             :raises SomeException: in case of something
             '''
             pass
 
         parsed = parse_docstring(func)
 
-        assert parsed['raw'] == 'Some summary.\n:raises SomeException: in case of something'
+        assert parsed['raw'] == 'Some summary\n\n:raises SomeException: in case of something'
         assert parsed['summary'] == 'Some summary'
         assert parsed['details'] is None
-        assert parsed['returns'] is None
-        assert parsed['params'] == []
-        assert parsed['raises'] == {
-            'SomeException': 'in case of something'
-        }
+        assert parsed['raises'] == {'SomeException': 'in case of something'}
+
+    def test_sphinx(self):
+        def func():
+            '''
+            Some summary
+
+            :param id: The ID
+            :type id: int
+            :returns: Nothing
+            :rtype: None
+            '''
+            pass
+
+        parsed = parse_docstring(func)
+
+        assert parsed['raw'] == 'Some summary\n\n:param id: The ID\n:type id: int\n:returns: Nothing\n:rtype: None'
+        assert parsed['summary'] == 'Some summary'
+        assert parsed['details'] is None
+        assert parsed['raises'] == {}
