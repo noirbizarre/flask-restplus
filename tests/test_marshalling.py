@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import pytest
+
 from flask_restplus import (
     marshal, marshal_with, marshal_with_field, fields, Api, Resource
 )
@@ -254,8 +256,8 @@ class MarshallingTest(object):
                                 ('bar', OrderedDict([('a', 1), ('b', 2)]))])
         assert output == expected
 
+    @pytest.mark.options(debug=True)
     def test_will_prettyprint_json_in_debug_mode(self, app, client):
-        app.config['DEBUG'] = True
         api = Api(app)
 
         class Foo1(Resource):

@@ -432,9 +432,9 @@ class ErrorsTest(object):
         allow = set(method.strip() for method in allow.split(','))
         assert allow == set(['HEAD', 'OPTIONS', 'GET'])
 
+    @pytest.mark.options(debug=True)
     def test_exception_header_forwarded(self, app, client):
         '''Ensure that HTTPException's headers are extended properly'''
-        app.config['DEBUG'] = True
         api = restplus.Api(app)
 
         class NotModified(HTTPException):
