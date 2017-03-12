@@ -14,6 +14,14 @@ class ErrorsTest(object):
         api = restplus.Api(app)
         api.add_resource(Foo, '/test/')
 
+        res = client.get('/test/', headers={'Accept': None})
+        assert res.status_code == 200
+        assert res.content_type == 'application/json'
+
+    def test_accept_application_json_by_default(self, app, client):
+        api = restplus.Api(app)
+        api.add_resource(Foo, '/test/')
+
         res = client.get('/test/', headers=[('Accept', 'application/json')])
         assert res.status_code == 200
         assert res.content_type == 'application/json'

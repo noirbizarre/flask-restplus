@@ -7,7 +7,7 @@ import pytest
 from flask import Blueprint, abort
 from flask.signals import got_request_exception
 
-from werkzeug.exceptions import HTTPException, BadRequest, NotFound
+from werkzeug.exceptions import HTTPException, BadRequest, NotFound, Aborter
 from werkzeug.http import quote_etag, unquote_etag
 
 import flask_restplus as restplus
@@ -178,7 +178,7 @@ class ErrorsTest(object):
 
         data = json.loads(response.data.decode('utf8'))
         assert data == {
-            'message': '400: Bad Request',
+            'message': str(BadRequest()),
             'test': 'value',
         }
 
@@ -364,7 +364,6 @@ class ErrorsTest(object):
     def test_handle_error(self, app):
         api = restplus.Api(app)
 
-        # with self.app.test_request_context("/foo"):
         response = api.handle_error(BadRequest())
         assert response.status_code == 400
         assert json.loads(response.data.decode()) == {
@@ -448,12 +447,12 @@ class ErrorsTest(object):
             def get_headers(self, *args, **kwargs):
                 return [('ETag', self.etag)]
 
+        custom_abort = Aborter(mapping={304: NotModified})
+
         @api.route('/foo')
         class Foo1(restplus.Resource):
             def get(self):
-                abort(304, etag='myETag')
-
-        abort.mapping.update({304: NotModified})
+                custom_abort(304, etag='myETag')
 
         foo = client.get('/foo')
         assert foo.get_etag() == unquote_etag(quote_etag('myETag'))

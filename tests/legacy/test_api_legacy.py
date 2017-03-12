@@ -10,7 +10,7 @@ from json import dumps, loads, JSONEncoder
 
 from flask import Blueprint, redirect, views, abort as flask_abort
 from flask.signals import got_request_exception
-from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
+from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound, Aborter
 from werkzeug.http import quote_etag, unquote_etag
 
 import flask_restplus as restplus
@@ -682,12 +682,13 @@ class APITest(object):
                 """Get a list of headers."""
                 return [('ETag', self.etag)]
 
+        custom_abort = Aborter(mapping={304: NotModified})
+
         class Foo1(restplus.Resource):
             def get(self):
-                flask_abort(304, etag='myETag')
+                custom_abort(304, etag='myETag')
 
         api.add_resource(Foo1, '/foo')
-        flask_abort.mapping.update({304: NotModified})
 
         foo = client.get('/foo')
         assert foo.get_etag() == unquote_etag(quote_etag('myETag'))
