@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import re
+import fnmatch
+
 from calendar import timegm
 from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_EVEN
@@ -20,7 +23,7 @@ from .utils import camel_to_dash, not_none
 
 __all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime', 'Date',
            'Boolean', 'Integer', 'Float', 'Arbitrary', 'Fixed',
-           'Nested', 'List', 'ClassName', 'Polymorph',
+           'Nested', 'List', 'ClassName', 'Polymorph', 'Wildcard',
            'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingError')
 
 
@@ -695,3 +698,64 @@ class Polymorph(Nested):
 
         data['mask'] = mask
         return Polymorph(mapping, **data)
+
+
+class Wildcard(List):
+    '''
+    Field for marshalling list of "unkown" fields.
+
+    :param cls_or_instance: The field type the list will contain.
+    '''
+    exclude = []
+    _exclude = ['__dict__', '__doc__', '__module__', '__weakref__']
+    # keep a track of the last object
+    _idx = 0
+    # cache the flat object
+    _flat = None
+    _obj = None
+    _cache = []
+    _last = None
+
+    def _flatten(self, obj):
+        if obj == self._obj and self._flat:
+            return self._flat
+        if isinstance(obj, dict):
+            self._flat = obj.items()
+        else:
+            self._flat = []
+            for attr in dir(obj):
+                if attr not in self._exclude:
+                    self._flat.append((attr, getattr(obj, attr)))
+
+        self._idx = 0
+        self._cache = []
+        self._obj = obj
+        return self._flat
+
+    @property
+    def key(self):
+        return self._last
+
+    def output(self, key, obj):
+        flat = self._flatten(obj)
+        value = None
+        reg = fnmatch.translate(key)
+
+        for idx, (objkey, val) in enumerate(flat):
+            if idx < self._idx:
+                continue
+            if objkey not in self._cache and \
+                    objkey not in self.exclude and \
+                    re.match(reg, objkey, re.IGNORECASE):
+                value = val
+                self._cache.append(objkey)
+                self._last = objkey
+                self._idx = idx
+                break
+
+        if value is None:
+            if self.default is not None:
+                return self.default
+            return None
+
+        return self.container.format(value)

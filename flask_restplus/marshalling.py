@@ -32,6 +32,8 @@ def marshal(data, fields, envelope=None, mask=None):
     OrderedDict([('data', OrderedDict([('a', 100)]))])
 
     """
+    # ugly local import to avoid dependency loop
+    from .fields import Wildcard
 
     def make(cls):
         if isinstance(cls, type):
@@ -49,9 +51,35 @@ def marshal(data, fields, envelope=None, mask=None):
             out = OrderedDict([(envelope, out)])
         return out
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
-              else make(v).output(k, data))
-             for k, v in fields.items())
+    items = []
+    keys = []
+    for dkey, val in fields.items():
+        key = dkey
+        if isinstance(val, dict):
+            value = marshal(data, val)
+        else:
+            field = make(val)
+            # exclude already parsed keys from the wildcard
+            if isinstance(field, Wildcard) and keys:
+                for tmp in keys:
+                    if tmp not in field.exclude:
+                        field.exclude.append(tmp)
+                keys = []
+            value = field.output(dkey, data)
+            if isinstance(field, Wildcard):
+                key = field.key or dkey
+                items.append((key, value))
+                while True:
+                    value = field.output(dkey, data)
+                    if value is None:
+                        break
+                    key = field.key
+                    items.append((key, value))
+                continue
+        keys.append(key)
+        items.append((key, value))
+
+    items = tuple(items)
 
     out = OrderedDict(items)
 

@@ -875,6 +875,76 @@ class ListFieldTest(BaseFieldTestMixin, FieldTestCase):
         self.assert_field(field, data, data)
 
 
+class WildcardFieldTest(BaseFieldTestMixin, FieldTestCase):
+    field_class = partial(fields.Wildcard, fields.String)
+
+    def test_defaults(self):
+        field = fields.Wildcard(fields.String)
+        assert not field.required
+        assert field.__schema__ == {'type': 'array', 'items': {'type': 'string'}}
+
+    def test_min_items(self):
+        field = fields.Wildcard(fields.String, min_items=5)
+        assert 'minItems' in field.__schema__
+        assert field.__schema__['minItems'] == 5
+
+    def test_max_items(self):
+        field = fields.Wildcard(fields.String, max_items=42)
+        assert 'maxItems' in field.__schema__
+        assert field.__schema__['maxItems'] == 42
+
+    def test_unique(self):
+        field = fields.Wildcard(fields.String, unique=True)
+        assert 'uniqueItems' in field.__schema__
+        assert field.__schema__['uniqueItems'] is True
+
+    def test_with_scoped_attribute_on_dict_or_obj(self):
+        class Test(object):
+            def __init__(self, data):
+                self.data = data
+
+        class Nested(object):
+            def __init__(self, value):
+                self.value = value
+
+        nesteds = [Nested(i) for i in ['a', 'b', 'c']]
+        test_obj = Test(nesteds)
+        test_dict = {'data': [{'value': 'a'}, {'value': 'b'}, {'value': 'c'}]}
+
+        field = fields.Wildcard(fields.String(attribute='value'), attribute='data')
+        assert ['a' == 'b', 'c'], field.output('whatever', test_obj)
+        assert ['a' == 'b', 'c'], field.output('whatever', test_dict)
+
+    def test_list_of_raw(self):
+        field = fields.Wildcard(fields.Raw)
+
+        data = [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]
+        expected = [OrderedDict([('a', 1), ('b', 1)]),
+                    OrderedDict([('a', 2), ('b', 1)]),
+                    OrderedDict([('a', 3), ('b', 1)])]
+        self.assert_field(field, data, expected)
+
+        data = [1, 2, 'a']
+        self.assert_field(field, data, data)
+
+    def test_wildcard(self, api):
+        wild1 = fields.Wildcard(fields.String)
+        wild2 = fields.Wildcard(fields.Integer)
+
+        wild_fields1 = api.model('WildcardModel1', {'*': wild1})
+        wild_fields2 = api.model('WildcardModel2', {'j*': wild2})
+
+        data = {'John': 12, 'bob': 42, 'Jane': '68'}
+        expected1 = {'John': '12', 'bob': '42', 'Jane': '68'}
+        expected2 = {'John': 12, 'Jane': 68}
+
+        result1 = api.marshal(data, wild_fields1)
+        result2 = api.marshal(data, wild_fields2)
+
+        assert expected1 == result1
+        assert expected2 == result2
+
+
 class ClassNameFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
     field_class = fields.ClassName
 
