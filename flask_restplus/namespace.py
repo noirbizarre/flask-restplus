@@ -192,6 +192,7 @@ class Namespace(object):
 
         :param ModelBase|Parse inputs: An expect model or request parser
         :param bool validate: whether to perform validation or not
+        :param str description: short model description
 
         '''
         expect = []
@@ -200,6 +201,8 @@ class Namespace(object):
             'expect': expect
         }
         for param in inputs:
+            if 'description' in kwargs and isinstance(param, Model):
+                param = (param, kwargs.get('description', ''))
             expect.append(param)
         return self.doc(**params)
 
