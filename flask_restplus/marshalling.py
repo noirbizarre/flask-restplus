@@ -71,7 +71,7 @@ def marshal(data, fields, envelope=None, mask=None):
                 items.append((key, value))
                 while True:
                     value = field.output(dkey, data)
-                    if value is None:
+                    if value is None or value == field.default:
                         break
                     key = field.key
                     items.append((key, value))

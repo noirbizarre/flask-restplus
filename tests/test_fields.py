@@ -930,19 +930,44 @@ class WildcardFieldTest(BaseFieldTestMixin, FieldTestCase):
     def test_wildcard(self, api):
         wild1 = fields.Wildcard(fields.String)
         wild2 = fields.Wildcard(fields.Integer)
+        wild3 = fields.Wildcard(fields.String)
+        wild4 = fields.Wildcard(fields.String, default='x')
 
         wild_fields1 = api.model('WildcardModel1', {'*': wild1})
         wild_fields2 = api.model('WildcardModel2', {'j*': wild2})
+        wild_fields3 = api.model('WildcardModel3', {'*': wild3})
+        wild_fields4 = api.model('WildcardModel4', {'*': wild4})
+
+        class Dummy(object):
+            john = 12
+            bob = '42'
+
+        class Dummy2(object):
+            pass
 
         data = {'John': 12, 'bob': 42, 'Jane': '68'}
+        data1_2 = data.copy()
+        data1_2.update({'toto': 72})
+        data3 = Dummy()
+        data4 = Dummy2()
         expected1 = {'John': '12', 'bob': '42', 'Jane': '68'}
+        expected1_2 = expected1.copy()
+        expected1_2.update({'toto': '72'})
         expected2 = {'John': 12, 'Jane': 68}
+        expected3 = {'john': '12', 'bob': '42'}
+        expected4 = {'*': 'x'}
 
         result1 = api.marshal(data, wild_fields1)
+        result1_2 = api.marshal(data1_2, wild_fields1)
         result2 = api.marshal(data, wild_fields2)
+        result3 = api.marshal(data3, wild_fields3)
+        result4 = api.marshal(data4, wild_fields4)
 
         assert expected1 == result1
+        assert expected1_2 == result1_2
         assert expected2 == result2
+        assert expected3 == result3
+        assert expected4 == result4
 
 
 class ClassNameFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import re
 import fnmatch
+import inspect
 
 from calendar import timegm
 from datetime import date, datetime
@@ -707,7 +708,6 @@ class Wildcard(List):
     :param cls_or_instance: The field type the list will contain.
     '''
     exclude = []
-    _exclude = ['__dict__', '__doc__', '__module__', '__weakref__']
     # keep a track of the last object
     _idx = 0
     # cache the flat object
@@ -723,9 +723,9 @@ class Wildcard(List):
             self._flat = obj.items()
         else:
             self._flat = []
-            for attr in dir(obj):
-                if attr not in self._exclude:
-                    self._flat.append((attr, getattr(obj, attr)))
+            attributes = inspect.getmembers(obj, lambda a: not(inspect.isroutine(a)))
+            for (key, val) in [a for a in attributes if not(a[0].startswith('__') and a[0].endswith('__'))]:
+                self._flat.append((key, val))
 
         self._idx = 0
         self._cache = []
