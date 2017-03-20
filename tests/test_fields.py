@@ -932,11 +932,18 @@ class WildcardFieldTest(BaseFieldTestMixin, FieldTestCase):
         wild2 = fields.Wildcard(fields.Integer)
         wild3 = fields.Wildcard(fields.String)
         wild4 = fields.Wildcard(fields.String, default='x')
+        wild5 = fields.Wildcard(fields.String)
+
+        mod5 = OrderedDict()
+        mod5['toto'] = fields.Integer
+        mod5['bob'] = fields.Integer
+        mod5['*'] = wild5
 
         wild_fields1 = api.model('WildcardModel1', {'*': wild1})
         wild_fields2 = api.model('WildcardModel2', {'j*': wild2})
         wild_fields3 = api.model('WildcardModel3', {'*': wild3})
         wild_fields4 = api.model('WildcardModel4', {'*': wild4})
+        wild_fields5 = api.model('WildcardModel5', mod5)
 
         class Dummy(object):
             john = 12
@@ -946,28 +953,26 @@ class WildcardFieldTest(BaseFieldTestMixin, FieldTestCase):
             pass
 
         data = {'John': 12, 'bob': 42, 'Jane': '68'}
-        data1_2 = data.copy()
-        data1_2.update({'toto': 72})
         data3 = Dummy()
         data4 = Dummy2()
+        data5 = {'John': 12, 'bob': 42, 'Jane': '68', 'toto': '72'}
         expected1 = {'John': '12', 'bob': '42', 'Jane': '68'}
-        expected1_2 = expected1.copy()
-        expected1_2.update({'toto': '72'})
         expected2 = {'John': 12, 'Jane': 68}
         expected3 = {'john': '12', 'bob': '42'}
         expected4 = {'*': 'x'}
+        expected5 = {'John': '12', 'bob': 42, 'Jane': '68', 'toto': 72}
 
         result1 = api.marshal(data, wild_fields1)
-        result1_2 = api.marshal(data1_2, wild_fields1)
         result2 = api.marshal(data, wild_fields2)
         result3 = api.marshal(data3, wild_fields3)
         result4 = api.marshal(data4, wild_fields4)
+        result5 = api.marshal(data5, wild_fields5)
 
         assert expected1 == result1
-        assert expected1_2 == result1_2
         assert expected2 == result2
         assert expected3 == result3
         assert expected4 == result4
+        assert expected5 == result5
 
 
 class ClassNameFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
