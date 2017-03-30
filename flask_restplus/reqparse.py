@@ -50,7 +50,7 @@ LOCATIONS = {
     'files': 'formData',
 }
 
-#: Maps Pyton primitives types to Swagger ones
+#: Maps Python primitives types to Swagger ones
 PY_TYPES = {
     int: 'integer',
     str: 'string',

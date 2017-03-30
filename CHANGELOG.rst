@@ -15,6 +15,7 @@ Current
 - Help message is now added to source error message instead of string interpolation (:issue:`147`)
 - Use pytest instead of nosetests
 - Upgrade to Swagger-UI 2.2.10
+- Fix typo in comments
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
