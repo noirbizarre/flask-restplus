@@ -29,6 +29,7 @@ PATH_TYPES = {
 #: Maps Pyton primitives types to Swagger ones
 PY_TYPES = {
     int: 'integer',
+    float: 'number',
     str: 'string',
     bool: 'boolean',
     None: 'void'
