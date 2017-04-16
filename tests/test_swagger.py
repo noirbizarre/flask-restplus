@@ -921,7 +921,7 @@ class SwaggerTest(object):
                     'type': int,
                     'in': 'query',
                 },
-                'int': {
+                'float': {
                     'type': float,
                     'in': 'query',
                 },
@@ -960,14 +960,14 @@ class SwaggerTest(object):
         parameters = dict((p['name'], p) for p in op['parameters'])
 
         assert parameters['int']['type'] == 'integer'
-        assert parameters['float']['type'] == 'float'
+        assert parameters['float']['type'] == 'number'
         assert parameters['str']['type'] == 'string'
         assert parameters['bool']['type'] == 'boolean'
 
         assert parameters['int-array']['type'] == 'array'
         assert parameters['int-array']['items']['type'] == 'integer'
         assert parameters['float-array']['type'] == 'array'
-        assert parameters['float-array']['items']['type'] == 'float'
+        assert parameters['float-array']['items']['type'] == 'number'
         assert parameters['str-array']['type'] == 'array'
         assert parameters['str-array']['items']['type'] == 'string'
         assert parameters['bool-array']['type'] == 'array'
