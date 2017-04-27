@@ -81,7 +81,7 @@ class Mask(OrderedDict):
                 fields = stack.pop()
             elif token == ',':
                 if previous in (',', '{', None):
-                    raise ParseError('Unexpected coma')
+                    raise ParseError('Unexpected comma')
             else:
                 fields[token] = True
 
