@@ -240,7 +240,7 @@ class Swagger(object):
                 method_doc['docstring'] = parse_docstring(method_impl)
                 method_params = self.expected_params(method_doc)
                 method_params = merge(method_params, method_doc.get('params', {}))
-                inherited_params = dict((k, v) for k, v in iteritems(params) if k in method_params)
+                inherited_params = OrderedDict((k, v) for k, v in iteritems(params) if k in method_params)
                 method_doc['params'] = merge(inherited_params, method_params)
             doc[method] = method_doc
         return doc
@@ -252,7 +252,7 @@ class Swagger(object):
 
         for expect in doc.get('expect', []):
             if isinstance(expect, RequestParser):
-                parser_params = dict((p['name'], p) for p in expect.__schema__)
+                parser_params = OrderedDict((p['name'], p) for p in expect.__schema__)
                 params.update(parser_params)
             elif isinstance(expect, ModelBase):
                 params['payload'] = not_none({
