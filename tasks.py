@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import
 
+from datetime import datetime
+
 from invoke import run, task
 
 from os.path import join, abspath, dirname
@@ -11,6 +13,10 @@ ROOT = abspath(join(dirname(__file__)))
 def lrun(cmd, *args, **kwargs):
     '''Run a command ensuring cwd is project root'''
     return run('cd {0} && {1}'.format(ROOT, cmd), *args, **kwargs)
+
+
+def build_args(*args):
+    return ' '.join(a for a in args if a)
 
 
 @task
@@ -29,16 +35,37 @@ def demo(ctx):
 
 
 @task
-def test(ctx):
+def test(ctx, profile=False):
     '''Run tests suite'''
-    lrun('pytest', pty=True)
+    kwargs = build_args(
+        '--benchmark-skip',
+        '--profile' if profile else None,
+    )
+    lrun('pytest {0}'.format(kwargs), pty=True)
+
+
+@task
+def benchmark(ctx, max_time=2, save=False, compare=False, histogram=False, profile=False, tox=False):
+    '''Run benchmarks'''
+    ts = datetime.now()
+    kwargs = build_args(
+        '--benchmark-max-time={0}'.format(max_time),
+        '--benchmark-autosave' if save else None,
+        '--benchmark-compare' if compare else None,
+        '--benchmark-histogram=histograms/{0:%Y%m%d-%H%M%S}'.format(ts) if histogram else None,
+        '--benchmark-cprofile=tottime' if profile else None,
+    )
+    cmd = 'pytest tests/benchmarks {0}'.format(kwargs)
+    if tox:
+        cmd = 'tox -- {0}'.format(cmd)
+    lrun(cmd, pty=True)
 
 
 @task
 def cover(ctx, html=False):
     '''Run tests suite with coverage'''
     extra = '--cov-report html' if html else ''
-    lrun('pytest --cov flask_restplus --cov-report term {0}'.format(extra), pty=True)
+    lrun('pytest --benchmark-skip --cov flask_restplus --cov-report term {0}'.format(extra), pty=True)
 
 
 @task

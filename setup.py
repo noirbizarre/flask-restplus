@@ -45,12 +45,15 @@ long_description = '\n'.join((
 
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
-tests_require = ['pytest', 'pytest-sugar', 'pytest-flask', 'pytest-mock', 'pytest-faker', 'blinker', 'tzlocal', 'mock']
+tests_require = [
+    'pytest', 'pytest-sugar', 'pytest-flask', 'pytest-mock', 'pytest-faker', 'pytest-benchmark==3.1.0a2',
+    'blinker', 'tzlocal', 'mock'
+]
 install_requires = ['Flask>=0.8', 'six>=1.3.0', 'pytz', 'aniso8601>=0.82', 'jsonschema']
 doc_require = ['sphinx', 'alabaster', 'sphinx_issues']
 qa_require = ['pytest-cover', 'flake8']
 ci_require = ['invoke>=0.13'] + qa_require + tests_require
-dev_require = ['minibench', 'tox'] + ci_require + doc_require
+dev_require = ['pytest-profiling', 'tox'] + ci_require + doc_require
 
 try:
     from unittest.mock import Mock
