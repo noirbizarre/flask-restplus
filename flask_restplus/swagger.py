@@ -3,7 +3,9 @@ from __future__ import unicode_literals, absolute_import
 
 import itertools
 import re
+import xml.etree.ElementTree as ET
 
+from docutils.core import publish_doctree
 from inspect import isclass, getdoc
 from collections import OrderedDict, Hashable
 from six import string_types, itervalues, iteritems, iterkeys
@@ -39,8 +41,6 @@ RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
 
 DEFAULT_RESPONSE_DESCRIPTION = 'Success'
 DEFAULT_RESPONSE = {'description': DEFAULT_RESPONSE_DESCRIPTION}
-
-RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)$', re.MULTILINE)
 
 
 def ref(model):
@@ -109,20 +109,24 @@ def _clean_header(header):
 
 def parse_docstring(obj):
     raw = getdoc(obj)
-    summary = raw.strip(' \n').split('\n')[0].split('.')[0] if raw else None
+    summary = []
     raises = {}
-    details = raw.replace(summary, '').lstrip('. \n').strip(' \n') if raw else None
-    for match in RE_RAISES.finditer(raw or ''):
-        raises[match.group('name')] = match.group('description')
-        if details:
-            details = details.replace(match.group(0), '')
+
+    if raw is not None:
+        tree = ET.fromstring(publish_doctree(raw).asdom().toxml())
+        summary = tree.findall('paragraph')
+
+        for field_list in tree.findall('field_list'):
+            for field in field_list.findall('field'):
+                match = re.match('^raises\s+(.*)$', field.find('field_name').text)
+                if match:
+                    raises[match.group(1)] = field.find('field_body').find('paragraph').text
+
     parsed = {
         'raw': raw,
-        'summary': summary or None,
-        'details': details or None,
-        'returns': None,
-        'params': [],
-        'raises': raises,
+        'summary': summary[0].text if summary else None,
+        'details': '\n\n'.join([s.text for s in summary[1:]]) if len(summary) > 1 else None,
+        'raises': raises
     }
     return parsed
 
