@@ -406,6 +406,35 @@ You can also use the :attr:`__schema_format__`, ``__schema_type__`` and
         __schema_example__ = 'hello, world'
 
 
+Skip fields which value is None
+-------------------------------
+
+You can skip those fields which values is ``None`` instead of marshaling those fields with JSON value, null.
+This feature is useful to reduce the size of response when you have a lots of fields which value may be None,
+but which fields are ``None`` are unpredictable.
+
+Let consider the following example with an optional ``skip_none`` keyword argument be set to True.
+
+.. code-block:: python
+
+    >>> from flask_restplus import Model, fields, marshal_with
+    >>> import json
+    >>> model = Model('Model', {
+    ...     'name': fields.String,
+    ...     'address_1': fields.String,
+    ...     'address_2': fields.String
+    ... })
+    >>> @marshal_with(model, skip_none=True)
+    ... def get():
+    ...     return {'name': 'John', 'address_1': None}
+    ...
+    >>> get()
+    OrderedDict([('name', 'John')])
+
+You can see that ``address_1`` and ``address_2`` are skipped by :func:`marshal_with`.
+``address_1`` be skipped because value is ``None``.
+``address_2`` be skipped because the dictionary return by ``get()`` have no key, ``address_2``.
+
 Define model using JSON Schema
 ------------------------------
 

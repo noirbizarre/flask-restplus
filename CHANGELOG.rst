@@ -16,6 +16,7 @@ Current
 - Use pytest instead of nosetests
 - Upgrade to Swagger-UI 2.2.10
 - Fix typo in comments
+- Add an optional key argument, ``skip_none``, in :func:`marshal_with` and :func:`marshal`
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
