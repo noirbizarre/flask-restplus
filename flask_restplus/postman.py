@@ -4,10 +4,7 @@ from __future__ import unicode_literals, absolute_import
 from time import time
 from uuid import uuid5, NAMESPACE_URL
 
-try:
-    from urllib import urlencode
-except:
-    from urllib.parse import urlencode
+from six.moves.urllib.parse import urlencode
 
 
 def clean(data):
