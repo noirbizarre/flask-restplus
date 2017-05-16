@@ -57,7 +57,9 @@ def benchmark(ctx, max_time=2, save=False, compare=False, histogram=False, profi
     )
     cmd = 'pytest tests/benchmarks {0}'.format(kwargs)
     if tox:
-        cmd = 'tox -- {0}'.format(cmd)
+        envs = lrun('tox -l', hide=True).stdout.splitlines()
+        envs = ','.join(e for e in envs if e != 'doc')
+        cmd = 'tox -e {envs} -- {cmd}'.format(envs=envs, cmd=cmd)
     lrun(cmd, pty=True)
 
 
