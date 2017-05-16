@@ -49,7 +49,7 @@ if [ "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" != "master" ]; then
     pip install -e .[ci]
 
     # Perform benchmark and save result for comparison
-    inv benchmark -m 4 -s
+    inv benchmark --max-time 4 --save
 
     # Bench the current commit that was pushed
     git checkout -f "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}"
@@ -58,6 +58,6 @@ if [ "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" != "master" ]; then
     pip install -e .[ci]
 
     # Perform benchmark and compare with previous result
-    inv benchmark -m 4 -s
+    inv benchmark --max-time 4 --compare
 
 fi
