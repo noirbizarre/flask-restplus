@@ -5,9 +5,10 @@ import copy
 import re
 import warnings
 
-from collections import OrderedDict, MutableMapping
+from collections import MutableMapping
 from six import iteritems, itervalues
 
+from ._compat import OrderedDict
 from .mask import Mask
 from .errors import abort
 

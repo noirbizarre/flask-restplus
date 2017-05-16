@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 import re
 
-from collections import OrderedDict
 from copy import deepcopy
 from six import iteritems
+
+from ._compat import OrderedDict
 
 
 FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')

@@ -5,13 +5,14 @@ import itertools
 import re
 
 from inspect import isclass, getdoc
-from collections import OrderedDict, Hashable
+from collections import Hashable
 from six import string_types, itervalues, iteritems, iterkeys
 
 from flask import current_app
 from werkzeug.routing import parse_rule
 
 from . import fields
+from ._compat import OrderedDict
 from .model import Model, ModelBase
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from collections import OrderedDict
 from functools import wraps
 
 from flask import request, current_app, has_app_context
 
+from ._compat import OrderedDict
 from .mask import Mask, apply as apply_mask
 from .utils import unpack
 

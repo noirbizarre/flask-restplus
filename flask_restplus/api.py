@@ -8,7 +8,6 @@ import operator
 import re
 import sys
 
-from collections import OrderedDict
 from functools import wraps, partial
 from types import MethodType
 
@@ -26,6 +25,7 @@ from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import BaseResponse
 
 from . import apidoc
+from ._compat import OrderedDict
 from .mask import ParseError, MaskError
 from .namespace import Namespace
 from .postman import PostmanCollectionV1

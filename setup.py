@@ -1,12 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # flake8: noqa
-from __future__ import unicode_literals
 
+import logging
 import re
 import sys
 
-from setuptools import setup, find_packages
+from distutils import log
+from setuptools import Extension, setup, find_packages
+
+try:
+    sys.pypy_version_info
+    PYPY = True
+except AttributeError:
+    PYPY = False
+
+if PYPY:
+    CYTHON = False
+else:
+    try:
+        from Cython.Distutils import build_ext
+        from Cython.Build import cythonize
+        CYTHON = True
+    except ImportError:
+        # Logs are visible with pip install -v
+        log.warn('Cython is not installed, some optimization won\'t be available')
+        CYTHON = False
+
 
 RE_REQUIREMENT = re.compile(r'^\s*-r\s*(?P<filename>.*)$')
 
@@ -55,10 +75,24 @@ qa_require = ['pytest-cover', 'flake8']
 ci_require = ['invoke>=0.13'] + qa_require + tests_require
 dev_require = ['pytest-profiling', 'tox'] + ci_require + doc_require
 
+if CYTHON and sys.version_info[0:2] < (3, 5):
+    install_requires += ['cyordereddict']  # OrderedDict has been rewitten in C in Python 3.5
+
 try:
     from unittest.mock import Mock
 except:
     tests_require += ['mock']
+
+if CYTHON:
+    cmdclass = {'build_ext': build_ext}
+    extensions = cythonize([
+        Extension('flask_restplus.marshalling', ['flask_restplus/marshalling.py']),
+        Extension('flask_restplus.mask', ['flask_restplus/mask.py']),
+        Extension('flask_restplus.utils', ['flask_restplus/utils.py'])
+    ])
+else:
+    cmdclass = {}
+    extensions = []
 
 setup(
     name='flask-restplus',
@@ -79,6 +113,8 @@ setup(
         'ci': ci_require,
         'dev': dev_require,
     },
+    cmdclass=cmdclass,
+    ext_modules=extensions,
     license='MIT',
     use_2to3=True,
     zip_safe=False,

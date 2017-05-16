@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from collections import OrderedDict
 from datetime import date, datetime
 from decimal import Decimal
 from functools import partial
@@ -11,6 +10,7 @@ import pytest
 
 from flask import Blueprint
 from flask_restplus import fields, Api
+from flask_restplus._compat import OrderedDict
 
 
 class FieldTestCase(object):

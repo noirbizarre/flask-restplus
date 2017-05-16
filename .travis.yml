@@ -7,7 +7,11 @@ python:
   - 3.6
   - pypy
   - pypy3
+env:
+  - CYTHON=true
+  - CYTHON=false
 install:
+  - if [[ $CYTHON == true ]]; then pip install Cython; fi
   - pip install -e .[ci]
 script:
   - inv cover qa
@@ -18,3 +22,8 @@ after_success:
 matrix:
   allow_failures:
     - python: pypy3
+  exclude:
+    - python: pypy
+      env: CYTHON=true
+    - python: pypy3
+      env: CYTHON=true

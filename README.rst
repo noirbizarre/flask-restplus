@@ -43,11 +43,11 @@ You can install Flask-Restplus with pip:
 
     $ pip install flask-restplus
 
-or with easy_install:
+You can benefit from some optimization if Cython is installed before flask-restplus:
 
 .. code-block:: console
 
-    $ easy_install flask-restplus
+    $ pip install Cython flask-restplus
 
 
 Quick start
