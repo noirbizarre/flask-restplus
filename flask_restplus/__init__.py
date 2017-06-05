@@ -17,6 +17,7 @@ __all__ = (
     '__description__',
     'Api',
     'Resource',
+    'Namespace',
     'apidoc',
     'marshal',
     'marshal_with',
