@@ -51,7 +51,7 @@ def marshal_nested_with_mask(app):
         return marshal(family(), family_fields)
 
 
-@pytest.mark.benchmark(group='marhsalling')
+@pytest.mark.benchmark(group='marshalling')
 class MarshallingBenchmark(object):
     def bench_marshal_simple(self, benchmark):
         benchmark(marshal_simple)
