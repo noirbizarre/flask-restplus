@@ -22,7 +22,6 @@ from jsonschema import RefResolver
 from werkzeug import cached_property
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
-from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import BaseResponse
 
 from . import apidoc
@@ -33,6 +32,7 @@ from .resource import Resource
 from .swagger import Swagger
 from .utils import default_id, camel_to_dash, unpack
 from .representations import output_json
+from ._http import HTTPStatus
 
 RE_RULES = re.compile('(<.*>)')
 
@@ -354,14 +354,14 @@ class Api(object):
         return func
 
     def render_root(self):
-        self.abort(404)
+        self.abort(HTTPStatus.NOT_FOUND)
 
     def render_doc(self):
         '''Override this method to customize the documentation page'''
         if self._doc_view:
             return self._doc_view()
         elif not self._doc:
-            self.abort(404)
+            self.abort(HTTPStatus.NOT_FOUND)
         return apidoc.ui_for(self)
 
     def default_endpoint(self, resource, namespace):
@@ -580,36 +580,36 @@ class Api(object):
         if e.__class__ in self.error_handlers:
             handler = self.error_handlers[e.__class__]
             result = handler(e)
-            default_data, code, headers = unpack(result, 500)
+            default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif isinstance(e, HTTPException):
-            code = e.code
+            code = HTTPStatus(e.code)
             default_data = {
-                'message': getattr(e, 'description', HTTP_STATUS_CODES.get(code, ''))
+                'message': getattr(e, 'description', code.phrase)
             }
             headers = e.get_response().headers
         elif self._default_error_handler:
             result = self._default_error_handler(e)
-            default_data, code, headers = unpack(result, 500)
+            default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
         else:
-            code = 500
+            code = HTTPStatus.INTERNAL_SERVER_ERROR
             default_data = {
-                'message': HTTP_STATUS_CODES.get(code, str(e)),
+                'message': code.phrase,
             }
 
         default_data['message'] = default_data.get('message', str(e))
         data = getattr(e, 'data', default_data)
         fallback_mediatype = None
 
-        if code >= 500:
+        if code >= HTTPStatus.INTERNAL_SERVER_ERROR:
             exc_info = sys.exc_info()
             if exc_info[1] is None:
                 exc_info = None
             current_app.log_exception(exc_info)
 
-        elif code == 404 and current_app.config.get("ERROR_404_HELP", True):
+        elif code == HTTPStatus.NOT_FOUND and current_app.config.get("ERROR_404_HELP", True):
             data['message'] = self._help_on_404(data.get('message', None))
 
-        elif code == 406 and self.default_mediatype is None:
+        elif code == HTTPStatus.NOT_ACCEPTABLE and self.default_mediatype is None:
             # if we are handling NotAcceptable (406), make sure that
             # make_response uses a representation we support as the
             # default mediatype (so that make_response doesn't throw
@@ -623,7 +623,7 @@ class Api(object):
 
         resp = self.make_response(data, code, headers, fallback_mediatype=fallback_mediatype)
 
-        if code == 401:
+        if code == HTTPStatus.UNAUTHORIZED:
             resp = self.unauthorized(resp)
         return resp
 
@@ -779,7 +779,7 @@ class SwaggerView(Resource):
     '''Render the Swagger specifications as JSON'''
     def get(self):
         schema = self.api.__schema__
-        return schema, 500 if 'error' in schema else 200
+        return schema, HTTPStatus.INTERNAL_SERVER_ERROR if 'error' in schema else HTTPStatus.OK
 
     def mediatypes(self):
         return ['application/json']
@@ -787,9 +787,9 @@ class SwaggerView(Resource):
 
 def mask_parse_error_handler(error):
     '''When a mask can't be parsed'''
-    return {'message': 'Mask parse error: {0}'.format(error)}, 400
+    return {'message': 'Mask parse error: {0}'.format(error)}, HTTPStatus.BAD_REQUEST
 
 
 def mask_error_handler(error):
     '''When any error occurs on mask'''
-    return {'message': 'Mask error: {0}'.format(error)}, 400
+    return {'message': 'Mask error: {0}'.format(error)}, HTTPStatus.BAD_REQUEST

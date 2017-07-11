@@ -14,6 +14,7 @@ from werkzeug import exceptions
 from .errors import abort, SpecsError
 from .marshalling import marshal
 from .model import Model
+from ._http import HTTPStatus
 
 
 class ParseResult(dict):
@@ -179,7 +180,7 @@ class Argument(object):
 
         if bundle_errors:
             return ValueError(error), errors
-        abort(400, 'Input payload validation failed', errors=errors)
+        abort(HTTPStatus.BAD_REQUEST, 'Input payload validation failed', errors=errors)
 
     def parse(self, request, bundle_errors=False):
         '''
@@ -360,7 +361,7 @@ class RequestParser(object):
             if found or arg.store_missing:
                 result[arg.dest or arg.name] = value
         if errors:
-            abort(400, 'Input payload validation failed', errors=errors)
+            abort(HTTPStatus.BAD_REQUEST, 'Input payload validation failed', errors=errors)
 
         if strict and req.unparsed_arguments:
             arguments = ', '.join(req.unparsed_arguments.keys())

@@ -12,6 +12,7 @@ from .marshalling import marshal, marshal_with
 from .model import Model, SchemaModel
 from .reqparse import RequestParser
 from .utils import merge
+from ._http import HTTPStatus
 
 
 class Namespace(object):
@@ -212,7 +213,7 @@ class Namespace(object):
         field.__apidoc__ = merge(getattr(field, '__apidoc__', {}), {'as_list': True})
         return field
 
-    def marshal_with(self, fields, as_list=False, code=200, description=None, **kwargs):
+    def marshal_with(self, fields, as_list=False, code=HTTPStatus.OK, description=None, **kwargs):
         '''
         A decorator specifying the fields to use for serialization.
 

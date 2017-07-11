@@ -15,6 +15,7 @@ from . import fields
 from .model import Model, ModelBase
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
+from ._http import HTTPStatus
 
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
@@ -424,7 +425,7 @@ class Swagger(object):
                         responses[code]['schema'] = self.serialize_schema(model)
                     self.process_headers(responses[code], doc, method, kwargs.get('headers'))
             if 'model' in d:
-                code = str(d.get('default_code', 200))
+                code = str(d.get('default_code', HTTPStatus.OK))
                 if code not in responses:
                     responses[code] = self.process_headers(DEFAULT_RESPONSE.copy(), doc, method)
                 responses[code]['schema'] = self.serialize_schema(d['model'])
@@ -439,7 +440,7 @@ class Swagger(object):
                             break
 
         if not responses:
-            responses['200'] = self.process_headers(DEFAULT_RESPONSE.copy(), doc, method)
+            responses[str(HTTPStatus.OK.value)] = self.process_headers(DEFAULT_RESPONSE.copy(), doc, method)
         return responses
 
     def process_headers(self, response, doc, method=None, headers=None):
