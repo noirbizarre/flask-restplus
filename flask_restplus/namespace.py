@@ -288,6 +288,10 @@ class Namespace(object):
         header.update(kwargs)
         return self.doc(headers={name: header})
 
+    def produces(self, mimetypes):
+        '''A decorator to specify the MIME types the API can produce'''
+        return self.doc(produces=mimetypes)
+
     def deprecated(self, func):
         '''A decorator to mark a resource or a method as deprecated'''
         return self.doc(deprecated=True)(func)
