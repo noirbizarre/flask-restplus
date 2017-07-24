@@ -40,7 +40,7 @@ Here's an example directory structure::
 The `app` module will serve as a main application entry point following one of the classic
 Flask patterns (See :ref:`flask:larger-applications` and :ref:`flask:app-factories`).
 
-The `core` module is an example, it caontains the business logic.
+The `core` module is an example, it contains the business logic.
 In fact, you call it whatever you want, and there can be many packages.
 
 The `apis` package will be your main API entry point that you need to import and register on the application,
