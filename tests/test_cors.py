@@ -22,6 +22,25 @@ class ErrorsTest(object):
         assert 'OPTIONS' in res.headers['Access-Control-Allow-Methods']
         assert 'GET' in res.headers['Access-Control-Allow-Methods']
 
+    def test_crossdomain_dictionary(self, app, client):
+        class Foo(Resource):
+            @cors.crossdomain(origin='*')
+            def get(self):
+                # dict is not a standard flask response type,
+                # used to cause errors with make_response() in cors.py
+                return {"a": 5}
+
+        api = Api(app)
+        api.add_resource(Foo, '/test/')
+
+        res = client.get('/test/')
+        assert res.status_code == 200
+        assert res.headers['Access-Control-Allow-Origin'] == '*'
+        assert res.headers['Access-Control-Max-Age'] == '21600'
+        assert 'HEAD' in res.headers['Access-Control-Allow-Methods']
+        assert 'OPTIONS' in res.headers['Access-Control-Allow-Methods']
+        assert 'GET' in res.headers['Access-Control-Allow-Methods']
+
     def test_access_control_expose_headers(self, app, client):
         class Foo(Resource):
             @cors.crossdomain(origin='*',
