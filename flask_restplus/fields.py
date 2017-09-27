@@ -189,6 +189,9 @@ class Nested(Raw):
     :param dict model: The model dictionary to nest
     :param bool allow_null: Whether to return None instead of a dictionary
         with null keys, if a nested dictionary has all-null keys
+    :param bool skip_none: Optional key will be used to eliminate inner fields
+                           which value is None or the inner field's key not
+                           exist in data
     :param kwargs: If ``default`` keyword argument is present, a nested
         dictionary will be marshaled as its value if nested dictionary is
         all-null keys (e.g. lets you return an empty JSON object instead of

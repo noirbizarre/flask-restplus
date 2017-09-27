@@ -435,6 +435,21 @@ You can see that ``address_1`` and ``address_2`` are skipped by :func:`marshal_w
 ``address_1`` be skipped because value is ``None``.
 ``address_2`` be skipped because the dictionary return by ``get()`` have no key, ``address_2``.
 
+Skip none in Nested fields
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If your module use :class:`fields.Nested`, you need to pass ``skip_none=True`` keyword argument to :class:`fields.Nested`.
+
+.. code-block:: python
+
+    >>> from flask_restplus import Model, fields, marshal_with
+    >>> import json
+    >>> model = Model('Model', {
+    ...     'name': fields.String,
+    ...     'location': fields.Nested(location_model, skip_none=True)
+    ... })
+
+
 Define model using JSON Schema
 ------------------------------
 
