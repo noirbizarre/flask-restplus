@@ -41,7 +41,7 @@ def test(ctx, profile=False):
         '--benchmark-skip',
         '--profile' if profile else None,
     )
-    lrun('pytest {0}'.format(kwargs), pty=True)
+    lrun('py.test {0}'.format(kwargs), pty=True)
 
 
 @task
