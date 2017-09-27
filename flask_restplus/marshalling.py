@@ -55,12 +55,12 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None):
             out = OrderedDict([(envelope, out)])
         return out
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
+    items = ((k, marshal(data, v, skip_none=skip_none) if isinstance(v, dict)
               else make(v).output(k, data))
              for k, v in fields.items())
 
     if skip_none:
-        items = ((k, v) for k, v in items if v is not None)
+        items = ((k, v) for k, v in items if v is not None and v != OrderedDict())
 
     out = OrderedDict(items)
 

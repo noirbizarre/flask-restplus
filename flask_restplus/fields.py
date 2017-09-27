@@ -196,10 +196,11 @@ class Nested(Raw):
     '''
     __schema_type__ = None
 
-    def __init__(self, model, allow_null=False, as_list=False, **kwargs):
+    def __init__(self, model, allow_null=False, skip_none=False, as_list=False, **kwargs):
         self.model = model
         self.as_list = as_list
         self.allow_null = allow_null
+        self.skip_none = skip_none
         super(Nested, self).__init__(**kwargs)
 
     @property
@@ -214,7 +215,7 @@ class Nested(Raw):
             elif self.default is not None:
                 return self.default
 
-        return marshal(value, self.nested)
+        return marshal(value, self.nested, skip_none=self.skip_none)
 
     def schema(self):
         schema = super(Nested, self).schema()

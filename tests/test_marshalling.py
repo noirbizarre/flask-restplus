@@ -185,6 +185,21 @@ class MarshallingTest(object):
         expected = OrderedDict([('foo', 'bar'), ('fee', None)])
         assert output == expected
 
+    def test_marshal_nested_with_skip_none(self):
+        model = OrderedDict([
+            ('foo', fields.Raw),
+            ('fee', fields.Nested(
+                OrderedDict([
+                    ('fye', fields.String)
+                ]), skip_none=True))
+        ])
+        marshal_fields = OrderedDict([('foo', 'bar'),
+                                      ('bat', 'baz'),
+                                      ('fee', None)])
+        output = marshal(marshal_fields, model, skip_none=True)
+        expected = OrderedDict([('foo', 'bar')])
+        assert output == expected
+
     def test_allow_null_presents_data(self):
         model = OrderedDict([
             ('foo', fields.Raw),
@@ -201,6 +216,26 @@ class MarshallingTest(object):
         expected = OrderedDict([
             ('foo', 'bar'),
             ('fee', OrderedDict([('fye', None), ('blah', 'cool')]))
+        ])
+        assert output == expected
+
+    def test_skip_none_presents_data(self):
+        model = OrderedDict([
+            ('foo', fields.Raw),
+            ('fee', fields.Nested(
+                OrderedDict([
+                    ('fye', fields.String),
+                    ('blah', fields.String),
+                    ('foe', fields.String)
+                ]), skip_none=True))
+        ])
+        marshal_fields = OrderedDict([('foo', 'bar'),
+                                      ('bat', 'baz'),
+                                      ('fee', {'blah': 'cool', 'foe': None})])
+        output = marshal(marshal_fields, model)
+        expected = OrderedDict([
+            ('foo', 'bar'),
+            ('fee', OrderedDict([('blah', 'cool')]))
         ])
         assert output == expected
 
@@ -225,6 +260,32 @@ class MarshallingTest(object):
             ('foo', 'bar'),
             ('fee', OrderedDict([
                 ('fye', None),
+                ('blah', 'cool')
+            ]))
+        ])]
+        assert output == expected
+
+    def test_marshal_nested_property_with_skip_none(self):
+        class TestObject(object):
+            @property
+            def fee(self):
+                return {'blah': 'cool', 'foe': None}
+        model = OrderedDict([
+            ('foo', fields.Raw),
+            ('fee', fields.Nested(
+                OrderedDict([
+                    ('fye', fields.String),
+                    ('blah', fields.String),
+                    ('foe', fields.String)
+                ]), skip_none=True))
+        ])
+        obj = TestObject()
+        obj.foo = 'bar'
+        obj.bat = 'baz'
+        output = marshal([obj], model)
+        expected = [OrderedDict([
+            ('foo', 'bar'),
+            ('fee', OrderedDict([
                 ('blah', 'cool')
             ]))
         ])]
