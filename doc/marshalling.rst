@@ -273,7 +273,7 @@ Use :class:`~fields.Nested` with :class:`~fields.List` to marshal lists of more 
 The ``api.model()`` factory
 ----------------------------
 
-The :meth:`~Namespace.model` factory allows you to instanciate
+The :meth:`~Namespace.model` factory allows you to instantiate
 and register models to your :class:`API` or :class:`Namespace`.
 
 .. code-block:: python
@@ -294,7 +294,7 @@ and register models to your :class:`API` or :class:`Namespace`.
 Duplicating with ``clone``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :meth:`Model.clone` method allows you to instanciate an augmented model.
+The :meth:`Model.clone` method allows you to instantiate an augmented model.
 It saves you duplicating all fields.
 
 .. code-block:: python
