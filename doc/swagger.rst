@@ -629,7 +629,7 @@ You can mark resources or methods as deprecated with the ``@api.deprecated`` dec
         def get(self):
             return {}
 
-    # Hide methods
+    # Deprecate methods
     @api.route('/resource4/')
     class Resource4(Resource):
         def get(self):
