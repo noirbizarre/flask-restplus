@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import
 
-from json import dumps
+try:
+    from ujson import dumps
+except ImportError:
+    from json import dumps
 
 from flask import make_response, current_app
 
