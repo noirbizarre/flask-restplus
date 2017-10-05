@@ -50,6 +50,8 @@ tests_require = [
     'blinker', 'tzlocal', 'mock'
 ]
 install_requires = ['Flask>=0.8', 'six>=1.3.0', 'pytz', 'aniso8601>=0.82', 'jsonschema']
+if sys.version_info < (3, 4):
+    install_requires += ['enum34']
 doc_require = ['sphinx', 'alabaster', 'sphinx_issues']
 qa_require = ['pytest-cover', 'flake8']
 ci_require = ['invoke>=0.13'] + qa_require + tests_require

@@ -5,6 +5,8 @@ import flask
 
 from werkzeug.exceptions import HTTPException
 
+from ._http import HTTPStatus
+
 __all__ = (
     'abort',
     'RestError',
@@ -13,7 +15,7 @@ __all__ = (
 )
 
 
-def abort(code=500, message=None, **kwargs):
+def abort(code=HTTPStatus.INTERNAL_SERVER_ERROR, message=None, **kwargs):
     '''
     Properly abort the current request.
 

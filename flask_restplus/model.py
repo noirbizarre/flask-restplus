@@ -15,6 +15,7 @@ from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
 
 from .utils import not_none
+from ._http import HTTPStatus
 
 
 RE_REQUIRED = re.compile(r'u?\'(?P<name>.*)\' is a required property', re.I | re.U)
@@ -97,7 +98,7 @@ class ModelBase(object):
         try:
             validator.validate(data)
         except ValidationError:
-            abort(400, message='Input payload validation failed',
+            abort(HTTPStatus.BAD_REQUEST, message='Input payload validation failed',
                   errors=dict(self.format_error(e) for e in validator.iter_errors(data)))
 
     def format_error(self, error):
