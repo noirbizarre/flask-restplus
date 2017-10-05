@@ -34,7 +34,7 @@ class Mask(OrderedDict):
     '''
     def __init__(self, mask=None, skip=False, **kwargs):
         self.skip = skip
-        if isinstance(mask, six.text_type):
+        if isinstance(mask, six.string_types):
             super(Mask, self).__init__()
             self.parse(mask)
         elif isinstance(mask, (dict, OrderedDict)):
