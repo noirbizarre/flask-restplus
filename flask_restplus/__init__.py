@@ -8,7 +8,7 @@ from .mask import Mask
 from .model import Model, SchemaModel  # noqa
 from .namespace import Namespace  # noqa
 from .resource import Resource  # noqa
-from .errors import abort, RestError, SpecsError, ValidationError
+from .errors import abort, RestError, SpecsError, ValidationError, ModelError
 from .swagger import Swagger
 from .__about__ import __version__, __description__
 
@@ -33,4 +33,5 @@ __all__ = (
     'SpecsError',
     'Swagger',
     'ValidationError',
+    'ModelError',
 )

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import copy
 import pytest
 
-from flask_restplus import fields, Model, SchemaModel
+from flask_restplus import fields, Model, SchemaModel, ModelError
 
 
 class ModelTest(object):
@@ -698,6 +698,49 @@ class ModelDeprecattionsTest(object):
                 'extra': {
                     'type': 'string'
                 }
+            },
+            'type': 'object'
+        }
+
+
+class ModelConstraintNonFieldTest(object):
+    def test_raise_exception_if_non_field_model_attribute(self):
+        with pytest.raises(ModelError):
+            wrong = Model('Wrong', {
+                'name': fields.String,
+                'age': fields.Integer,
+                'birthdate': 'qweqwe',
+            })
+
+    def test_raise_exception_if_non_field_kwarg(self):
+        with pytest.raises(ModelError):
+            wrong = Model(
+                'Wrong',
+                {'name': fields.String},
+                age=fields.Integer,
+                birthdate='qweqwe',
+            )
+
+    def test_no_exception_when_field_in_kwarg(self):
+        correct = Model(
+            'Correct',
+            {'name': fields.String},
+            age=fields.Integer,
+            birthdate=fields.DateTime,
+        )
+
+        assert correct.__schema__ == {
+            'properties': {
+                'name': {
+                    'type': 'string'
+                },
+                'age': {
+                    'type': 'integer'
+                },
+                'birthdate': {
+                    'type': 'string',
+                    'format': 'date-time'
+                },
             },
             'type': 'object'
         }
