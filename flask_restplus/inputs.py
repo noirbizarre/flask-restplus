@@ -555,7 +555,7 @@ def datetime_from_iso8601(value):
         except ValueError:
             date = aniso8601.parse_date(value)
             return datetime(date.year, date.month, date.day)
-    except:
+    except Exception:
         raise ValueError('Invalid date literal "{0}"'.format(value))
 
 

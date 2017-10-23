@@ -139,7 +139,7 @@ def qa(ctx):
         if flake8_results.failed:
             error('There is some lints to fix')
         else:
-            success('No lint to fix')
+            success('No linter errors')
         info('Ensure PyPI can render README and CHANGELOG')
         readme_results = ctx.run('python setup.py check -r -s', pty=True, warn=True, hide=True)
         if readme_results.failed:
