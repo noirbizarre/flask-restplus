@@ -11,7 +11,15 @@ from invoke import task
 ROOT = os.path.dirname(__file__)
 
 CLEAN_PATTERNS = [
-    'build', 'dist', 'cover', 'docs/_build', '**/*.pyc', '.tox', '**/__pycache__', 'reports'
+    'build',
+    'dist',
+    'cover',
+    'docs/_build',
+    '**/*.pyc',
+    '.tox',
+    '**/__pycache__',
+    'reports',
+    '*.egg-info',
 ]
 
 
@@ -71,6 +79,14 @@ def clean(ctx):
         for pattern in CLEAN_PATTERNS:
             info('Removing {0}', pattern)
             ctx.run('rm -rf {0}'.format(pattern))
+
+
+@task
+def deps(ctx):
+    '''Install or update development dependencies'''
+    header(deps.__doc__)
+    with ctx.cd(ROOT):
+        ctx.run('pip install -r requirements/develop.pip -r requirements/doc.pip', pty=True)
 
 
 @task
@@ -176,7 +192,7 @@ def dist(ctx):
         ctx.run('python setup.py bdist_wheel', pty=True)
 
 
-@task(clean, test, doc, qa, assets, dist, default=True)
+@task(clean, deps, test, doc, qa, assets, dist, default=True)
 def all(ctx):
     '''Run tests, reports and packaging'''
     pass

@@ -31,7 +31,7 @@ and expose its documentation properly using `Swagger`_.
 Compatibility
 =============
 
-Flask-RestPlus requires Python 2.7+.
+Flask-RestPlus requires Python 2.7 or 3.4+.
 
 
 Installation
