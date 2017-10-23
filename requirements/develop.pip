@@ -1,0 +1,5 @@
+-e .[test]
+invoke==0.21.0
+flake8==3.5.0
+readme-renderer==17.2
+tox==2.9.1

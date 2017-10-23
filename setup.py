@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # flake8: noqa
-from __future__ import unicode_literals
 
+import io
+import os
 import re
 import sys
 
@@ -30,10 +31,22 @@ def rst(filename):
      - code-block directive
      - all badges
     '''
-    content = open(filename).read()
+    content = io.open(filename).read()
     for regex, replacement in PYPI_RST_FILTERS:
         content = re.sub(regex, replacement, content)
     return content
+
+
+
+def pip(filename):
+    '''Parse pip reqs file and transform it to setuptools requirements.'''
+    requirements = []
+    for line in io.open(os.path.join('requirements', '{0}.pip'.format(filename))):
+        line = line.strip()
+        if not line or '://' in line or line.startswith('#'):
+            continue
+        requirements.append(line)
+    return requirements
 
 
 long_description = '\n'.join((
@@ -45,22 +58,11 @@ long_description = '\n'.join((
 
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
-tests_require = [
-    'pytest', 'pytest-sugar', 'pytest-flask', 'pytest-mock', 'pytest-faker', 'pytest-benchmark==3.1.0a2',
-    'blinker', 'tzlocal', 'mock'
-]
-install_requires = ['Flask>=0.8', 'six>=1.3.0', 'pytz', 'aniso8601>=0.82', 'jsonschema']
+install_requires = pip('install')
 if sys.version_info < (3, 4):
     install_requires += ['enum34']
-doc_require = ['sphinx', 'alabaster', 'sphinx_issues']
-qa_require = ['pytest-cover', 'flake8']
-ci_require = ['invoke>=0.13'] + qa_require + tests_require
-dev_require = ['pytest-profiling', 'tox'] + ci_require + doc_require
-
-try:
-    from unittest.mock import Mock
-except:
-    tests_require += ['mock']
+doc_require = pip('doc')
+tests_require = pip('test')
 
 setup(
     name='flask-restplus',
@@ -77,14 +79,11 @@ setup(
     extras_require={
         'test': tests_require,
         'doc': doc_require,
-        'qa': qa_require,
-        'ci': ci_require,
-        'dev': dev_require,
     },
     license='MIT',
     use_2to3=True,
     zip_safe=False,
-    keywords='',
+    keywords='flask restplus rest api swagger openapi',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python',
