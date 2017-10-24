@@ -770,6 +770,13 @@ class NestedFieldTest(FieldTestCase):
         assert field.allow_null
         assert field.__schema__ == {'$ref': '#/definitions/NestedModel'}
 
+    def test_with_skip_none(self, api):
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        field = fields.Nested(nested_fields, skip_none=True)
+        assert not field.required
+        assert field.skip_none
+        assert field.__schema__ == {'$ref': '#/definitions/NestedModel'}
+
     def test_with_readonly(self, app):
         api = Api(app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
