@@ -14,7 +14,7 @@ Current
 - Fix error bundling (:issue:`175`, :issue:`144`)
 - Help message is now added to source error message instead of string interpolation (:issue:`147`)
 - Use pytest instead of nosetests
-- Upgrade to Swagger-UI 2.2.10
+- Upgrade to Swagger-UI 3.4.0
 - Fix typo in comments
 - Add an optional key argument, ``skip_none``, in :func:`marshal_with` and :func:`marshal`
 - Fix masks not working correctly with Python 2.7 (:issue:`217`)
