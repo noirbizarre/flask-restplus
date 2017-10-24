@@ -898,7 +898,7 @@ setting (``'none'``, ``'list'`` or ``'full'``):
 
     api = Api(app)
 
-You can enable a JSON editor in Swagger UI by setting ``config.SWAGGER_UI_JSONEDITOR`` to ``True``:
+By default, operation ID is hidden as well as request duration, you can enable them respectively with:
 
 .. code-block:: python
 
@@ -906,24 +906,10 @@ You can enable a JSON editor in Swagger UI by setting ``config.SWAGGER_UI_JSONED
     from flask_restplus import Api
 
     app = Flask(__name__)
-    app.config.SWAGGER_UI_JSONEDITOR = True
+    app.config.SWAGGER_UI_OPERATION_ID = True
+    app.config.SWAGGER_UI_REQUEST_DURATION = True
 
     api = Api(app)
-
-It also support optionnal translations through ``config.SWAGGER_UI_LANGUAGES``:
-
-.. code-block:: python
-
-    from flask import Flask
-    from flask_restplus import Api
-
-    app = Flask(__name__)
-    app.config.SWAGGER_UI_LANGUAGES = ['en', 'fr']
-
-    api = Api(app)
-
-See `the official documentation <https://github.com/swagger-api/swagger-ui#user-content-localization-and-translation>`_
-for more details.
 
 
 If you need a custom UI,

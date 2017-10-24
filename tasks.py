@@ -181,7 +181,11 @@ def assets(ctx):
     '''Fetch web assets'''
     header(assets.__doc__)
     with ctx.cd(ROOT):
-        ctx.run('bower install')
+        ctx.run('npm install')
+        ctx.run('cp node_modules/swagger-ui-dist/{swagger-ui*.{css,js}{,.map},favicon*.png} flask_restplus/static')
+        # Until next release we need to install droid sans separately
+        ctx.run('cp node_modules/typeface-droid-sans/index.css flask_restplus/static/droid-sans.css')
+        ctx.run('cp -R node_modules/typeface-droid-sans/files flask_restplus/static/')
 
 
 @task

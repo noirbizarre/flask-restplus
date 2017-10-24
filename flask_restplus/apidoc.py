@@ -27,8 +27,7 @@ apidoc = Apidoc('restplus_doc', __name__,
 
 @apidoc.add_app_template_global
 def swagger_static(filename):
-    return url_for('restplus_doc.static',
-                   filename='bower/swagger-ui/dist/{0}'.format(filename))
+    return url_for('restplus_doc.static', filename=filename)
 
 
 def ui_for(api):
