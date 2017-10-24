@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">    
     <title>{{ title }}</title>
     {% include 'swagger-ui-css.html' %}
     {% include 'swagger-ui-libs.html' %}
@@ -23,6 +24,19 @@
                 validatorUrl: "{{ config.SWAGGER_VALIDATOR_URL }}" || null,
                 dom_id: "swagger-ui-container",
                 supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                authorizations: {
+                  csrfInterceptor: function() {
+                    // This function will get called /before/ each request
+                    // ... UNLESS you have a 'security' tag in the swagger.json file, 
+                    // ... in which case you must add 'csrfInterceptor' to the list of auths.
+                    var csrftoken = $('meta[name=csrf-token]').attr('content')
+                    this.headers['X-CSRFToken'] = csrftoken; 
+                    return true; 
+                      // there is a bug, fixed but not in develop_2.0 of swagger-ui.js where returning true will only 
+                      //   process _one_ interceptor This works if it's your only interceptor and 
+                      //   when the fix is in, it'll work as expected for more than one...
+                  }
+                }, 
                 onComplete: function(swaggerApi, swaggerUi){
                     if(typeof initOAuth == "function") {
                         {% if config.SWAGGER_UI_OAUTH_CLIENT_ID -%}
