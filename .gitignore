@@ -35,6 +35,8 @@ htmlcov/
 nosetests.xml
 coverage.xml
 prof/
+histograms/
+.benchmarks
 
 # Translations
 *.mo
