@@ -2702,6 +2702,25 @@ class SwaggerTest(object):
             resp = client.open('/test/', method=method)
             assert resp.status_code == 200
 
+    def test_produces_method(self, api, client):
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+            @api.produces(['application/octet-stream'])
+            def post(self):
+                pass
+
+        data = client.get_specs()
+
+        get_operation = data['paths']['/test/']['get']
+        assert 'produces' not in get_operation
+
+        post_operation = data['paths']['/test/']['post']
+        assert 'produces' in post_operation
+        assert post_operation['produces'] == ['application/octet-stream']
+
     def test_deprecated_resource(self, api, client):
         @api.deprecated
         @api.route('/test/', endpoint='test')

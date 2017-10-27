@@ -322,6 +322,9 @@ class Swagger(object):
             'parameters': self.parameters_for(doc[method]) or None,
             'security': self.security_for(doc, method),
         }
+        # Handle 'produces' mimetypes documentation
+        if 'produces' in doc[method]:
+            operation['produces'] = doc[method]['produces']
         # Handle deprecated annotation
         if doc.get('deprecated') or doc[method].get('deprecated'):
             operation['deprecated'] = True
