@@ -389,11 +389,11 @@ class Api(object):
                 suffix += 1
         return endpoint
 
-    def get_ns_path(self, ns):
-        return self.ns_paths.get(ns)
+    def get_ns_path(self, ns, default=None):
+        return self.ns_paths.get(ns, default)
 
     def ns_urls(self, ns, urls):
-        path = self.get_ns_path(ns) or ns.path
+        path = self.get_ns_path(ns, ns.path)
         return [path + url for url in urls]
 
     def add_namespace(self, ns, path=None):
