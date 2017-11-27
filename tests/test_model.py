@@ -670,7 +670,7 @@ class ModelSchemaTestCase(object):
         }
 
 
-class ModelDeprecattionsTest(object):
+class ModelDeprecationsTest(object):
     def test_extend_is_deprecated(self):
         parent = Model('Parent', {
             'name': fields.String,
@@ -706,19 +706,19 @@ class ModelDeprecattionsTest(object):
 class ModelConstraintNonFieldTest(object):
     def test_raise_exception_if_non_field_model_attribute(self):
         with pytest.raises(ModelError):
-            wrong = Model('Wrong', {
+            Model('Wrong', {
                 'name': fields.String,
                 'age': fields.Integer,
-                'birthdate': 'qweqwe',
+                'birthday': 'qweqwe',
             })
 
     def test_raise_exception_if_non_field_kwarg(self):
         with pytest.raises(ModelError):
-            wrong = Model(
+            Model(
                 'Wrong',
                 {'name': fields.String},
                 age=fields.Integer,
-                birthdate='qweqwe',
+                birthday='qweqwe',
             )
 
     def test_no_exception_when_field_in_kwarg(self):
@@ -726,7 +726,7 @@ class ModelConstraintNonFieldTest(object):
             'Correct',
             {'name': fields.String},
             age=fields.Integer,
-            birthdate=fields.DateTime,
+            birthday=fields.DateTime,
         )
 
         assert correct.__schema__ == {
@@ -737,7 +737,7 @@ class ModelConstraintNonFieldTest(object):
                 'age': {
                     'type': 'integer'
                 },
-                'birthdate': {
+                'birthday': {
                     'type': 'string',
                     'format': 'date-time'
                 },
