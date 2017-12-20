@@ -577,24 +577,26 @@ class Api(object):
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
         headers = Headers()
-        if e.__class__ in self.error_handlers:
-            handler = self.error_handlers[e.__class__]
-            result = handler(e)
-            default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
-        elif isinstance(e, HTTPException):
-            code = HTTPStatus(e.code)
-            default_data = {
-                'message': getattr(e, 'description', code.phrase)
-            }
-            headers = e.get_response().headers
-        elif self._default_error_handler:
-            result = self._default_error_handler(e)
-            default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
+        for typecheck, handler in self.error_handlers.iteritems():
+            if isinstance(e, typecheck):
+                result = handler(e)
+                default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
+                break
         else:
-            code = HTTPStatus.INTERNAL_SERVER_ERROR
-            default_data = {
-                'message': code.phrase,
-            }
+            if isinstance(e, HTTPException):
+                code = HTTPStatus(e.code)
+                default_data = {
+                    'message': getattr(e, 'description', code.phrase)
+                }
+                headers = e.get_response().headers
+            elif self._default_error_handler:
+                result = self._default_error_handler(e)
+                default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
+            else:
+                code = HTTPStatus.INTERNAL_SERVER_ERROR
+                default_data = {
+                    'message': code.phrase,
+                }
 
         default_data['message'] = default_data.get('message', str(e))
         data = getattr(e, 'data', default_data)
