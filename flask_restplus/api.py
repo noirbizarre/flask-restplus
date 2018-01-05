@@ -597,6 +597,7 @@ class Api(object):
             }
 
         default_data['message'] = default_data.get('message', str(e))
+
         data = getattr(e, 'data', default_data)
         fallback_mediatype = None
 
@@ -620,6 +621,9 @@ class Api(object):
         # Remove blacklisted headers
         for header in HEADERS_BLACKLIST:
             headers.pop(header, None)
+
+        if not current_app.config.get("ERROR_INCLUDE_MESSAGE", True):
+            del data['message']
 
         resp = self.make_response(data, code, headers, fallback_mediatype=fallback_mediatype)
 
