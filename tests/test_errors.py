@@ -405,6 +405,16 @@ class ErrorsTest(object):
             'message': NotFound.description
         }
 
+    def test_handle_include_error_message(self, app):
+        api = restplus.Api(app)
+        view = restplus.Resource
+
+        api.add_resource(view, '/foo', endpoint='bor')
+
+        with app.test_request_context("/faaaaa"):
+            response = api.handle_error(NotFound())
+            assert 'message' in json.loads(response.data.decode())
+
     def test_handle_not_include_error_message(self, app):
         app.config['ERROR_INCLUDE_MESSAGE'] = False
 
