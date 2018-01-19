@@ -576,6 +576,9 @@ class Api(object):
         '''
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
+        include_message_in_response = current_app.config.get("ERROR_INCLUDE_MESSAGE", True)
+        default_data = {}
+
         headers = Headers()
         if e.__class__ in self.error_handlers:
             handler = self.error_handlers[e.__class__]
@@ -583,20 +586,24 @@ class Api(object):
             default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif isinstance(e, HTTPException):
             code = HTTPStatus(e.code)
-            default_data = {
-                'message': getattr(e, 'description', code.phrase)
-            }
+            if include_message_in_response:
+                default_data = {
+                    'message': getattr(e, 'description', code.phrase)
+                }
             headers = e.get_response().headers
         elif self._default_error_handler:
             result = self._default_error_handler(e)
             default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
         else:
             code = HTTPStatus.INTERNAL_SERVER_ERROR
-            default_data = {
-                'message': code.phrase,
-            }
+            if include_message_in_response:
+                default_data = {
+                    'message': code.phrase,
+                }
 
-        default_data['message'] = default_data.get('message', str(e))
+        if include_message_in_response:
+            default_data['message'] = default_data.get('message', str(e))
+
         data = getattr(e, 'data', default_data)
         fallback_mediatype = None
 
@@ -606,7 +613,8 @@ class Api(object):
                 exc_info = None
             current_app.log_exception(exc_info)
 
-        elif code == HTTPStatus.NOT_FOUND and current_app.config.get("ERROR_404_HELP", True):
+        elif code == HTTPStatus.NOT_FOUND and current_app.config.get("ERROR_404_HELP", True) \
+                and include_message_in_response:
             data['message'] = self._help_on_404(data.get('message', None))
 
         elif code == HTTPStatus.NOT_ACCEPTABLE and self.default_mediatype is None:
