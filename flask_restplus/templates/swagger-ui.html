@@ -62,13 +62,13 @@
             deepLinking: true,
             presets: [
                 SwaggerUIBundle.presets.apis,
-                SwaggerUIStandalonePreset
+                {#SwaggerUIStandalonePreset#}
 
             ],
             plugins: [
                 SwaggerUIBundle.plugins.DownloadUrl
             ],
-            layout: "StandaloneLayout",
+            {#layout: "StandaloneLayout",#}
             displayOperationId: {{ config.SWAGGER_UI_OPERATION_ID|default(False)|tojson }},
             displayRequestDuration: {{ config.SWAGGER_UI_REQUEST_DURATION|default(False)|tojson }},
             docExpansion: "{{ config.SWAGGER_UI_DOC_EXPANSION | default('none') }}"
