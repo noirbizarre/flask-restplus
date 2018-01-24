@@ -145,7 +145,7 @@ to specify alternate locations to pull the values from. Any variable on the
 
 .. note ::
 
-    Using ``location='form'`` is way to both validate form data and document you form fields.
+    Using ``location='form'`` is way to both validate form data and document your form fields.
 
 
 Multiple Locations
