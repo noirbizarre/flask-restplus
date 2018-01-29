@@ -18,6 +18,7 @@ Current
 - Fix typo in comments
 - Add an optional key argument, ``skip_none``, in :func:`marshal_with` and :func:`marshal`
 - Fix masks not working correctly with Python 2.7 (:issue:`217`)
+- Fixed typos in doc/scaling
 
 Breaking changes
 ~~~~~~~~~~~~~~~~

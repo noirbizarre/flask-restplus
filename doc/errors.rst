@@ -189,3 +189,9 @@ It also allows for overriding the default error handler when used wihtout parame
     def default_error_handler(error):
         '''Default error handler'''
         return {'message': str(error)}, getattr(error, 'code', 500)
+
+.. note ::
+
+    Flask-RESTPlus will return a message in the error response by default.
+    If a custom response is required as an error and the message field is not needed,
+    it can be disabled by setting ``ERROR_INCLUDE_MESSAGE`` to ``False`` in your application config.
