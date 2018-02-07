@@ -5,6 +5,7 @@ import inspect
 import six
 import warnings
 
+from flask import request
 from flask.views import http_method_funcs
 
 from .errors import abort
@@ -28,6 +29,7 @@ class Namespace(object):
     :param bool validate: Whether or not to perform validation on this namespace
     :param Api api: an optional API to attache to the namespace
     '''
+
     def __init__(self, name, description=None, path=None, decorators=None, validate=None, **kwargs):
         self.name = name
         self.description = description
@@ -48,6 +50,11 @@ class Namespace(object):
     @property
     def path(self):
         return (self._path or ('/' + self.name)).rstrip('/')
+
+    @property
+    def payload(self):
+        '''Store the input payload in the current request context'''
+        return request.values.to_dict()
 
     def add_resource(self, resource, *urls, **kwargs):
         '''
