@@ -918,7 +918,7 @@ you can register a custom view function with the :meth:`~Api.documentation` deco
 .. code-block:: python
 
     from flask import Flask
-    from flask_restplus import API, apidoc
+    from flask_restplus import Api, apidoc
 
     app = Flask(__name__)
     api = Api(app)
