@@ -14,13 +14,20 @@ class NamespaceTest(object):
     def test_doc_decorator(self):
         api = Namespace('test')
         params = {'q': {'description': 'some description'}}
+        authorizations = {
+            'apikey': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'X-API-KEY'
+            }
+        }
 
-        @api.doc(params=params)
+        @api.doc(params=params, authorizations=authorizations)
         class TestResource(restplus.Resource):
             pass
 
         assert hasattr(TestResource, '__apidoc__')
-        assert TestResource.__apidoc__ == {'params': params}
+        assert TestResource.__apidoc__ == {'params': params, 'authorizations': authorizations}
 
     def test_doc_with_inheritance(self):
         api = Namespace('test')
@@ -73,12 +80,20 @@ class NamespaceTest(object):
         assert 'GrandParent' in api.models
 
     def test_inherit(self):
-        api = Namespace('test')
+        authorizations = {
+            'apikey': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'X-API-KEY'
+            }
+        }
+        api = Namespace('test', authorizations=authorizations)
         parent = api.model('Parent', {})
         api.inherit('Child', parent, {})
 
         assert 'Parent' in api.models
         assert 'Child' in api.models
+        assert api.authorizations == authorizations
 
     def test_inherit_from_multiple_parents(self):
         api = Namespace('test')
