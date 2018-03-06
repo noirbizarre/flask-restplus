@@ -14,20 +14,13 @@ class NamespaceTest(object):
     def test_doc_decorator(self):
         api = Namespace('test')
         params = {'q': {'description': 'some description'}}
-        authorizations = {
-            'apikey': {
-                'type': 'apiKey',
-                'in': 'header',
-                'name': 'X-API-KEY'
-            }
-        }
 
-        @api.doc(params=params, authorizations=authorizations)
+        @api.doc(params=params)
         class TestResource(restplus.Resource):
             pass
 
         assert hasattr(TestResource, '__apidoc__')
-        assert TestResource.__apidoc__ == {'params': params, 'authorizations': authorizations}
+        assert TestResource.__apidoc__ == {'params': params}
 
     def test_doc_with_inheritance(self):
         api = Namespace('test')
