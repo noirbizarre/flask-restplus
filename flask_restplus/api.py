@@ -462,7 +462,7 @@ class Api(object):
 
         :rtype: str
         '''
-        return url_for(self.endpoint('root'))
+        return url_for(self.endpoint('root'), _external=False)
 
     @cached_property
     def __schema__(self):
