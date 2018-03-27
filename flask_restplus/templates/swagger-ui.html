@@ -55,7 +55,6 @@
 
         // Build a system
         const ui = SwaggerUIBundle({
-            url: "http://petstore.swagger.io/v2/swagger.json",
             dom_id: '#swagger-ui',
             url: "{{ specs_url }}",
             validatorUrl: "{{ config.SWAGGER_VALIDATOR_URL }}" || null,
