@@ -176,6 +176,13 @@ class Swagger(object):
                 for url in self.api.ns_urls(ns, urls):
                     paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
 
+        # merge in the top-level authorizations
+        for ns in self.api.namespaces:
+            if ns.authorizations:
+                if self.api.authorizations is None:
+                    self.api.authorizations = {}
+                self.api.authorizations = merge(self.api.authorizations, ns.authorizations)
+
         specs = {
             'swagger': '2.0',
             'basePath': basepath,

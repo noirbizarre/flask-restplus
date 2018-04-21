@@ -25,6 +25,7 @@ Thanks to all of Flask-RESTPlus contributors (including those of initial flask-r
 - Catherine Devlin
 - Constantin Roshchupkin
 - Dan Quirk
+- Daniel Kats
 - Daniele Esposti
 - Dario Bertini
 - David Arnold

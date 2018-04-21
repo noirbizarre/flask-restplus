@@ -73,12 +73,20 @@ class NamespaceTest(object):
         assert 'GrandParent' in api.models
 
     def test_inherit(self):
-        api = Namespace('test')
+        authorizations = {
+            'apikey': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'X-API-KEY'
+            }
+        }
+        api = Namespace('test', authorizations=authorizations)
         parent = api.model('Parent', {})
         api.inherit('Child', parent, {})
 
         assert 'Parent' in api.models
         assert 'Child' in api.models
+        assert api.authorizations == authorizations
 
     def test_inherit_from_multiple_parents(self):
         api = Namespace('test')

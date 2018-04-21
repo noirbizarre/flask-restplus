@@ -28,7 +28,8 @@ class Namespace(object):
     :param bool validate: Whether or not to perform validation on this namespace
     :param Api api: an optional API to attache to the namespace
     '''
-    def __init__(self, name, description=None, path=None, decorators=None, validate=None, **kwargs):
+    def __init__(self, name, description=None, path=None, decorators=None, validate=None,
+            authorizations=None, **kwargs):
         self.name = name
         self.description = description
         self._path = path
@@ -41,6 +42,7 @@ class Namespace(object):
         self.resources = []
         self.error_handlers = {}
         self.default_error_handler = None
+        self.authorizations = authorizations
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
