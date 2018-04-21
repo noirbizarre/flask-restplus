@@ -81,7 +81,6 @@ setup(
         'doc': doc_require,
     },
     license='MIT',
-    use_2to3=True,
     zip_safe=False,
     keywords='flask restplus rest api swagger openapi',
     classifiers=[
