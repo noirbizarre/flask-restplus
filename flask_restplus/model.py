@@ -10,7 +10,8 @@ from six import iteritems, itervalues
 from werkzeug.utils import cached_property
 
 from .mask import Mask
-from .errors import abort
+from .fields import Raw
+from .errors import abort, ModelError
 
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import ValidationError
@@ -130,6 +131,16 @@ class Model(ModelBase, OrderedDict, MutableMapping):
         if self.__mask__ and not isinstance(self.__mask__, Mask):
             self.__mask__ = Mask(self.__mask__)
         super(Model, self).__init__(name, *args, **kwargs)
+
+        for fname, field in iteritems(self):
+            inst = instance(field)
+            if not isinstance(inst, Raw):
+                bases = ','.join((bs.__name__ for bs in field.__class__.__bases__))
+                field_class = '{}({})'.format(field.__class__.__name__, bases)
+                raise ModelError(
+                    'Wrong field type for model {}, {}: {}'
+                    'Field must be a child-class of fields.Raw.'
+                    ''.format(name, fname, field_class))
 
         def instance_clone(name, *parents):
             return self.__class__.clone(name, self, *parents)

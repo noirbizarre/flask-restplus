@@ -12,6 +12,7 @@ __all__ = (
     'RestError',
     'ValidationError',
     'SpecsError',
+    'ModelError',
 )
 
 
@@ -53,4 +54,9 @@ class ValidationError(RestError):
 
 class SpecsError(RestError):
     '''An helper class for incoherent specifications.'''
+    pass
+
+
+class ModelError(RestError):
+    '''An helper class for validation model.'''
     pass
