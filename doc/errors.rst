@@ -200,3 +200,16 @@ It also allows for overriding the default error handler when used without parame
     Flask-RESTPlus will return a message in the error response by default.
     If a custom response is required as an error and the message field is not needed,
     it can be disabled by setting ``ERROR_INCLUDE_MESSAGE`` to ``False`` in your application config.
+
+Error handlers can also be registered on namespaces. An error handler registered on a namespace
+will override one registered on the api.
+
+
+.. code-block:: python
+
+    ns = Namespace('cats', description='Cats related operations')
+
+    @ns.errorhandler
+    def specific_namespace_error_handler(error):
+        '''Namespace error handler'''
+        return {'message': str(error)}, getattr(error, 'code', 500)
