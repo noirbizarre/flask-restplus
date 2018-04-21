@@ -7,6 +7,7 @@ import warnings
 
 from collections import OrderedDict, MutableMapping
 from six import iteritems, itervalues
+from werkzeug.utils import cached_property
 
 from .mask import Mask
 from .errors import abort
@@ -155,7 +156,7 @@ class Model(ModelBase, OrderedDict, MutableMapping):
             'type': 'object',
         })
 
-    @property
+    @cached_property
     def resolved(self):
         '''
         Resolve real fields before submitting them to marshal
