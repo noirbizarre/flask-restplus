@@ -6,6 +6,7 @@ import inspect
 import logging
 import operator
 import re
+import six
 import sys
 
 from collections import OrderedDict
@@ -415,7 +416,7 @@ class Api(object):
         for resource, urls, kwargs in ns.resources:
             self.register_resource(ns, resource, *self.ns_urls(ns, urls), **kwargs)
         # Register models
-        for name, definition in ns.models.items():
+        for name, definition in six.iteritems(ns.models):
             self.models[name] = definition
 
     def namespace(self, *args, **kwargs):
@@ -484,7 +485,7 @@ class Api(object):
         rv = {}
         rv.update(self.error_handlers)
         for ns in self.namespaces:
-            for exception, handler in ns.error_handlers.items():
+            for exception, handler in six.iteritems(ns.error_handlers):
                 rv[exception] = handler
         return rv
 
@@ -587,7 +588,7 @@ class Api(object):
 
         headers = Headers()
 
-        for typecheck, handler in self._own_and_child_error_handlers.iteritems():
+        for typecheck, handler in six.iteritems(self._own_and_child_error_handlers):
             if isinstance(e, typecheck):
                 result = handler(e)
                 default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)

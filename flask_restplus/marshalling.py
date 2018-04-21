@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 from functools import wraps
+from six import iteritems
 
 from flask import request, current_app, has_app_context
 
@@ -56,8 +57,8 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None):
         return out
 
     items = ((k, marshal(data, v, skip_none=skip_none) if isinstance(v, dict)
-              else make(v).output(k, data))
-             for k, v in fields.items())
+             else make(v).output(k, data))
+             for k, v in iteritems(fields))
 
     if skip_none:
         items = ((k, v) for k, v in items if v is not None and v != OrderedDict())

@@ -137,7 +137,7 @@ class Mask(OrderedDict):
 
         '''
         out = {}
-        for field, content in self.items():
+        for field, content in six.iteritems(self):
             if field == '*':
                 continue
             elif isinstance(content, Mask):
@@ -154,7 +154,7 @@ class Mask(OrderedDict):
                 out[field] = data.get(field, None)
 
         if '*' in self.keys():
-            for key, value in data.items():
+            for key, value in six.iteritems(data):
                 if key not in out:
                     out[key] = value
         return out
@@ -162,7 +162,7 @@ class Mask(OrderedDict):
     def __str__(self):
         return '{{{0}}}'.format(','.join([
             ''.join((k, str(v))) if isinstance(v, Mask) else k
-            for k, v in self.items()
+            for k, v in six.iteritems(self)
         ]))
 
 
