@@ -368,6 +368,8 @@ def _parse_interval(value):
             return aniso8601.parse_datetime(value), None
         except ValueError:
             return aniso8601.parse_date(value), None
+    except IndexError:
+        raise ValueError()
 
 
 def iso8601interval(value, argument='argument'):

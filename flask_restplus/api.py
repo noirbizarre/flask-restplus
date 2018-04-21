@@ -417,9 +417,6 @@ class Api(object):
         # Register models
         for name, definition in ns.models.items():
             self.models[name] = definition
-        # Register error handlers
-        for exception, handler in ns.error_handlers.items():
-            self.error_handlers[exception] = handler
 
     def namespace(self, *args, **kwargs):
         '''
@@ -481,6 +478,15 @@ class Api(object):
                 log.exception(msg)  # This will provide a full traceback
                 return {'error': msg}
         return self._schema
+
+    @property
+    def _own_and_child_error_handlers(self):
+        rv = {}
+        rv.update(self.error_handlers)
+        for ns in self.namespaces:
+            for exception, handler in ns.error_handlers.items():
+                rv[exception] = handler
+        return rv
 
     def errorhandler(self, exception):
         '''A decorator to register an error handler for a given exception'''
@@ -580,7 +586,8 @@ class Api(object):
         default_data = {}
 
         headers = Headers()
-        for typecheck, handler in self.error_handlers.iteritems():
+
+        for typecheck, handler in self._own_and_child_error_handlers.iteritems():
             if isinstance(e, typecheck):
                 result = handler(e)
                 default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
