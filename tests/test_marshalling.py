@@ -7,10 +7,7 @@ from flask_restplus import (
     marshal, marshal_with, marshal_with_field, fields, Api, Resource
 )
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 
 # Add a dummy Resource to verify that the app is properly set.
