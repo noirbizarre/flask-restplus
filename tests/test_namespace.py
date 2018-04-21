@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import flask_restplus as restplus
 
-from flask_restplus import Namespace
+from flask_restplus import Namespace, Model, OrderedModel
 
 
 class NamespaceTest(object):
@@ -48,6 +48,13 @@ class NamespaceTest(object):
         api = Namespace('test')
         api.model('Person', {})
         assert 'Person' in api.models
+        assert isinstance(api.models['Person'], Model)
+
+    def test_ordered_model(self):
+        api = Namespace('test', ordered=True)
+        api.model('Person', {})
+        assert 'Person' in api.models
+        assert isinstance(api.models['Person'], OrderedModel)
 
     def test_schema_model(self):
         api = Namespace('test')

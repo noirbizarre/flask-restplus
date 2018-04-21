@@ -74,6 +74,7 @@ class Api(object):
     :param str default_label: The default namespace label (used in Swagger documentation)
     :param str default_mediatype: The default media type to return
     :param bool validate: Whether or not the API should perform input payload validation.
+    :param bool ordered: Whether or not preserve order models and marshalling.
     :param str doc: The documentation path. If set to a false value, documentation is disabled.
                 (Default to '/')
     :param list decorators: Decorators to attach to every resource
@@ -92,7 +93,7 @@ class Api(object):
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
-            tags=None, prefix='',
+            tags=None, prefix='', ordered=False,
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
             **kwargs):
@@ -108,6 +109,7 @@ class Api(object):
         self.authorizations = authorizations
         self.security = security
         self.default_id = default_id
+        self.ordered = ordered
         self._validate = validate
         self._doc = doc
         self._doc_view = None
@@ -131,7 +133,8 @@ class Api(object):
         )
         self.ns_paths = dict()
 
-        self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
+        wrap_cls = OrderedDict if ordered else dict
+        self.representations = wrap_cls(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
@@ -425,6 +428,7 @@ class Api(object):
 
         :returns Namespace: a new namespace instance
         '''
+        kwargs['ordered'] = kwargs.get('ordered', self.ordered)
         ns = Namespace(*args, **kwargs)
         self.add_namespace(ns)
         return ns

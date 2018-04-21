@@ -307,3 +307,15 @@ class APITest(object):
         unified_auth = copy.copy(a1)
         unified_auth.update(a2)
         assert api.__schema__["securityDefinitions"] == unified_auth
+
+    def test_non_ordered_namespace(self, app):
+        api = restplus.Api(app)
+        ns = api.namespace('ns', 'Test namespace')
+
+        assert not ns.ordered
+
+    def test_ordered_namespace(self, app):
+        api = restplus.Api(app, ordered=True)
+        ns = api.namespace('ns', 'Test namespace')
+
+        assert ns.ordered

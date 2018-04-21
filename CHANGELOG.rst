@@ -22,6 +22,9 @@ Current
 - Fixed typos in doc/scaling
 - Add docs for `allow_null` and :class:`~fields.Nested`
 - Add Namespace.payload
+- **Breaking**: everything is unordered by default because ordering has a serious impact on performances:
+    - :class:`Api` and :class:`Namespace` now accept an optionnal ``ordered`` parameter
+    - :func:`marshal_with` and :func:`marshal` now accept an optionnal ``ordered`` parameter
 
 Breaking changes
 ~~~~~~~~~~~~~~~~

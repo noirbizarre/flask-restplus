@@ -10,7 +10,7 @@ from flask.views import http_method_funcs
 
 from .errors import abort
 from .marshalling import marshal, marshal_with
-from .model import Model, SchemaModel
+from .model import Model, OrderedModel, SchemaModel
 from .reqparse import RequestParser
 from .utils import merge
 from ._http import HTTPStatus
@@ -27,10 +27,11 @@ class Namespace(object):
     :param str path: An optional prefix path. If not provided, prefix is ``/+name``
     :param list decorators: A list of decorators to apply to each resources
     :param bool validate: Whether or not to perform validation on this namespace
+    :param bool ordered: Whether or not to preserve order on models and marshalling
     :param Api api: an optional API to attache to the namespace
     '''
     def __init__(self, name, description=None, path=None, decorators=None, validate=None,
-            authorizations=None, **kwargs):
+            authorizations=None, ordered=False, **kwargs):
         self.name = name
         self.description = description
         self._path = path
@@ -44,6 +45,7 @@ class Namespace(object):
         self.error_handlers = {}
         self.default_error_handler = None
         self.authorizations = authorizations
+        self.ordered = ordered
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
@@ -142,7 +144,8 @@ class Namespace(object):
 
         .. seealso:: :class:`Model`
         '''
-        model = Model(name, model, mask=mask)
+        cls = OrderedModel if self.ordered else Model
+        model = cls(name, model, mask=mask)
         model.__apidoc__.update(kwargs)
         return self.add_model(name, model)
 
@@ -232,7 +235,7 @@ class Namespace(object):
                 '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
             }
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            return marshal_with(fields, **kwargs)(func)
+            return marshal_with(fields, ordered=self.ordered, **kwargs)(func)
         return wrapper
 
     def marshal_list_with(self, fields, **kwargs):

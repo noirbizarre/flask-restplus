@@ -297,6 +297,17 @@ Using the :meth:`~Api.marshal_with` decorator also document the output in the sw
 Many of the field types you need are already included.
 See the :mod:`fields` guide for a complete list.
 
+Order Preservation
+~~~~~~~~~~~~~~~~~~
+
+By default, fields order is not preserved as this have a performance drop effect.
+If you still require fields order preservation, you can pass a ``ordered=True``
+parameter to some classes or function to force order preservation:
+
+- globally on :class:`Api`: ``api = Api(ordered=True)``
+- globally on :class:`Namespace`: ``ns = Namespace(ordered=True)``
+- locally on :func:`marshal`: ``return marshal(data, fields, ordered=True)``
+
 
 Full example
 ------------
