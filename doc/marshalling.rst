@@ -256,6 +256,8 @@ In other words:
 whereas in the previous example ``data.addr1`` was the location attribute.
 Remember: :class:`~fields.Nested` and :class:`~fields.List` objects create a new scope for attributes.
 
+By default when the sub-object is `None`, an object with default values for the nested fields will be generated instead of `null`. This can be modified by passing the `allow_null` parameter, see the :class:`~fields.Nested` constructor for more details.
+
 Use :class:`~fields.Nested` with :class:`~fields.List` to marshal lists of more complex objects:
 
 .. code-block:: python
