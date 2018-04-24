@@ -21,6 +21,7 @@ Current
 - Fix masks not working correctly with Python 2.7 (:issue:`217`)
 - Fixed typos in doc/scaling
 - Add docs for `allow_null` and :class:`~fields.Nested`
+- Add Namespace.payload
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
