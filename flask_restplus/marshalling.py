@@ -63,6 +63,7 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None):
     if skip_none:
         items = ((k, v) for k, v in items if v is not None and v != OrderedDict())
 
+    items = ((k, v) for k, v in items if not (v is None and fields[k].skip_if_null))
     out = OrderedDict(items)
 
     if envelope:

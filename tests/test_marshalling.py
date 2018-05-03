@@ -112,6 +112,12 @@ class MarshallingTest(object):
         output = marshal(marshal_fields, model)
         assert output == {'foo': 'bar'}
 
+    def test_marshal_skip_null_string(self):
+        model = OrderedDict({'foo': fields.String()})
+        marshal_fields = OrderedDict()
+        output = marshal(marshal_fields, model)
+        assert output == {}
+
     def test_marshal_tuple(self):
         model = OrderedDict({'foo': fields.Raw})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])

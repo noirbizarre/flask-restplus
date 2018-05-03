@@ -109,7 +109,7 @@ class Raw(object):
     __schema_example__ = None
 
     def __init__(self, default=None, attribute=None, title=None, description=None,
-                 required=None, readonly=None, example=None, mask=None, **kwargs):
+                 required=None, readonly=None, example=None, mask=None, skip_if_null=None, **kwargs):
         self.attribute = attribute
         self.default = default
         self.title = title
@@ -118,6 +118,7 @@ class Raw(object):
         self.readonly = readonly
         self.example = example or self.__schema_example__
         self.mask = mask
+        self.skip_if_null = skip_if_null
 
     def format(self, value):
         '''
@@ -313,6 +314,7 @@ class StringMixin(object):
     __schema_type__ = 'string'
 
     def __init__(self, *args, **kwargs):
+        kwargs['skip_if_null'] = True
         self.min_length = kwargs.pop('min_length', None)
         self.max_length = kwargs.pop('max_length', None)
         self.pattern = kwargs.pop('pattern', None)
