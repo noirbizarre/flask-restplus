@@ -349,6 +349,7 @@ class NumberMixin(MinMaxMixin):
     __schema_type__ = 'number'
 
     def __init__(self, *args, **kwargs):
+        kwargs['skip_if_null'] = True
         self.multiple = kwargs.pop('multiple', None)
         super(NumberMixin, self).__init__(*args, **kwargs)
 
@@ -453,6 +454,10 @@ class Boolean(Raw):
     '''
     __schema_type__ = 'boolean'
 
+    def __init__(self, **kwargs):
+        kwargs['skip_if_null'] = True
+        super(Boolean, self).__init__(**kwargs)
+
     def format(self, value):
         return bool(value)
 
@@ -471,6 +476,7 @@ class DateTime(MinMaxMixin, Raw):
     __schema_format__ = 'date-time'
 
     def __init__(self, dt_format='iso8601', **kwargs):
+        kwargs['skip_if_null'] = True
         super(DateTime, self).__init__(**kwargs)
         self.dt_format = dt_format
 
