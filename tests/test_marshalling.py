@@ -112,12 +112,6 @@ class MarshallingTest(object):
         output = marshal(marshal_fields, model)
         assert output == {'foo': 'bar'}
 
-    def test_marshal_skip_null_string(self):
-        model = OrderedDict({'foo': fields.String()})
-        marshal_fields = OrderedDict()
-        output = marshal(marshal_fields, model)
-        assert output == {}
-
     def test_marshal_tuple(self):
         model = OrderedDict({'foo': fields.Raw})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
@@ -202,6 +196,21 @@ class MarshallingTest(object):
         output = marshal(marshal_fields, model, skip_none=True)
         expected = OrderedDict([('foo', 'bar')])
         assert output == expected
+
+    def test_marshal_skip_null_string(self):
+        model = OrderedDict({
+            'foo': fields.String(),
+            'bar': fields.String(default='dflt', required=True),
+            'baz': fields.String(default='dflt', required=True)
+        })
+        marshal_fields = OrderedDict({
+            'bar': 'present'
+        })
+        output = marshal(marshal_fields, model)
+        assert output == {
+            'bar': 'present',
+            'baz': 'dflt'
+        }
 
     def test_allow_null_presents_data(self):
         model = OrderedDict([

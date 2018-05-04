@@ -56,14 +56,20 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None):
             out = OrderedDict([(envelope, out)])
         return out
 
-    items = ((k, marshal(data, v, skip_none=skip_none) if isinstance(v, dict)
-             else make(v).output(k, data))
-             for k, v in iteritems(fields))
+    items = []
+    for k, v in iteritems(fields):
+        try:
+            if isinstance(v, dict):
+                v = marshal(data, v, skip_none=skip_none)
+            else:
+                v = make(v).output(k, data)
+        except NoLegalOutput:
+            continue  # Pretend this item doesn't exist, no key-value pair
+        items.append((k, v))
 
     if skip_none:
         items = ((k, v) for k, v in items if v is not None and v != OrderedDict())
 
-    items = ((k, v) for k, v in items if not (v is None and fields[k].skip_if_null))
     out = OrderedDict(items)
 
     if envelope:
@@ -166,3 +172,11 @@ class marshal_with_field(object):
             return self.field.format(resp)
 
         return wrapper
+
+class NoLegalOutput(Exception):
+    """
+    Thrown while serializing a field to indicate that the field should have no
+    representation at all in the output. (As opposed to {"fieldname":null})
+    """
+    def __init__(self, *args, **kwargs):
+        super(NoLegalOutput, self).__init__(*args, **kwargs)

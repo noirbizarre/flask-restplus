@@ -14,7 +14,7 @@ from werkzeug import cached_property
 
 from .inputs import date_from_iso8601, datetime_from_iso8601, datetime_from_rfc822
 from .errors import RestError
-from .marshalling import marshal
+from .marshalling import marshal, NoLegalOutput
 from .utils import camel_to_dash, not_none
 
 
@@ -109,7 +109,7 @@ class Raw(object):
     __schema_example__ = None
 
     def __init__(self, default=None, attribute=None, title=None, description=None,
-                 required=None, readonly=None, example=None, mask=None, skip_if_null=None, **kwargs):
+                 required=None, readonly=None, example=None, mask=None, **kwargs):
         self.attribute = attribute
         self.default = default
         self.title = title
@@ -118,7 +118,6 @@ class Raw(object):
         self.readonly = readonly
         self.example = example or self.__schema_example__
         self.mask = mask
-        self.skip_if_null = skip_if_null
 
     def format(self, value):
         '''
@@ -146,12 +145,15 @@ class Raw(object):
         should override this and return the desired value.
 
         :raises MarshallingError: In case of formatting problem
+        :raises OptionalWithoutDefault: When the key-value should not be present at all.
         '''
 
         value = get_value(key if self.attribute is None else self.attribute, obj)
 
         if value is None:
             default = self._v('default')
+            if default is None and not self.required:
+                raise NoLegalOutput(key)
             return self.format(default) if default else default
 
         try:
@@ -314,7 +316,6 @@ class StringMixin(object):
     __schema_type__ = 'string'
 
     def __init__(self, *args, **kwargs):
-        kwargs['skip_if_null'] = True
         self.min_length = kwargs.pop('min_length', None)
         self.max_length = kwargs.pop('max_length', None)
         self.pattern = kwargs.pop('pattern', None)
@@ -349,7 +350,6 @@ class NumberMixin(MinMaxMixin):
     __schema_type__ = 'number'
 
     def __init__(self, *args, **kwargs):
-        kwargs['skip_if_null'] = True
         self.multiple = kwargs.pop('multiple', None)
         super(NumberMixin, self).__init__(*args, **kwargs)
 
@@ -454,10 +454,6 @@ class Boolean(Raw):
     '''
     __schema_type__ = 'boolean'
 
-    def __init__(self, **kwargs):
-        kwargs['skip_if_null'] = True
-        super(Boolean, self).__init__(**kwargs)
-
     def format(self, value):
         return bool(value)
 
@@ -476,7 +472,6 @@ class DateTime(MinMaxMixin, Raw):
     __schema_format__ = 'date-time'
 
     def __init__(self, dt_format='iso8601', **kwargs):
-        kwargs['skip_if_null'] = True
         super(DateTime, self).__init__(**kwargs)
         self.dt_format = dt_format
 
