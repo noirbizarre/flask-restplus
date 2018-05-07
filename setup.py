@@ -80,7 +80,7 @@ setup(
         'test': tests_require,
         'doc': doc_require,
     },
-    license='MIT',
+    license='BSD-3-Clause',
     zip_safe=False,
     keywords='flask restplus rest api swagger openapi',
     classifiers=[
@@ -99,6 +99,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: BSD License',
     ],
 )
