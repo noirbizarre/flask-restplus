@@ -231,12 +231,12 @@ class Namespace(object):
                 '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
             }
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
-            return marshal_with(fields, **kwargs)(func)
+            return marshal_with(fields, code, **kwargs)(func)
         return wrapper
 
-    def marshal_list_with(self, fields, **kwargs):
+    def marshal_list_with(self, fields, code, **kwargs):
         '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
-        return self.marshal_with(fields, True, **kwargs)
+        return self.marshal_with(fields, True, code, **kwargs)
 
     def marshal(self, *args, **kwargs):
         '''A shortcut to the :func:`marshal` helper'''

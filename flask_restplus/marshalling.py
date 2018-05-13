@@ -103,7 +103,7 @@ class marshal_with(object):
 
     see :meth:`flask_restplus.marshal`
     """
-    def __init__(self, fields, envelope=None, skip_none=False, mask=None):
+    def __init__(self, fields, code, envelope=None, skip_none=False, mask=None):
         """
         :param fields: a dict of whose keys will make up the final
                        serialized response output
@@ -113,6 +113,7 @@ class marshal_with(object):
         self.fields = fields
         self.envelope = envelope
         self.skip_none = skip_none
+        self.code = code
         self.mask = Mask(mask, skip=True)
 
     def __call__(self, f):
@@ -125,9 +126,12 @@ class marshal_with(object):
                 mask = request.headers.get(mask_header) or mask
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return marshal(data, self.fields, self.envelope, self.skip_none, mask), code, headers
+                if code ==self.code:
+                    return marshal(data, self.fields, self.envelope, self.skip_none, mask), code, headers
             else:
-                return marshal(resp, self.fields, self.envelope, self.skip_none, mask)
+                if 200 ==self.code:
+                    return marshal(resp, self.fields, self.envelope, self.skip_none, mask)
+            return resp
         return wrapper
 
 
