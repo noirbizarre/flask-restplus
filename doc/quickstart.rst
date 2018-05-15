@@ -23,7 +23,7 @@ As every other extension, you can initialize it with an application object:
     app = Flask(__name__)
     api = Api(app)
 
-of lazily with the factory pattern:
+or lazily with the factory pattern:
 
 .. code-block:: python
 
