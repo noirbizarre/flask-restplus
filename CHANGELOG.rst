@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.11.0 (2018-05-16)
+-------------------
 
 - Add authorizations parsing to namespace (:issue:`403`)
 - Add vendor extensions support (:issue:`97`)
