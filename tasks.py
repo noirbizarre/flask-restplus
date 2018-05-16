@@ -182,7 +182,7 @@ def assets(ctx):
     header(assets.__doc__)
     with ctx.cd(ROOT):
         ctx.run('npm install')
-        ctx.run('mkdir flask_restplus/static')
+        ctx.run('mkdir -p flask_restplus/static')
         ctx.run('cp node_modules/swagger-ui-dist/{swagger-ui*.{css,js}{,.map},favicon*.png} flask_restplus/static')
         # Until next release we need to install droid sans separately
         ctx.run('cp node_modules/typeface-droid-sans/index.css flask_restplus/static/droid-sans.css')
