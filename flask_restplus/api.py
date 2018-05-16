@@ -133,8 +133,7 @@ class Api(object):
         )
         self.ns_paths = dict()
 
-        wrap_cls = OrderedDict if ordered else dict
-        self.representations = wrap_cls(DEFAULT_REPRESENTATIONS)
+        self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
