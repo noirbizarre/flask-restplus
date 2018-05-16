@@ -43,6 +43,19 @@ class MarshallingTest(object):
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         assert try_me() == {'foo': 'bar'}
 
+    def test_marshal_decorator_with_diffent_code(self):
+        model = OrderedDict([('foo', fields.Raw)])
+
+        @marshal_with(model, code=201)
+        def try_me():
+            return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
+        assert try_me() == {'foo': 'bar', 'bat': 'baz'}
+
+        @marshal_with(model)
+        def try_me():
+            return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 201
+        assert try_me() == ({'foo': 'bar', 'bat': 'baz'}, 201)
+
     def test_marshal_decorator_with_envelope(self):
         model = OrderedDict([('foo', fields.Raw)])
 
