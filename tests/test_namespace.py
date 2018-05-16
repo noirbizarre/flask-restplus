@@ -97,3 +97,32 @@ class NamespaceTest(object):
         assert 'GrandParent' in api.models
         assert 'Parent' in api.models
         assert 'Child' in api.models
+
+    def test_api_payload(self, app, client):
+        api = restplus.Api(app, validate=True)
+        ns = restplus.Namespace('apples')
+        api.add_namespace(ns)
+
+        fields = ns.model('Person', {
+            'name': restplus.fields.String(required=True),
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @ns.route('/validation/')
+        class Payload(restplus.Resource):
+            payload = None
+
+            @ns.expect(fields)
+            def post(self):
+                Payload.payload = ns.payload
+                return {}
+
+        data = {
+            'name': 'John Doe',
+            'age': 15,
+        }
+
+        client.post_json('/apples/validation/', data)
+
+        assert Payload.payload == data

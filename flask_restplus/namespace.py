@@ -5,6 +5,7 @@ import inspect
 import six
 import warnings
 
+from flask import request
 from flask.views import http_method_funcs
 
 from .errors import abort
@@ -311,6 +312,11 @@ class Namespace(object):
         for arg in args:
             kwargs.update(arg)
         return self.doc(vendor=kwargs)
+
+    @property
+    def payload(self):
+        '''Store the input payload in the current request context'''
+        return request.get_json()
 
 
 def unshortcut_params_description(data):
