@@ -59,8 +59,6 @@ long_description = '\n'.join((
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
 install_requires = pip('install')
-if sys.version_info < (3, 4):
-    install_requires += ['enum34']
 doc_require = pip('doc')
 tests_require = pip('test')
 
