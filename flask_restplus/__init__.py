@@ -23,6 +23,7 @@ __all__ = (
     'marshal_with_field',
     'Mask',
     'Model',
+    'Namespace',
     'OrderedModel',
     'SchemaModel',
     'abort',
