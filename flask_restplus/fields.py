@@ -726,10 +726,8 @@ class Wildcard(List):
         if isinstance(obj, dict):
             self._flat = obj.items()
         else:
-            self._flat = []
             attributes = inspect.getmembers(obj, lambda a: not(inspect.isroutine(a)))
-            for (key, val) in [a for a in attributes if not(a[0].startswith('__') and a[0].endswith('__'))]:
-                self._flat.append((key, val))
+            self._flat = [x for x in attributes if match_attributes(x)]
 
         self._idx = 0
         self._cache = []
@@ -763,3 +761,10 @@ class Wildcard(List):
             return None
 
         return self.container.format(value)
+
+
+def match_attributes(attribute):
+    attr_name, _ = attribute
+    if attr_name.startswith('__') and attr_name.endswith('__'):
+        return False
+    return True
