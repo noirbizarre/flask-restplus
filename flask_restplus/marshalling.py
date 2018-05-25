@@ -64,32 +64,39 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=Fal
         items = []
         keys = []
         for dkey, val in fields.items():
-            if skip_none and (val is None or val == OrderedDict() or val == {}):
-                continue
             key = dkey
             if isinstance(val, dict):
                 value = marshal(data, val, skip_none=skip_none, ordered=ordered)
             else:
                 field = make(val)
+                is_wildcard = isinstance(field, Wildcard)
                 # exclude already parsed keys from the wildcard
-                if isinstance(field, Wildcard) and keys:
+                if is_wildcard and keys:
                     for tmp in keys:
                         if tmp not in field.exclude:
                             field.exclude.append(tmp)
                     keys = []
                 value = field.output(dkey, data)
-                if isinstance(field, Wildcard):
+                if is_wildcard:
+
+                    def _append(k, v):
+                        if skip_none and (v is None or v == OrderedDict() or v == {}):
+                            return
+                        items.append((k, v))
+
                     key = field.key or dkey
-                    items.append((key, value))
+                    _append(key, value)
                     while True:
                         value = field.output(dkey, data, ordered=ordered)
                         if value is None or value == field.default:
                             break
                         key = field.key
-                        items.append((key, value))
+                        _append(key, value)
                     continue
 
             keys.append(key)
+            if skip_none and (value is None or value == OrderedDict() or value == {}):
+                continue
             items.append((key, value))
 
         items = tuple(items)

@@ -971,7 +971,7 @@ class WildcardFieldTest(BaseFieldTestMixin, FieldTestCase):
 
         result1 = api.marshal(data, wild_fields1)
         result2 = api.marshal(data, wild_fields2)
-        result3 = api.marshal(data3, wild_fields3)
+        result3 = api.marshal(data3, wild_fields3, skip_none=True)
         result4 = api.marshal(data4, wild_fields4)
         result5 = api.marshal(data5, wild_fields5)
 
