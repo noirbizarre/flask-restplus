@@ -629,7 +629,7 @@ You can mark resources or methods as deprecated with the ``@api.deprecated`` dec
         def get(self):
             return {}
 
-    # Hide methods
+    # Deprecate methods
     @api.route('/resource4/')
     class Resource4(Resource):
         def get(self):
@@ -898,7 +898,7 @@ setting (``'none'``, ``'list'`` or ``'full'``):
 
     api = Api(app)
 
-You can enable a JSON editor in Swagger UI by setting ``config.SWAGGER_UI_JSONEDITOR`` to ``True``:
+By default, operation ID is hidden as well as request duration, you can enable them respectively with:
 
 .. code-block:: python
 
@@ -906,24 +906,10 @@ You can enable a JSON editor in Swagger UI by setting ``config.SWAGGER_UI_JSONED
     from flask_restplus import Api
 
     app = Flask(__name__)
-    app.config.SWAGGER_UI_JSONEDITOR = True
+    app.config.SWAGGER_UI_OPERATION_ID = True
+    app.config.SWAGGER_UI_REQUEST_DURATION = True
 
     api = Api(app)
-
-It also support optionnal translations through ``config.SWAGGER_UI_LANGUAGES``:
-
-.. code-block:: python
-
-    from flask import Flask
-    from flask_restplus import Api
-
-    app = Flask(__name__)
-    app.config.SWAGGER_UI_LANGUAGES = ['en', 'fr']
-
-    api = Api(app)
-
-See `the official documentation <https://github.com/swagger-api/swagger-ui#user-content-localization-and-translation>`_
-for more details.
 
 
 If you need a custom UI,
@@ -932,7 +918,7 @@ you can register a custom view function with the :meth:`~Api.documentation` deco
 .. code-block:: python
 
     from flask import Flask
-    from flask_restplus import API, apidoc
+    from flask_restplus import Api, apidoc
 
     app = Flask(__name__)
     api = Api(app)

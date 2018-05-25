@@ -921,6 +921,10 @@ class SwaggerTest(object):
                     'type': int,
                     'in': 'query',
                 },
+                'float': {
+                    'type': float,
+                    'in': 'query',
+                },
                 'bool': {
                     'type': bool,
                     'in': 'query',
@@ -931,6 +935,10 @@ class SwaggerTest(object):
                 },
                 'int-array': {
                     'type': [int],
+                    'in': 'query',
+                },
+                'float-array': {
+                    'type': [float],
                     'in': 'query',
                 },
                 'bool-array': {
@@ -952,11 +960,14 @@ class SwaggerTest(object):
         parameters = dict((p['name'], p) for p in op['parameters'])
 
         assert parameters['int']['type'] == 'integer'
+        assert parameters['float']['type'] == 'number'
         assert parameters['str']['type'] == 'string'
         assert parameters['bool']['type'] == 'boolean'
 
         assert parameters['int-array']['type'] == 'array'
         assert parameters['int-array']['items']['type'] == 'integer'
+        assert parameters['float-array']['type'] == 'array'
+        assert parameters['float-array']['items']['type'] == 'number'
         assert parameters['str-array']['type'] == 'array'
         assert parameters['str-array']['items']['type'] == 'string'
         assert parameters['bool-array']['type'] == 'array'
@@ -2690,6 +2701,25 @@ class SwaggerTest(object):
         for method in 'GET', 'POST', 'PUT':
             resp = client.open('/test/', method=method)
             assert resp.status_code == 200
+
+    def test_produces_method(self, api, client):
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+            @api.produces(['application/octet-stream'])
+            def post(self):
+                pass
+
+        data = client.get_specs()
+
+        get_operation = data['paths']['/test/']['get']
+        assert 'produces' not in get_operation
+
+        post_operation = data['paths']['/test/']['post']
+        assert 'produces' in post_operation
+        assert post_operation['produces'] == ['application/octet-stream']
 
     def test_deprecated_resource(self, api, client):
         @api.deprecated

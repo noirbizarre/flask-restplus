@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import flask_restplus as restplus
 
-from flask_restplus import Namespace
+from flask_restplus import Namespace, Model, OrderedModel
 
 
 class NamespaceTest(object):
@@ -48,6 +48,13 @@ class NamespaceTest(object):
         api = Namespace('test')
         api.model('Person', {})
         assert 'Person' in api.models
+        assert isinstance(api.models['Person'], Model)
+
+    def test_ordered_model(self):
+        api = Namespace('test', ordered=True)
+        api.model('Person', {})
+        assert 'Person' in api.models
+        assert isinstance(api.models['Person'], OrderedModel)
 
     def test_schema_model(self):
         api = Namespace('test')
@@ -73,12 +80,20 @@ class NamespaceTest(object):
         assert 'GrandParent' in api.models
 
     def test_inherit(self):
-        api = Namespace('test')
+        authorizations = {
+            'apikey': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'X-API-KEY'
+            }
+        }
+        api = Namespace('test', authorizations=authorizations)
         parent = api.model('Parent', {})
         api.inherit('Child', parent, {})
 
         assert 'Parent' in api.models
         assert 'Child' in api.models
+        assert api.authorizations == authorizations
 
     def test_inherit_from_multiple_parents(self):
         api = Namespace('test')
@@ -89,3 +104,32 @@ class NamespaceTest(object):
         assert 'GrandParent' in api.models
         assert 'Parent' in api.models
         assert 'Child' in api.models
+
+    def test_api_payload(self, app, client):
+        api = restplus.Api(app, validate=True)
+        ns = restplus.Namespace('apples')
+        api.add_namespace(ns)
+
+        fields = ns.model('Person', {
+            'name': restplus.fields.String(required=True),
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @ns.route('/validation/')
+        class Payload(restplus.Resource):
+            payload = None
+
+            @ns.expect(fields)
+            def post(self):
+                Payload.payload = ns.payload
+                return {}
+
+        data = {
+            'name': 'John Doe',
+            'age': 15,
+        }
+
+        client.post_json('/apples/validation/', data)
+
+        assert Payload.payload == data

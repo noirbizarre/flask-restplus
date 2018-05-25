@@ -63,46 +63,33 @@ class APIDocTest(object):
         response = client.get(url_for('doc'))
         assert 'docExpansion: "full"' in str(response.data)
 
-    def test_apidoc_doc_jsoneditor_parameter(self, app, client):
+    def test_apidoc_doc_display_operation_id(self, app, client):
         restplus.Api(app)
 
         response = client.get(url_for('doc'))
-        assert 'jsonEditor: false' in str(response.data)
+        assert 'displayOperationId: false' in str(response.data)
 
-        app.config['SWAGGER_UI_JSONEDITOR'] = False
+        app.config['SWAGGER_UI_OPERATION_ID'] = False
         response = client.get(url_for('doc'))
-        assert 'jsonEditor: false' in str(response.data)
+        assert 'displayOperationId: false' in str(response.data)
 
-        app.config['SWAGGER_UI_JSONEDITOR'] = True
+        app.config['SWAGGER_UI_OPERATION_ID'] = True
         response = client.get(url_for('doc'))
-        assert 'jsonEditor: true' in str(response.data)
+        assert 'displayOperationId: true' in str(response.data)
 
-    def test_apidoc_doc_language_parameter(self, app, client):
+    def test_apidoc_doc_display_request_duration(self, app, client):
         restplus.Api(app)
 
         response = client.get(url_for('doc'))
-        assert 'lang/translator.js' not in str(response.data)
-        assert 'lang/en.js' not in str(response.data)
-        assert 'lang/fr.js' not in str(response.data)
-        assert 'window.SwaggerTranslator' not in str(response.data)
+        assert 'displayRequestDuration: false' in str(response.data)
 
-        app.config['SWAGGER_UI_LANGUAGES'] = ['en', 'fr']
+        app.config['SWAGGER_UI_REQUEST_DURATION'] = False
         response = client.get(url_for('doc'))
-        assert 'lang/translator.js' in str(response.data)
-        assert 'lang/en.js' in str(response.data)
-        assert 'lang/fr.js' in str(response.data)
-        assert 'window.SwaggerTranslator' in str(response.data)
+        assert 'displayRequestDuration: false' in str(response.data)
 
-    def test_apidoc_doc_minified(self, app, client):
-        restplus.Api(app)
-
-        app.config['DEBUG'] = True
+        app.config['SWAGGER_UI_REQUEST_DURATION'] = True
         response = client.get(url_for('doc'))
-        assert 'swagger-ui.js' in str(response.data)
-
-        app.config['DEBUG'] = False
-        response = client.get(url_for('doc'))
-        assert 'swagger-ui.min.js' in str(response.data)
+        assert 'displayRequestDuration: true' in str(response.data)
 
     def test_custom_apidoc_url(self, app, client):
         restplus.Api(app, version='1.0', doc='/doc/')

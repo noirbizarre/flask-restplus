@@ -296,9 +296,9 @@ structures and render them appropriately. ::
     >>> resource_fields['shipping_address'] = fields.Nested(address_fields)
     >>> address1 = {'addr1': '123 fake street', 'city': 'New York', 'state': 'NY', 'zip': '10468'}
     >>> address2 = {'addr1': '555 nowhere', 'city': 'New York', 'state': 'NY', 'zip': '10468'}
-    >>> data = { 'name': 'bob', 'billing_address': address1, 'shipping_address': address2}
+    >>> data = {'name': 'bob', 'billing_address': address1, 'shipping_address': address2}
     >>>
-    >>> json.dumps(marshal_with(data, resource_fields))
+    >>> json.dumps(marshal(data, resource_fields))
     '{"billing_address": {"line 1": "123 fake street", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}, "name": "bob", "shipping_address": {"line 1": "555 nowhere", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}}'
 
 This example uses two :class:`~fields.Nested` fields.
@@ -312,6 +312,8 @@ In other words:
 ``data.billing_address.addr1`` is in scope here,
 whereas in the previous example ``data.addr1`` was the location attribute.
 Remember: :class:`~fields.Nested` and :class:`~fields.List` objects create a new scope for attributes.
+
+By default when the sub-object is `None`, an object with default values for the nested fields will be generated instead of `null`. This can be modified by passing the `allow_null` parameter, see the :class:`~fields.Nested` constructor for more details.
 
 Use :class:`~fields.Nested` with :class:`~fields.List` to marshal lists of more complex objects:
 
@@ -330,7 +332,7 @@ Use :class:`~fields.Nested` with :class:`~fields.List` to marshal lists of more 
 The ``api.model()`` factory
 ----------------------------
 
-The :meth:`~Namespace.model` factory allows you to instanciate
+The :meth:`~Namespace.model` factory allows you to instantiate
 and register models to your :class:`API` or :class:`Namespace`.
 
 .. code-block:: python
@@ -351,7 +353,7 @@ and register models to your :class:`API` or :class:`Namespace`.
 Duplicating with ``clone``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :meth:`Model.clone` method allows you to instanciate an augmented model.
+The :meth:`Model.clone` method allows you to instantiate an augmented model.
 It saves you duplicating all fields.
 
 .. code-block:: python
@@ -461,6 +463,50 @@ You can also use the :attr:`__schema_format__`, ``__schema_type__`` and
 
     class MyVerySpecialField(fields.Raw):
         __schema_example__ = 'hello, world'
+
+
+Skip fields which value is None
+-------------------------------
+
+You can skip those fields which values is ``None`` instead of marshaling those fields with JSON value, null.
+This feature is useful to reduce the size of response when you have a lots of fields which value may be None,
+but which fields are ``None`` are unpredictable.
+
+Let consider the following example with an optional ``skip_none`` keyword argument be set to True.
+
+.. code-block:: python
+
+    >>> from flask_restplus import Model, fields, marshal_with
+    >>> import json
+    >>> model = Model('Model', {
+    ...     'name': fields.String,
+    ...     'address_1': fields.String,
+    ...     'address_2': fields.String
+    ... })
+    >>> @marshal_with(model, skip_none=True)
+    ... def get():
+    ...     return {'name': 'John', 'address_1': None}
+    ...
+    >>> get()
+    OrderedDict([('name', 'John')])
+
+You can see that ``address_1`` and ``address_2`` are skipped by :func:`marshal_with`.
+``address_1`` be skipped because value is ``None``.
+``address_2`` be skipped because the dictionary return by ``get()`` have no key, ``address_2``.
+
+Skip none in Nested fields
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If your module use :class:`fields.Nested`, you need to pass ``skip_none=True`` keyword argument to :class:`fields.Nested`.
+
+.. code-block:: python
+
+    >>> from flask_restplus import Model, fields, marshal_with
+    >>> import json
+    >>> model = Model('Model', {
+    ...     'name': fields.String,
+    ...     'location': fields.Nested(location_model, skip_none=True)
+    ... })
 
 
 Define model using JSON Schema

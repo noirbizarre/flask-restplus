@@ -1,19 +1,19 @@
 language: python
 python:
   - 2.7
-  - 3.3
   - 3.4
   - 3.5
   - 3.6
   - pypy
   - pypy3
 install:
-  - pip install -e .[ci]
+  - pip install -r requirements/develop.pip
 script:
   - inv cover qa
 after_success:
   - pip install coveralls
   - coveralls --rcfile=coverage.rc
+  - ./travis-bench-after-success.sh
 matrix:
   allow_failures:
     - python: pypy3

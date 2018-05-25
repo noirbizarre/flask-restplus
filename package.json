@@ -1,0 +1,16 @@
+{
+  "name": "flask-restplus",
+  "version": "0.10.1",
+  "description": "Fully featured framework for fast, easy and documented API development with Flask",
+  "repository": "noirbizarre/flask-restplus",
+  "keywords": [
+    "swagger",
+    "flask"
+  ],
+  "author": "Axel Haustant",
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "swagger-ui-dist": "^3.4.0",
+    "typeface-droid-sans": "0.0.40"
+  }
+}

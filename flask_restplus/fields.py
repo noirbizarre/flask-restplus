@@ -140,7 +140,7 @@ class Raw(object):
         '''
         return value
 
-    def output(self, key, obj):
+    def output(self, key, obj, **kwargs):
         '''
         Pulls the value for the given key from the object, applies the
         field's formatting and returns the result. If the key is not found
@@ -193,6 +193,9 @@ class Nested(Raw):
     :param dict model: The model dictionary to nest
     :param bool allow_null: Whether to return None instead of a dictionary
         with null keys, if a nested dictionary has all-null keys
+    :param bool skip_none: Optional key will be used to eliminate inner fields
+                           which value is None or the inner field's key not
+                           exist in data
     :param kwargs: If ``default`` keyword argument is present, a nested
         dictionary will be marshaled as its value if nested dictionary is
         all-null keys (e.g. lets you return an empty JSON object instead of
@@ -200,17 +203,18 @@ class Nested(Raw):
     '''
     __schema_type__ = None
 
-    def __init__(self, model, allow_null=False, as_list=False, **kwargs):
+    def __init__(self, model, allow_null=False, skip_none=False, as_list=False, **kwargs):
         self.model = model
         self.as_list = as_list
         self.allow_null = allow_null
+        self.skip_none = skip_none
         super(Nested, self).__init__(**kwargs)
 
     @property
     def nested(self):
         return getattr(self.model, 'resolved', self.model)
 
-    def output(self, key, obj):
+    def output(self, key, obj, ordered=False, **kwargs):
         value = get_value(key if self.attribute is None else self.attribute, obj)
         if value is None:
             if self.allow_null:
@@ -218,7 +222,7 @@ class Nested(Raw):
             elif self.default is not None:
                 return self.default
 
-        return marshal(value, self.nested)
+        return marshal(value, self.nested, skip_none=self.skip_none, ordered=ordered)
 
     def schema(self):
         schema = super(Nested, self).schema()
@@ -281,7 +285,7 @@ class List(Raw):
             for idx, val in enumerate(value)
         ]
 
-    def output(self, key, data):
+    def output(self, key, data, ordered=False, **kwargs):
         value = get_value(key if self.attribute is None else self.attribute, data)
         # we cannot really test for external dict behavior
         if is_indexable_but_not_string(value) and not isinstance(value, dict):
@@ -568,7 +572,7 @@ class Url(StringMixin, Raw):
         self.absolute = absolute
         self.scheme = scheme
 
-    def output(self, key, obj):
+    def output(self, key, obj, **kwargs):
         try:
             data = to_marshallable_type(obj)
             endpoint = self.endpoint if self.endpoint is not None else request.endpoint
@@ -605,7 +609,7 @@ class FormattedString(StringMixin, Raw):
         super(FormattedString, self).__init__(**kwargs)
         self.src_str = text_type(src_str)
 
-    def output(self, key, obj):
+    def output(self, key, obj, **kwargs):
         try:
             data = to_marshallable_type(obj)
             return self.src_str.format(**data)
@@ -623,7 +627,7 @@ class ClassName(String):
         super(ClassName, self).__init__(**kwargs)
         self.dash = dash
 
-    def output(self, key, obj):
+    def output(self, key, obj, **kwargs):
         classname = obj.__class__.__name__
         if classname == 'dict':
             return 'object'
@@ -654,7 +658,7 @@ class Polymorph(Nested):
         parent = self.resolve_ancestor(list(itervalues(mapping)))
         super(Polymorph, self).__init__(parent, allow_null=not required, **kwargs)
 
-    def output(self, key, obj):
+    def output(self, key, obj, ordered=False, **kwargs):
         # Copied from upstream NestedField
         value = get_value(key if self.attribute is None else self.attribute, obj)
         if value is None:
@@ -674,7 +678,7 @@ class Polymorph(Nested):
         elif len(candidates) > 1:
             raise ValueError('Unable to determine a candidate for: ' + value.__class__.__name__)
         else:
-            return marshal(value, candidates[0].resolved, mask=self.mask)
+            return marshal(value, candidates[0].resolved, mask=self.mask, ordered=ordered)
 
     def resolve_ancestor(self, models):
         '''
@@ -736,7 +740,7 @@ class Wildcard(List):
     def key(self):
         return self._last
 
-    def output(self, key, obj):
+    def output(self, key, obj, ordered=False):
         flat = self._flatten(obj)
         value = None
         reg = fnmatch.translate(key)

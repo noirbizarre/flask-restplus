@@ -133,10 +133,15 @@ The ``@api.errorhandler`` decorator
 -----------------------------------
 
 The :meth:`@api.errorhandler <Api.errorhandler>` decorator
-allows you to register a specific handler for a given exception, in the same manner
+allows you to register a specific handler for a given exception (or any exceptions inherited from it), in the same manner
 that you can do with Flask/Blueprint :meth:`@errorhandler <flask:flask.Flask.errorhandler>` decorator.
 
 .. code-block:: python
+
+    @api.errorhandler(RootException)
+    def handle_root_exception(error):
+        '''Return a custom message and 400 status code'''
+        return {'message': 'What you want'}, 400
 
     @api.errorhandler(CustomException)
     def handle_custom_exception(error):
@@ -181,11 +186,30 @@ In this example, the ``:raise:`` docstring will be automatically extracted
 and the response 400 will be documented properly.
 
 
-It also allows for overriding the default error handler when used wihtout parameter:
+It also allows for overriding the default error handler when used without parameter:
 
 .. code-block:: python
 
     @api.errorhandler
     def default_error_handler(error):
         '''Default error handler'''
+        return {'message': str(error)}, getattr(error, 'code', 500)
+
+.. note ::
+
+    Flask-RESTPlus will return a message in the error response by default.
+    If a custom response is required as an error and the message field is not needed,
+    it can be disabled by setting ``ERROR_INCLUDE_MESSAGE`` to ``False`` in your application config.
+
+Error handlers can also be registered on namespaces. An error handler registered on a namespace
+will override one registered on the api.
+
+
+.. code-block:: python
+
+    ns = Namespace('cats', description='Cats related operations')
+
+    @ns.errorhandler
+    def specific_namespace_error_handler(error):
+        '''Namespace error handler'''
         return {'message': str(error)}, getattr(error, 'code', 500)

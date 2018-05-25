@@ -1,12 +1,8 @@
-from minibench import Benchmark
+import pytest
 
-from faker import Faker
-
-from flask import Flask
 from flask_restplus import fields, Api, Resource
 from flask_restplus.swagger import Swagger
 
-fake = Faker()
 api = Api()
 
 person = api.model('Person', {
@@ -78,18 +74,24 @@ class Person(Resource):
         pass
 
 
-class SwaggerBenchmark(Benchmark):
-    '''Swagger serialization benchmark for a full API'''
-    times = 1000
+def swagger_specs(app):
+    with app.test_request_context('/'):
+        return Swagger(api).as_dict()
 
-    def before_class(self):
-        self.app = Flask(__name__)
-        api.init_app(self.app)
 
-    def bench_swagger_specs(self):
-        with self.app.test_request_context('/'):
-            return Swagger(api).as_dict()
+def swagger_specs_cached(app):
+    with app.test_request_context('/'):
+        return api.__schema__
 
-    def bench_swagger_specs_cached(self):
-        with self.app.test_request_context('/'):
-            return api.__schema__
+
+@pytest.mark.benchmark(group='swagger')
+class SwaggerBenchmark(object):
+    @pytest.fixture(autouse=True)
+    def register(self, app):
+        api.init_app(app)
+
+    def bench_swagger_specs(self, app, benchmark):
+        benchmark(swagger_specs, app)
+
+    def bench_swagger_specs_cached(self, app, benchmark):
+        benchmark(swagger_specs_cached, app)

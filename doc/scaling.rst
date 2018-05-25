@@ -18,8 +18,8 @@ There are many different ways to organize your Flask-RESTPlus app,
 but here we'll describe one that scales pretty well with larger apps
 and maintains a nice level organization.
 
-Flask-RESTPlus provides a way to use almost the same pattern as Blueprint.
-The main idea is to split your app into reusables namespaces.
+Flask-RESTPlus provides a way to use almost the same pattern as Flask's `blueprint`.
+The main idea is to split your app into reusable namespaces.
 
 Here's an example directory structure::
 
@@ -40,13 +40,13 @@ Here's an example directory structure::
 The `app` module will serve as a main application entry point following one of the classic
 Flask patterns (See :ref:`flask:larger-applications` and :ref:`flask:app-factories`).
 
-The `core` module is an example, it caontains the business logic.
+The `core` module is an example, it contains the business logic.
 In fact, you call it whatever you want, and there can be many packages.
 
 The `apis` package will be your main API entry point that you need to import and register on the application,
-whereas the namespaces modules are reusables namespaces designed like you would do with blueprint.
+whereas the namespaces modules are reusable namespaces designed like you would do with Flask's Blueprint.
 
-A namespace module will contains models and resources declarations declaration.
+A namespace module contains models and resources declarations.
 For example:
 
 .. code-block:: Python
@@ -163,7 +163,7 @@ Here's an example of how to link an :class:`Api` up to a :class:`~flask.Blueprin
     api = Api(blueprint)
     # ...
 
-Using a blueprint will allow you to mount your API on any url prefix and/or subdomain
+Using a `blueprint` will allow you to mount your API on any url prefix and/or subdomain
 in you application:
 
 

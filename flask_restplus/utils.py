@@ -7,6 +7,8 @@ from collections import OrderedDict
 from copy import deepcopy
 from six import iteritems
 
+from ._http import HTTPStatus
+
 
 FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
 ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
@@ -74,11 +76,10 @@ def not_none_sorted(data):
     :return: The same dictionnary without the keys with values to ``None``
     :rtype: OrderedDict
     '''
-    ordered_items = OrderedDict(sorted(iteritems(data)))
-    return OrderedDict((k, v) for k, v in iteritems(ordered_items) if v is not None)
+    return OrderedDict((k, v) for k, v in sorted(iteritems(data)) if v is not None)
 
 
-def unpack(response, default_code=200):
+def unpack(response, default_code=HTTPStatus.OK):
     '''
     Unpack a Flask standard response.
 

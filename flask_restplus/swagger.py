@@ -15,6 +15,7 @@ from . import fields
 from .model import Model, ModelBase
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
+from ._http import HTTPStatus
 
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
@@ -26,9 +27,10 @@ PATH_TYPES = {
 }
 
 
-#: Maps Pyton primitives types to Swagger ones
+#: Maps Python primitives types to Swagger ones
 PY_TYPES = {
     int: 'integer',
+    float: 'number',
     str: 'string',
     bool: 'boolean',
     None: 'void'
@@ -174,6 +176,13 @@ class Swagger(object):
                 for url in self.api.ns_urls(ns, urls):
                     paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
 
+        # merge in the top-level authorizations
+        for ns in self.api.namespaces:
+            if ns.authorizations:
+                if self.api.authorizations is None:
+                    self.api.authorizations = {}
+                self.api.authorizations = merge(self.api.authorizations, ns.authorizations)
+
         specs = {
             'swagger': '2.0',
             'basePath': basepath,
@@ -240,7 +249,7 @@ class Swagger(object):
                 method_doc['docstring'] = parse_docstring(method_impl)
                 method_params = self.expected_params(method_doc)
                 method_params = merge(method_params, method_doc.get('params', {}))
-                inherited_params = dict((k, v) for k, v in iteritems(params) if k in method_params)
+                inherited_params = OrderedDict((k, v) for k, v in iteritems(params) if k in method_params)
                 method_doc['params'] = merge(inherited_params, method_params)
             doc[method] = method_doc
         return doc
@@ -252,7 +261,7 @@ class Swagger(object):
 
         for expect in doc.get('expect', []):
             if isinstance(expect, RequestParser):
-                parser_params = dict((p['name'], p) for p in expect.__schema__)
+                parser_params = OrderedDict((p['name'], p) for p in expect.__schema__)
                 params.update(parser_params)
             elif isinstance(expect, ModelBase):
                 params['payload'] = not_none({
@@ -283,7 +292,7 @@ class Swagger(object):
 
     def register_errors(self):
         responses = {}
-        for exception, handler in self.api.error_handlers.items():
+        for exception, handler in iteritems(self.api.error_handlers):
             doc = parse_docstring(handler)
             response = {
                 'description': doc['summary']
@@ -320,6 +329,9 @@ class Swagger(object):
             'parameters': self.parameters_for(doc[method]) or None,
             'security': self.security_for(doc, method),
         }
+        # Handle 'produces' mimetypes documentation
+        if 'produces' in doc[method]:
+            operation['produces'] = doc[method]['produces']
         # Handle deprecated annotation
         if doc.get('deprecated') or doc[method].get('deprecated'):
             operation['deprecated'] = True
@@ -340,7 +352,7 @@ class Swagger(object):
         '''
         return dict(
             (k if k.startswith('x-') else 'x-{0}'.format(k), v)
-            for k, v in doc[method].get('vendor', {}).items()
+            for k, v in iteritems(doc[method].get('vendor', {}))
         )
 
     def description_for(self, doc, method):
@@ -423,14 +435,14 @@ class Swagger(object):
                         responses[code]['schema'] = self.serialize_schema(model)
                     self.process_headers(responses[code], doc, method, kwargs.get('headers'))
             if 'model' in d:
-                code = str(d.get('default_code', 200))
+                code = str(d.get('default_code', HTTPStatus.OK))
                 if code not in responses:
                     responses[code] = self.process_headers(DEFAULT_RESPONSE.copy(), doc, method)
                 responses[code]['schema'] = self.serialize_schema(d['model'])
 
             if 'docstring' in d:
-                for name, description in d['docstring']['raises'].items():
-                    for exception, handler in self.api.error_handlers.items():
+                for name, description in iteritems(d['docstring']['raises']):
+                    for exception, handler in iteritems(self.api.error_handlers):
                         error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
                         code = list(error_responses.keys())[0] if error_responses else None
                         if code and exception.__name__ == name:
@@ -438,7 +450,7 @@ class Swagger(object):
                             break
 
         if not responses:
-            responses['200'] = self.process_headers(DEFAULT_RESPONSE.copy(), doc, method)
+            responses[str(HTTPStatus.OK.value)] = self.process_headers(DEFAULT_RESPONSE.copy(), doc, method)
         return responses
 
     def process_headers(self, response, doc, method=None, headers=None):
@@ -447,9 +459,9 @@ class Swagger(object):
             response['headers'] = dict(
                 (k, _clean_header(v)) for k, v
                 in itertools.chain(
-                    doc.get('headers', {}).items(),
-                    method_doc.get('headers', {}).items(),
-                    (headers or {}).items()
+                    iteritems(doc.get('headers', {})),
+                    iteritems(method_doc.get('headers', {})),
+                    iteritems(headers or {})
                 )
             )
         return response
