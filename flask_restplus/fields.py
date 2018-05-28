@@ -705,7 +705,7 @@ class Polymorph(Nested):
         return Polymorph(mapping, **data)
 
 
-class Wildcard(List):
+class Wildcard(Raw):
     '''
     Field for marshalling list of "unkown" fields.
 
@@ -719,6 +719,18 @@ class Wildcard(List):
     _obj = None
     _cache = []
     _last = None
+
+    def __init__(self, cls_or_instance, **kwargs):
+        super(Wildcard, self).__init__(**kwargs)
+        error_msg = 'The type of the wildcard elements must be a subclass of fields.Raw'
+        if isinstance(cls_or_instance, type):
+            if not issubclass(cls_or_instance, Raw):
+                raise MarshallingError(error_msg)
+            self.container = cls_or_instance()
+        else:
+            if not isinstance(cls_or_instance, Raw):
+                raise MarshallingError(error_msg)
+            self.container = cls_or_instance
 
     def _flatten(self, obj):
         if obj == self._obj and self._flat:
@@ -761,6 +773,19 @@ class Wildcard(List):
             return None
 
         return self.container.format(value)
+
+    def schema(self):
+        schema = super(Wildcard, self).schema()
+        schema['type'] = 'object'
+        schema['additionalProperties'] = self.container.__schema__
+        return schema
+
+    def clone(self, mask=None):
+        kwargs = self.__dict__.copy()
+        model = kwargs.pop('container')
+        if mask:
+            model = mask.apply(model)
+        return self.__class__(model, **kwargs)
 
 
 def match_attributes(attribute):

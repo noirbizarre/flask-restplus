@@ -888,22 +888,7 @@ class WildcardFieldTest(BaseFieldTestMixin, FieldTestCase):
     def test_defaults(self):
         field = fields.Wildcard(fields.String)
         assert not field.required
-        assert field.__schema__ == {'type': 'array', 'items': {'type': 'string'}}
-
-    def test_min_items(self):
-        field = fields.Wildcard(fields.String, min_items=5)
-        assert 'minItems' in field.__schema__
-        assert field.__schema__['minItems'] == 5
-
-    def test_max_items(self):
-        field = fields.Wildcard(fields.String, max_items=42)
-        assert 'maxItems' in field.__schema__
-        assert field.__schema__['maxItems'] == 42
-
-    def test_unique(self):
-        field = fields.Wildcard(fields.String, unique=True)
-        assert 'uniqueItems' in field.__schema__
-        assert field.__schema__['uniqueItems'] is True
+        assert field.__schema__ == {'type': 'object', 'additionalProperties': {'type': 'string'}}
 
     def test_with_scoped_attribute_on_dict_or_obj(self):
         class Test(object):
