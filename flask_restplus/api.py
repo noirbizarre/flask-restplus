@@ -97,7 +97,7 @@ class Api(object):
             tags=None, prefix='', ordered=False,
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
-            **kwargs):
+            add_specs=True, **kwargs):
         self.version = version
         self.title = title or 'API'
         self.description = description
@@ -149,7 +149,7 @@ class Api(object):
 
         if app is not None:
             self.app = app
-            self.init_app(app)
+            self.init_app(app, add_specs=add_specs)
         # super(Api, self).__init__(app, **kwargs)
 
     def init_app(self, app, **kwargs):

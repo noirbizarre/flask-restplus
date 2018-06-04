@@ -6,7 +6,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Allow to select if specs are added or hidden in the API (:pr:`553`, :issue:`464`)
 
 0.13.0 (2019-08-12)
 -------------------
