@@ -405,8 +405,8 @@ routes unless explicitly overridden:
     def get(self, id):
         return {}
 
-Here, the ``id`` documentation from the ``@api.doc()`` decorator is present in both routes, 
-``/my-resource/<id>`` inherits the ``My resource`` description from the ``@api.doc()`` 
+Here, the ``id`` documentation from the ``@api.doc()`` decorator is present in both routes,
+``/my-resource/<id>`` inherits the ``My resource`` description from the ``@api.doc()``
 decorator and  ``/also-my-resource/<id>`` overrides the description with ``Alias for /my-resource/<id>``.
 
 Routes with a ``doc`` parameter are given a `unique` Swagger ``operationId``. Routes without
@@ -751,6 +751,23 @@ You can hide some resources or methods from documentation using any of the follo
 
    Namespace tags without attached resources will be hidden automatically from the documentation.
 
+It is also possible to hide all the documentation or specs creating the API object like this:
+
+.. code-block:: python
+
+   from flask import Flask
+   from flask_restplus import Api
+
+   # Hide docs (default is '/', meaning that documentation will hang under '/')
+   app = Flask(__name__)
+   api = Api(app, doc=False)
+
+   # Hide specs (default is True, meaning that specs will be generated)
+   api = Api(app, add_specs=False)
+
+.. note::
+
+   If you disable the spec generation, documentation will be also disabled.
 
 Documenting authorizations
 --------------------------
@@ -1034,7 +1051,7 @@ Configuring "Try it Out"
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, all paths and methods have a "Try it Out" button for performing API requests in the browser.
-These can be disable **per method** with the ``SWAGGER_SUPPORTED_SUBMIT_METHODS`` configuration option, 
+These can be disable **per method** with the ``SWAGGER_SUPPORTED_SUBMIT_METHODS`` configuration option,
 supporting the same values as the ``supportedSubmitMethods`` `Swagger UI parameter <https://github.com/swagger-api/swagger-ui/blob/master/docs/usage/configuration.md#network/>`_.
 
 .. code-block:: python

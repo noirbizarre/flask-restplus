@@ -7,6 +7,7 @@ Current
 -------
 
 - Ensure that exceptions raised in error handler, including programming errors, are logged (:issue:`705`, :pr:`706`)
+- Allow to select if specs are added or hidden in the API (:pr:`553`, :issue:`464`)
 
 0.13.0 (2019-08-12)
 -------------------
