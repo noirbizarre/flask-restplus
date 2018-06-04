@@ -701,6 +701,16 @@ class BooleanTest(object):
     def test_bad_boolean(self):
         with pytest.raises(ValueError):
             inputs.boolean('blah')
+        with pytest.raises(ValueError):
+            inputs.boolean(None)
+
+    def test_checkbox(self):
+        assert inputs.boolean('on') is True
+
+    def test_non_strings(self):
+        assert inputs.boolean(0) is False
+        assert inputs.boolean(1) is True
+        assert inputs.boolean([]) is False
 
     def test_schema(self):
         assert inputs.boolean.__schema__ == {'type': 'boolean'}

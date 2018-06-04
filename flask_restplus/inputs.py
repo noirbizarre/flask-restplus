@@ -496,9 +496,11 @@ def boolean(value):
     if isinstance(value, bool):
         return value
 
-    if not value:
+    if value is None:
         raise ValueError('boolean type must be non-null')
-    value = value.lower()
+    elif not value:
+        return False
+    value = str(value).lower()
     if value in ('true', '1', 'on',):
         return True
     if value in ('false', '0',):
