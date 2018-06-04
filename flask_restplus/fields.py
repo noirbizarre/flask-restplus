@@ -12,7 +12,7 @@ from six.moves.urllib.parse import urlparse, urlunparse
 from flask import url_for, request
 from werkzeug import cached_property
 
-from .inputs import date_from_iso8601, datetime_from_iso8601, datetime_from_rfc822
+from .inputs import date_from_iso8601, datetime_from_iso8601, datetime_from_rfc822, boolean
 from .errors import RestError
 from .marshalling import marshal
 from .utils import camel_to_dash, not_none
@@ -452,7 +452,7 @@ class Boolean(Raw):
     __schema_type__ = 'boolean'
 
     def format(self, value):
-        return bool(value)
+        return boolean(value)
 
 
 class DateTime(MinMaxMixin, Raw):
