@@ -220,6 +220,8 @@ class Swagger(object):
             tags.append(tag)
             by_name[tag['name']] = tag
         for ns in api.namespaces:
+            if not ns.resources:
+                continue
             if ns.name not in by_name:
                 tags.append({
                     'name': ns.name,
