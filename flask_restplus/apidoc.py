@@ -33,4 +33,4 @@ def swagger_static(filename):
 def ui_for(api):
     '''Render a SwaggerUI for a given API'''
     return render_template('swagger-ui.html', title=api.title,
-                           specs_url=api.specs_url)
+                           specs_url=api.specs_url, base_url=api.base_url)
