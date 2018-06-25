@@ -63,7 +63,7 @@
                 displayOperationId: {{ config.SWAGGER_UI_OPERATION_ID|default(False)|tojson }},
                 displayRequestDuration: {{ config.SWAGGER_UI_REQUEST_DURATION|default(False)|tojson }},
                 docExpansion: "{{ config.SWAGGER_UI_DOC_EXPANSION | default('none') }}",
-                oauth2RedirectUrl: "{{ config.SWAGGER_UI_OAUTH_REDIRECT_URL | default(swagger_static('oauth2-redirect.html')) }}"
+                oauth2RedirectUrl: "{{ config.SWAGGER_UI_OAUTH_REDIRECT_URL | default(base_url + swagger_static('oauth2-redirect.html')) }}"
             })
 
             {% if config.SWAGGER_UI_OAUTH_CLIENT_ID -%}
