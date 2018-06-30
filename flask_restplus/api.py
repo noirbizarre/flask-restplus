@@ -168,6 +168,7 @@ class Api(object):
         :param str license_url: The license page URL (used in Swagger documentation)
 
         '''
+        self.app = app
         self.title = kwargs.get('title', self.title)
         self.description = kwargs.get('description', self.description)
         self.terms_url = kwargs.get('terms_url', self.terms_url)
