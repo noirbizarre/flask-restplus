@@ -347,7 +347,7 @@ For example, these two declarations are equivalent:
 
 .. code-block:: python
 
-    @api.route('/my-resource/<id>', endpoint='my-resource', doc={params:{'id': 'An ID'}})
+    @api.route('/my-resource/<id>', endpoint='my-resource', doc={'params':{'id': 'An ID'}})
     class MyResource(Resource):
         def get(self, id):
             return {}
