@@ -141,7 +141,8 @@ that you can do with Flask/Blueprint :meth:`@errorhandler <flask:flask.Flask.err
     @api.errorhandler(RootException)
     def handle_root_exception(error):
         '''Return a custom message and 400 status code'''
-        return {'message': 'What you want'}, 400
+        return {'message': 'What you want'}, 400       
+        
 
     @api.errorhandler(CustomException)
     def handle_custom_exception(error):
@@ -159,6 +160,17 @@ that you can do with Flask/Blueprint :meth:`@errorhandler <flask:flask.Flask.err
     def handle_fake_exception_with_header(error):
         '''Return a custom message and 400 status code'''
         return {'message': error.message}, 400, {'My-Header': 'Value'}
+        
+        
+    @api.errorhandler(NoResultFound)
+    def handle_no_result_exception(error):
+        '''Return a custom not found error message and 404 status code'''
+        return {'message': error.specific}, 404        
+        
+        
+.. note ::
+
+    A "NoResultFound" error with description is required by the OpenAPI 2.0 spec. The docstring in the error handle function is output in the swagger.json as the description.
 
 You can also document the error:
 
