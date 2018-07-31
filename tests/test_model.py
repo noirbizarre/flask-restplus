@@ -4,7 +4,9 @@ from __future__ import unicode_literals
 import copy
 import pytest
 
-from flask_restplus import fields, Model, SchemaModel
+from collections import OrderedDict
+
+from flask_restplus import fields, Model, OrderedModel, SchemaModel
 
 
 class ModelTest(object):
@@ -14,6 +16,9 @@ class ModelTest(object):
             'age': fields.Integer,
             'birthdate': fields.DateTime,
         })
+
+        assert isinstance(model, dict)
+        assert not isinstance(model, OrderedDict)
 
         assert model.__schema__ == {
             'properties': {
@@ -32,11 +37,13 @@ class ModelTest(object):
         }
 
     def test_model_as_ordered_dict(self):
-        model = Model('Person', [
+        model = OrderedModel('Person', [
             ('name', fields.String),
             ('age', fields.Integer),
             ('birthdate', fields.DateTime),
         ])
+
+        assert isinstance(model, OrderedDict)
 
         assert model.__schema__ == {
             'type': 'object',

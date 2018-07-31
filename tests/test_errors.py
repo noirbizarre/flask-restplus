@@ -236,6 +236,33 @@ class ErrorsTest(object):
             'test': 'value',
         }
 
+    def test_errorhandler_with_namespace_from_api(self, app, client):
+        api = restplus.Api(app)
+
+        ns = api.namespace("ExceptionHandler", path="/")
+
+        class CustomException(RuntimeError):
+            pass
+
+        @ns.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise CustomException('error')
+
+        @ns.errorhandler(CustomException)
+        def handle_custom_exception(error):
+            return {'message': str(error), 'test': 'value'}, 400
+
+        response = client.get('/test/')
+        assert response.status_code == 400
+        assert response.content_type == 'application/json'
+
+        data = json.loads(response.data.decode('utf8'))
+        assert data == {
+            'message': 'error',
+            'test': 'value',
+        }
+
     def test_default_errorhandler(self, app, client):
         api = restplus.Api(app)
 

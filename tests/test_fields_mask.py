@@ -4,10 +4,7 @@ from __future__ import unicode_literals
 import json
 import pytest
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 from flask_restplus import mask, Api, Resource, fields, marshal, Mask
 

@@ -176,6 +176,13 @@ class Swagger(object):
                 for url in self.api.ns_urls(ns, urls):
                     paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
 
+        # merge in the top-level authorizations
+        for ns in self.api.namespaces:
+            if ns.authorizations:
+                if self.api.authorizations is None:
+                    self.api.authorizations = {}
+                self.api.authorizations = merge(self.api.authorizations, ns.authorizations)
+
         specs = {
             'swagger': '2.0',
             'basePath': basepath,
@@ -285,7 +292,7 @@ class Swagger(object):
 
     def register_errors(self):
         responses = {}
-        for exception, handler in self.api.error_handlers.items():
+        for exception, handler in iteritems(self.api.error_handlers):
             doc = parse_docstring(handler)
             response = {
                 'description': doc['summary']
@@ -345,7 +352,7 @@ class Swagger(object):
         '''
         return dict(
             (k if k.startswith('x-') else 'x-{0}'.format(k), v)
-            for k, v in doc[method].get('vendor', {}).items()
+            for k, v in iteritems(doc[method].get('vendor', {}))
         )
 
     def description_for(self, doc, method):
@@ -434,8 +441,8 @@ class Swagger(object):
                 responses[code]['schema'] = self.serialize_schema(d['model'])
 
             if 'docstring' in d:
-                for name, description in d['docstring']['raises'].items():
-                    for exception, handler in self.api.error_handlers.items():
+                for name, description in iteritems(d['docstring']['raises']):
+                    for exception, handler in iteritems(self.api.error_handlers):
                         error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
                         code = list(error_responses.keys())[0] if error_responses else None
                         if code and exception.__name__ == name:
@@ -452,9 +459,9 @@ class Swagger(object):
             response['headers'] = dict(
                 (k, _clean_header(v)) for k, v
                 in itertools.chain(
-                    doc.get('headers', {}).items(),
-                    method_doc.get('headers', {}).items(),
-                    (headers or {}).items()
+                    iteritems(doc.get('headers', {})),
+                    iteritems(method_doc.get('headers', {})),
+                    iteritems(headers or {})
                 )
             )
         return response

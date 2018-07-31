@@ -59,8 +59,6 @@ long_description = '\n'.join((
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
 install_requires = pip('install')
-if sys.version_info < (3, 4):
-    install_requires += ['enum34']
 doc_require = pip('doc')
 tests_require = pip('test')
 
@@ -80,8 +78,7 @@ setup(
         'test': tests_require,
         'doc': doc_require,
     },
-    license='MIT',
-    use_2to3=True,
+    license='BSD-3-Clause',
     zip_safe=False,
     keywords='flask restplus rest api swagger openapi',
     classifiers=[
@@ -100,6 +97,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: BSD License',
     ],
 )

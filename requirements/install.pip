@@ -3,3 +3,4 @@ jsonschema
 Flask>=0.8
 pytz
 six>=1.3.0
+enum34; python_version < '3.4'

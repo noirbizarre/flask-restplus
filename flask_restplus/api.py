@@ -6,6 +6,7 @@ import inspect
 import logging
 import operator
 import re
+import six
 import sys
 
 from collections import OrderedDict
@@ -73,6 +74,7 @@ class Api(object):
     :param str default_label: The default namespace label (used in Swagger documentation)
     :param str default_mediatype: The default media type to return
     :param bool validate: Whether or not the API should perform input payload validation.
+    :param bool ordered: Whether or not preserve order models and marshalling.
     :param str doc: The documentation path. If set to a false value, documentation is disabled.
                 (Default to '/')
     :param list decorators: Decorators to attach to every resource
@@ -91,7 +93,7 @@ class Api(object):
             contact=None, contact_url=None, contact_email=None,
             authorizations=None, security=None, doc='/', default_id=default_id,
             default='default', default_label='Default namespace', validate=None,
-            tags=None, prefix='',
+            tags=None, prefix='', ordered=False,
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
             **kwargs):
@@ -107,6 +109,7 @@ class Api(object):
         self.authorizations = authorizations
         self.security = security
         self.default_id = default_id
+        self.ordered = ordered
         self._validate = validate
         self._doc = doc
         self._doc_view = None
@@ -415,11 +418,8 @@ class Api(object):
         for resource, urls, kwargs in ns.resources:
             self.register_resource(ns, resource, *self.ns_urls(ns, urls), **kwargs)
         # Register models
-        for name, definition in ns.models.items():
+        for name, definition in six.iteritems(ns.models):
             self.models[name] = definition
-        # Register error handlers
-        for exception, handler in ns.error_handlers.items():
-            self.error_handlers[exception] = handler
 
     def namespace(self, *args, **kwargs):
         '''
@@ -427,6 +427,7 @@ class Api(object):
 
         :returns Namespace: a new namespace instance
         '''
+        kwargs['ordered'] = kwargs.get('ordered', self.ordered)
         ns = Namespace(*args, **kwargs)
         self.add_namespace(ns)
         return ns
@@ -481,6 +482,15 @@ class Api(object):
                 log.exception(msg)  # This will provide a full traceback
                 return {'error': msg}
         return self._schema
+
+    @property
+    def _own_and_child_error_handlers(self):
+        rv = {}
+        rv.update(self.error_handlers)
+        for ns in self.namespaces:
+            for exception, handler in six.iteritems(ns.error_handlers):
+                rv[exception] = handler
+        return rv
 
     def errorhandler(self, exception):
         '''A decorator to register an error handler for a given exception'''
@@ -620,7 +630,8 @@ class Api(object):
         default_data = {}
 
         headers = Headers()
-        for typecheck, handler in self.error_handlers.iteritems():
+
+        for typecheck, handler in six.iteritems(self._own_and_child_error_handlers):
             if isinstance(e, typecheck):
                 result = handler(e)
                 default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)

@@ -398,6 +398,8 @@ def iso8601interval(value, argument='argument'):
     :rtype: A tuple (datetime, datetime)
     :raises ValueError: if the interval is invalid.
     '''
+    if not value:
+        raise ValueError('Expected a valid ISO8601 date/time interval.')
 
     try:
         start, end = _parse_interval(value)
@@ -409,7 +411,7 @@ def iso8601interval(value, argument='argument'):
 
     except ValueError:
         msg = 'Invalid {arg}: {value}. {arg} must be a valid ISO8601 date/time interval.'
-        raise ValueError(msg.format(arg=argument, value=value),)
+        raise ValueError(msg.format(arg=argument, value=value))
 
     return start, end
 

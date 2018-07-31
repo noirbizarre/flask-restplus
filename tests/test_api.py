@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import copy
+
 from flask import url_for, Blueprint
 
 import flask_restplus as restplus
@@ -260,3 +262,60 @@ class APITest(object):
 
         with app.test_request_context():
             assert url_for('test_resource') == '/api_test/test/'
+
+    def test_multiple_ns_with_authorizations(self, app):
+        api = restplus.Api()
+        a1 = {
+            'apikey': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'X-API'
+            }
+        }
+        a2 = {
+            'oauth2': {
+                'type': 'oauth2',
+                'flow': 'accessCode',
+                'tokenUrl': 'https://somewhere.com/token',
+                'scopes': {
+                    'read': 'Grant read-only access',
+                    'write': 'Grant read-write access',
+                }
+            }
+        }
+        ns1 = restplus.Namespace('ns1', authorizations=a1)
+        ns2 = restplus.Namespace('ns2', authorizations=a2)
+
+        @ns1.route('/')
+        class Ns1(restplus.Resource):
+            @ns1.doc(security='apikey')
+            def get(self):
+                pass
+
+        @ns2.route('/')
+        class Ns2(restplus.Resource):
+            @ns1.doc(security='oauth2')
+            def post(self):
+                pass
+
+        api.add_namespace(ns1, path='/ns1')
+        api.add_namespace(ns2, path='/ns2')
+        api.init_app(app)
+
+        assert {"apikey": []} in api.__schema__["paths"]["/ns1/"]["get"]["security"]
+        assert {"oauth2": []} in api.__schema__["paths"]["/ns2/"]["post"]["security"]
+        unified_auth = copy.copy(a1)
+        unified_auth.update(a2)
+        assert api.__schema__["securityDefinitions"] == unified_auth
+
+    def test_non_ordered_namespace(self, app):
+        api = restplus.Api(app)
+        ns = api.namespace('ns', 'Test namespace')
+
+        assert not ns.ordered
+
+    def test_ordered_namespace(self, app):
+        api = restplus.Api(app, ordered=True)
+        ns = api.namespace('ns', 'Test namespace')
+
+        assert ns.ordered

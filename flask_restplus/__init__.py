@@ -5,7 +5,7 @@ from . import fields, reqparse, apidoc, inputs, cors
 from .api import Api  # noqa
 from .marshalling import marshal, marshal_with, marshal_with_field  # noqa
 from .mask import Mask
-from .model import Model, SchemaModel  # noqa
+from .model import Model, OrderedModel, SchemaModel  # noqa
 from .namespace import Namespace  # noqa
 from .resource import Resource  # noqa
 from .errors import abort, RestError, SpecsError, ValidationError
@@ -23,6 +23,8 @@ __all__ = (
     'marshal_with_field',
     'Mask',
     'Model',
+    'Namespace',
+    'OrderedModel',
     'SchemaModel',
     'abort',
     'cors',

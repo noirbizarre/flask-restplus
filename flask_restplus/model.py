@@ -7,6 +7,7 @@ import warnings
 
 from collections import OrderedDict, MutableMapping
 from six import iteritems, itervalues
+from werkzeug.utils import cached_property
 
 from .mask import Mask
 from .errors import abort
@@ -115,7 +116,7 @@ class ModelBase(object):
     __str__ = __unicode__
 
 
-class Model(ModelBase, OrderedDict, MutableMapping):
+class RawModel(ModelBase):
     '''
     A thin wrapper on ordered fields dict to store API doc metadata.
     Can also be used for response marshalling.
@@ -124,11 +125,13 @@ class Model(ModelBase, OrderedDict, MutableMapping):
     :param str mask: an optional default model mask
     '''
 
+    wrapper = dict
+
     def __init__(self, name, *args, **kwargs):
         self.__mask__ = kwargs.pop('mask', None)
         if self.__mask__ and not isinstance(self.__mask__, Mask):
             self.__mask__ = Mask(self.__mask__)
-        super(Model, self).__init__(name, *args, **kwargs)
+        super(RawModel, self).__init__(name, *args, **kwargs)
 
         def instance_clone(name, *parents):
             return self.__class__.clone(name, self, *parents)
@@ -136,7 +139,7 @@ class Model(ModelBase, OrderedDict, MutableMapping):
 
     @property
     def _schema(self):
-        properties = OrderedDict()
+        properties = self.wrapper()
         required = set()
         discriminator = None
         for name, field in iteritems(self):
@@ -155,7 +158,7 @@ class Model(ModelBase, OrderedDict, MutableMapping):
             'type': 'object',
         })
 
-    @property
+    @cached_property
     def resolved(self):
         '''
         Resolve real fields before submitting them to marshal
@@ -209,17 +212,39 @@ class Model(ModelBase, OrderedDict, MutableMapping):
         :param str name: The new model name
         :param dict parents: The new model extra fields
         '''
-        fields = OrderedDict()
+        fields = cls.wrapper()
         for parent in parents:
             fields.update(copy.deepcopy(parent))
         return cls(name, fields)
 
     def __deepcopy__(self, memo):
         obj = self.__class__(self.name,
-                             [(key, copy.deepcopy(value, memo)) for key, value in self.items()],
+                             [(key, copy.deepcopy(value, memo)) for key, value in iteritems(self)],
                              mask=self.__mask__)
         obj.__parents__ = self.__parents__
         return obj
+
+
+class Model(RawModel, dict, MutableMapping):
+    '''
+    A thin wrapper on fields dict to store API doc metadata.
+    Can also be used for response marshalling.
+
+    :param str name: The model public name
+    :param str mask: an optional default model mask
+    '''
+    pass
+
+
+class OrderedModel(RawModel, OrderedDict, MutableMapping):
+    '''
+    A thin wrapper on ordered fields dict to store API doc metadata.
+    Can also be used for response marshalling.
+
+    :param str name: The model public name
+    :param str mask: an optional default model mask
+    '''
+    wrapper = OrderedDict
 
 
 class SchemaModel(ModelBase):

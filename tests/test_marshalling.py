@@ -7,10 +7,7 @@ from flask_restplus import (
     marshal, marshal_with, marshal_with_field, fields, Api, Resource
 )
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 
 # Add a dummy Resource to verify that the app is properly set.
@@ -24,6 +21,8 @@ class MarshallingTest(object):
         model = OrderedDict([('foo', fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = marshal(marshal_dict, model)
+        assert isinstance(output, dict)
+        assert not isinstance(output, OrderedDict)
         assert output == {'foo': 'bar'}
 
     def test_marshal_with_envelope(self):
@@ -134,6 +133,26 @@ class MarshallingTest(object):
         assert output == [{'foo': 'bar'}]
 
     def test_marshal_nested(self):
+        model = {
+            'foo': fields.Raw,
+            'fee': fields.Nested({'fye': fields.String}),
+        }
+
+        marshal_fields = {
+            'foo': 'bar',
+            'bat': 'baz',
+            'fee': {'fye': 'fum'},
+        }
+        expected = {
+            'foo': 'bar',
+            'fee': {'fye': 'fum'},
+        }
+
+        output = marshal(marshal_fields, model)
+
+        assert output == expected
+
+    def test_marshal_nested_ordered(self):
         model = OrderedDict([
             ('foo', fields.Raw),
             ('fee', fields.Nested({
@@ -141,14 +160,21 @@ class MarshallingTest(object):
             }))
         ])
 
-        marshal_fields = OrderedDict([
-            ('foo', 'bar'), ('bat', 'baz'), ('fee', {'fye': 'fum'})
-        ])
-        output = marshal(marshal_fields, model)
+        marshal_fields = {
+            'foo': 'bar',
+            'bat': 'baz',
+            'fee': {'fye': 'fum'},
+        }
         expected = OrderedDict([
-            ('foo', 'bar'), ('fee', OrderedDict([('fye', 'fum')]))
+            ('foo', 'bar'),
+            ('fee', OrderedDict([('fye', 'fum')]))
         ])
+
+        output = marshal(marshal_fields, model, ordered=True)
+
+        assert isinstance(output, OrderedDict)
         assert output == expected
+        assert isinstance(output['fee'], OrderedDict)
 
     def test_marshal_nested_with_non_null(self):
         model = OrderedDict([
