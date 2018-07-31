@@ -197,7 +197,7 @@ class Api(object):
         self._register_doc(self.blueprint or app)
 
         app.handle_exception = partial(self.error_router, app.handle_exception)
-        app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+        app.handle_user_exception = partial(self.user_error_router, app.handle_user_exception)
 
         if len(self.resources) > 0:
             for resource, urls, kwargs in self.resources:
