@@ -6,7 +6,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Fix Namespace decorators (:issue:`475`)
 
 0.11.0 (2018-05-16)
 -------------------
