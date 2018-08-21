@@ -176,8 +176,7 @@ class SwaggerTest(object):
         assert data['tags'] == [
             {'name': 'tag-1'},
             {'name': 'tag-2'},
-            {'name': 'tag-3'},
-            {'name': 'default', 'description': 'Default namespace'},
+            {'name': 'tag-3'}
         ]
 
     def test_specs_endpoint_tags_tuple(self, app, client):
@@ -191,8 +190,7 @@ class SwaggerTest(object):
         assert data['tags'] == [
             {'name': 'tag-1', 'description': 'Tag 1'},
             {'name': 'tag-2', 'description': 'Tag 2'},
-            {'name': 'tag-3', 'description': 'Tag 3'},
-            {'name': 'default', 'description': 'Default namespace'},
+            {'name': 'tag-3', 'description': 'Tag 3'}
         ]
 
     def test_specs_endpoint_tags_dict(self, app, client):
@@ -206,8 +204,7 @@ class SwaggerTest(object):
         assert data['tags'] == [
             {'name': 'tag-1', 'description': 'Tag 1'},
             {'name': 'tag-2', 'description': 'Tag 2'},
-            {'name': 'tag-3', 'description': 'Tag 3'},
-            {'name': 'default', 'description': 'Default namespace'},
+            {'name': 'tag-3', 'description': 'Tag 3'}
         ]
 
     @pytest.mark.api(tags=['ns', 'tag'])
@@ -215,11 +212,7 @@ class SwaggerTest(object):
         api.namespace('ns', 'Description')
 
         data = client.get_specs('')
-        assert data['tags'] == [
-            {'name': 'ns', 'description': 'Description'},
-            {'name': 'tag'},
-            {'name': 'default', 'description': 'Default namespace'},
-        ]
+        assert data['tags'] == [{'name': 'ns'}, {'name': 'tag'}]
 
     def test_specs_endpoint_invalid_tags(self, app, client):
         restplus.Api(app, tags=[
@@ -227,6 +220,54 @@ class SwaggerTest(object):
         ])
 
         client.get_specs('', status=500)
+
+    def test_specs_endpoint_default_ns_with_resources(self, app, client):
+        restplus.Api(app)
+        data = client.get_specs('')
+        assert data['tags'] == []
+
+    def test_specs_endpoint_default_ns_without_resources(self, app, client):
+        api = restplus.Api(app)
+
+        @api.route('/test', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                return {}
+
+        data = client.get_specs('')
+        assert data['tags'] == [
+            {'name': 'default', 'description': 'Default namespace'}
+        ]
+
+    def test_specs_endpoint_default_ns_with_specified_ns(self, app, client):
+        api = restplus.Api(app)
+        ns = api.namespace('ns', 'Test namespace')
+
+        @ns.route('/test2', endpoint='test2')
+        @api.route('/test', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                return {}
+
+        data = client.get_specs('')
+        assert data['tags'] == [
+            {'name': 'default', 'description': 'Default namespace'},
+            {'name': 'ns', 'description': 'Test namespace'}
+        ]
+
+    def test_specs_endpoint_specified_ns_without_default_ns(self, app, client):
+        api = restplus.Api(app)
+        ns = api.namespace('ns', 'Test namespace')
+
+        @ns.route('/', endpoint='test2')
+        class TestResource(restplus.Resource):
+            def get(self):
+                return {}
+
+        data = client.get_specs('')
+        assert data['tags'] == [
+            {'name': 'ns', 'description': 'Test namespace'}
+        ]
 
     def test_specs_authorizations(self, app, client):
         authorizations = {
@@ -352,7 +393,7 @@ class SwaggerTest(object):
         }
         assert 'parameters' not in op
 
-        assert len(data['tags']) == 2
+        assert len(data['tags']) == 1
         tag = data['tags'][-1]
         assert tag['name'] == 'ns'
         assert tag['description'] == 'Test namespace'
@@ -384,7 +425,7 @@ class SwaggerTest(object):
             }
         }
 
-        assert len(data['tags']) == 2
+        assert len(data['tags']) == 1
         tag = data['tags'][-1]
         assert tag['name'] == 'ns'
         assert tag['description'] == 'Test namespace'

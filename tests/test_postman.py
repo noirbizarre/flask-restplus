@@ -86,8 +86,8 @@ class PostmanTest(object):
         assert request['name'] == 'test_post'
         assert request['description'] == 'A test post'
 
-        assert len(data['folders']) == 2
-        folder = data['folders'][1]
+        assert len(data['folders']) == 1
+        folder = data['folders'][0]
         assert folder['name'] == 'test'
         assert folder['description'] == 'A test namespace'
 
@@ -131,8 +131,8 @@ class PostmanTest(object):
 
         assert len(data['requests']) == 3
 
-        assert len(data['folders']) == 2
-        folder = data['folders'][1]
+        assert len(data['folders']) == 1
+        folder = data['folders'][0]
         assert folder['name'] == 'test'
 
         expected_order = ('test_post_z', 'test_post_y', 'test_post_x')

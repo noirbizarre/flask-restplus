@@ -687,6 +687,10 @@ You can hide some resources or methods from documentation using any of the follo
         def delete(self):
             return {}
 
+.. note::
+
+   Namespace tags without attached resources will be hidden automatically from the documentation.
+
 
 Documenting authorizations
 --------------------------
