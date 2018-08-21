@@ -288,8 +288,8 @@ class BooleanFieldTest(BaseFieldTestMixin, FieldTestCase):
         (True, True),
         (False, False),
         ({}, False),
-        ('false', True),  # These are different from php
-        ('0', True),      # Will this be a problem?
+        ('false', False),  # These consistent with inputs.boolean
+        ('0', False),
     ])
     def test_value(self, value, expected):
         self.assert_field(fields.Boolean(), value, expected)
