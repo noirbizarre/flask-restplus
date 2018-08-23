@@ -49,6 +49,18 @@
     {% include 'swagger-ui-libs.html' %}
     <script type="text/javascript">
         window.onload = function() {
+             const DisableTryItOutPlugin = function () {
+               return {
+                 statePlugins: {
+                   spec: {
+                     wrapSelectors: {
+                       allowTryItOutFor: () => () => false
+                     }
+                   }
+                 }
+               }
+             };
+
             const ui = window.ui = new SwaggerUIBundle({
                 url: "{{ specs_url }}",
                 validatorUrl: "{{ config.SWAGGER_VALIDATOR_URL }}" || null,
@@ -58,6 +70,9 @@
                     SwaggerUIStandalonePreset.slice(1) // No Topbar
                 ],
                 plugins: [
+                    {% if config.SWAGGER_UI_TRY_IT_OUT == False -%}
+                    DisableTryItOutPlugin,
+                    {%- endif %}
                     SwaggerUIBundle.plugins.DownloadUrl
                 ],
                 displayOperationId: {{ config.SWAGGER_UI_OPERATION_ID|default(False)|tojson }},

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
+import re
 
 from flask import url_for, Blueprint
 from werkzeug.routing import BuildError
@@ -62,6 +63,21 @@ class APIDocTest(object):
         app.config['SWAGGER_UI_DOC_EXPANSION'] = 'full'
         response = client.get(url_for('doc'))
         assert 'docExpansion: "full"' in str(response.data)
+
+    def test_apidoc_try_it_out_feature_flag_parameter(self, app, client):
+        restplus.Api(app)
+
+        # assert that with no config then 'Try it Out' is enabled as is default in swagger-ui
+        response = client.get(url_for('doc'))
+        assert re.compile("plugins.*?\[.*?DisableTryItOut.*?\]").match(str(response.data)) is None
+
+        app.config['SWAGGER_UI_TRY_IT_OUT'] = True
+        response = client.get(url_for('doc'))
+        assert re.compile("plugins.*?\[.*?DisableTryItOut.*?\]").match(str(response.data)) is None
+
+        app.config['SWAGGER_UI_TRY_IT_OUT'] = False
+        response = client.get(url_for('doc'))
+        assert re.compile("plugins.*?\[.*?DisableTryItOut.*?\]").search(str(response.data), re.MULTILINE)
 
     def test_apidoc_doc_display_operation_id(self, app, client):
         restplus.Api(app)

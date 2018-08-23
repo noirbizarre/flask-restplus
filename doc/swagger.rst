@@ -928,6 +928,19 @@ you can register a custom view function with the :meth:`~Api.documentation` deco
         return apidoc.ui_for(api)
 
 
+The "Try it Out" functionality in Swagger-UI can be disabled by setting ``config.SWAGGER_UI_TRY_IT_OUT`` to ``False``:
+
+.. code-block:: python
+
+    from flask import Flask
+    from flask_restplus import Api
+
+    app = Flask(__name__)
+    app.config.SWAGGER_UI_TRY_IT_OUT = False
+
+    api = Api(app)
+
+
 Disabling the documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
