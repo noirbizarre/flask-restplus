@@ -488,7 +488,7 @@ class Swagger(object):
             if p.get('required'):
                 reqs.append(name)
         if props:
-            params["payload"] = {
+            params["payload"] = not_none({
                 'in':'body',
                 'name': 'payload',
                 'required': bool(reqs),
@@ -497,7 +497,7 @@ class Swagger(object):
                     'required': reqs,
                     'properties': props
                 }
-            }
+            })
         return params
 
     def serialize_schema(self, model):
