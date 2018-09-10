@@ -263,7 +263,7 @@ class Swagger(object):
 
         for expect in doc.get('expect', []):
             if isinstance(expect, RequestParser):
-                parser_params = OrderedDict((p['name'], p) for p in expect.__schema__)
+                parser_params = self.serialize_parser(expect)
                 params.update(parser_params)
             elif isinstance(expect, ModelBase):
                 params['payload'] = not_none({
@@ -473,6 +473,32 @@ class Swagger(object):
             (name, model.__schema__)
             for name, model in iteritems(self._registered_models)
         )
+
+    def serialize_parser(self, parser):
+        params = OrderedDict((p['name'], p) for p in parser.__schema__ if p['in'] != 'body')
+        props = {}
+        reqs = []
+        for p in (x for x in parser.__schema__ if x['in'] == 'body'):
+            name = p.get('name')
+            props[name] = {'type': p.get('type')}
+            if p.get('format'):
+                props[name]['format'] = p['format']
+            if p.get('type') == 'array':
+                props[name]['items'] = p['items']
+            if p.get('required'):
+                reqs.append(name)
+        if props:
+            params["payload"] = {
+                'in':'body',
+                'name': 'payload',
+                'required': bool(reqs),
+                'schema': {
+                    'type': 'object',
+                    'required': reqs,
+                    'properties': props
+                }
+            }
+        return params
 
     def serialize_schema(self, model):
         if isinstance(model, (list, tuple)):
