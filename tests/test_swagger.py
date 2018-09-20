@@ -710,6 +710,33 @@ class SwaggerTest(object):
 
         assert op['consumes'] == ['multipart/form-data']
 
+    def test_parser_parameter_in_files_on_class(self, api, client):
+        parser = api.parser()
+        parser.add_argument('in_files', type=FileStorage, location='files')
+
+        @api.route('/with-parser/', endpoint='with-parser')
+        @api.expect(parser)
+        class WithParserResource(restplus.Resource):
+            def get(self):
+                return {}
+
+        data = client.get_specs()
+        assert '/with-parser/' in data['paths']
+
+        path = data['paths']['/with-parser/']
+        assert len(path['parameters']) == 1
+
+        parameter = path['parameters'][0]
+        assert parameter['name'] == 'in_files'
+        assert parameter['type'] == 'file'
+        assert parameter['in'] == 'formData'
+
+        assert 'consumes' not in path
+
+        op = path['get']
+        assert 'consumes' in op
+        assert op['consumes'] == ['multipart/form-data']
+
     def test_explicit_parameters(self, api, client):
         @api.route('/name/<int:age>/', endpoint='by-name')
         class ByNameResource(restplus.Resource):
