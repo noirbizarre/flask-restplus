@@ -238,8 +238,11 @@ class Swagger(object):
         doc['name'] = resource.__name__
         params = merge(self.expected_params(doc), doc.get('params', OrderedDict()))
         params = merge(params, extract_path_params(url))
-        doc['params'] = params
-        for method in [m.lower() for m in resource.methods or []]:
+        # Track parameters for late deduplication
+        up_params = {(n, p.get('in', 'query')): p for n, p in params.items()}
+        need_to_go_down = set()
+        methods = [m.lower() for m in resource.methods or []]
+        for method in methods:
             method_doc = doc.get(method, OrderedDict())
             method_impl = getattr(resource, method)
             if hasattr(method_impl, 'im_func'):
@@ -253,7 +256,27 @@ class Swagger(object):
                 method_params = merge(method_params, method_doc.get('params', {}))
                 inherited_params = OrderedDict((k, v) for k, v in iteritems(params) if k in method_params)
                 method_doc['params'] = merge(inherited_params, method_params)
+                for name, param in method_doc['params'].items():
+                    key = (name, param.get('in', 'query'))
+                    if key in up_params:
+                        need_to_go_down.add(key)
             doc[method] = method_doc
+        # Deduplicate parameters
+        # For each couple (name, in), if a method overrides it,
+        # we need to move the paramter down to each method
+        if need_to_go_down:
+            for method in methods:
+                method_doc = doc[method]
+                params = {
+                    (n, p.get('in', 'query')): p
+                    for n, p in (method_doc['params'] or {}).items()
+                }
+                for key in need_to_go_down:
+                    if key not in params:
+                        method_doc['params'][key[0]] = up_params[key]
+        doc['params'] = OrderedDict(
+            (k[0], p) for k, p in up_params.items() if k not in need_to_go_down
+        )
         return doc
 
     def expected_params(self, doc):

@@ -815,11 +815,14 @@ class SwaggerTest(object):
             def get(self, age):
                 return {}
 
+            def post(self, age):
+                pass
+
         data = client.get_specs()
         assert '/name/{age}/' in data['paths']
 
         path = data['paths']['/name/{age}/']
-        assert len(path['parameters']) == 2
+        assert len(path['parameters']) == 1
 
         by_name = dict((p['name'], p) for p in path['parameters'])
 
@@ -830,20 +833,26 @@ class SwaggerTest(object):
         assert parameter['required'] is True
         assert parameter['description'] == 'An age'
 
-        parameter = by_name['q']
-        assert parameter['name'] == 'q'
-        assert parameter['type'] == 'string'
-        assert parameter['in'] == 'query'
-        assert parameter['description'] == 'Overriden description'
+        # Don't duplicate parameters
+        assert 'q' not in by_name
 
-        op = data['paths']['/name/{age}/']['get']
-        assert len(op['parameters']) == 1
+        get = data['paths']['/name/{age}/']['get']
+        assert len(get['parameters']) == 1
 
-        parameter = op['parameters'][0]
+        parameter = get['parameters'][0]
         assert parameter['name'] == 'q'
         assert parameter['type'] == 'string'
         assert parameter['in'] == 'query'
         assert parameter['description'] == 'A query string'
+
+        post = data['paths']['/name/{age}/']['post']
+        assert len(post['parameters']) == 1
+
+        parameter = post['parameters'][0]
+        assert parameter['name'] == 'q'
+        assert parameter['type'] == 'string'
+        assert parameter['in'] == 'query'
+        assert parameter['description'] == 'Overriden description'
 
     def test_explicit_parameters_override_by_method(self, api, client):
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
@@ -874,19 +883,12 @@ class SwaggerTest(object):
         assert '/name/{age}/' in data['paths']
 
         path = data['paths']['/name/{age}/']
-        assert len(path['parameters']) == 1
+        assert 'parameters' not in path
 
-        parameter = path['parameters'][0]
-        assert parameter['name'] == 'age'
-        assert parameter['type'] == 'integer'
-        assert parameter['in'] == 'path'
-        assert parameter['required'] is True
-        assert parameter['description'] == 'An age'
+        get = path['get']
+        assert len(get['parameters']) == 2
 
-        op = path['get']
-        assert len(op['parameters']) == 2
-
-        by_name = dict((p['name'], p) for p in op['parameters'])
+        by_name = dict((p['name'], p) for p in get['parameters'])
 
         parameter = by_name['age']
         assert parameter['name'] == 'age'
@@ -901,7 +903,17 @@ class SwaggerTest(object):
         assert parameter['in'] == 'query'
         assert parameter['description'] == 'A query string'
 
-        assert 'parameters' not in path['post']
+        post = path['post']
+        assert len(post['parameters']) == 1
+
+        by_name = dict((p['name'], p) for p in post['parameters'])
+
+        parameter = by_name['age']
+        assert parameter['name'] == 'age'
+        assert parameter['type'] == 'integer'
+        assert parameter['in'] == 'path'
+        assert parameter['required'] is True
+        assert parameter['description'] == 'An age'
 
     def test_explicit_parameters_desription_shortcut(self, api, client):
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
@@ -926,18 +938,12 @@ class SwaggerTest(object):
         assert '/name/{age}/' in data['paths']
 
         path = data['paths']['/name/{age}/']
-        assert len(path['parameters']) == 1
-        parameter = path['parameters'][0]
-        assert parameter['name'] == 'age'
-        assert parameter['type'] == 'integer'
-        assert parameter['in'] == 'path'
-        assert parameter['required'] is True
-        assert parameter['description'] == 'An age'
+        assert 'parameters' not in path
 
-        op = path['get']
-        assert len(op['parameters']) == 2
+        get = path['get']
+        assert len(get['parameters']) == 2
 
-        by_name = dict((p['name'], p) for p in op['parameters'])
+        by_name = dict((p['name'], p) for p in get['parameters'])
 
         parameter = by_name['age']
         assert parameter['name'] == 'age'
@@ -952,7 +958,19 @@ class SwaggerTest(object):
         assert parameter['in'] == 'query'
         assert parameter['description'] == 'A query string'
 
-        assert 'parameters' not in path['post']
+        post = path['post']
+        assert len(post['parameters']) == 1
+
+        by_name = dict((p['name'], p) for p in post['parameters'])
+
+        parameter = by_name['age']
+        assert parameter['name'] == 'age'
+        assert parameter['type'] == 'integer'
+        assert parameter['in'] == 'path'
+        assert parameter['required'] is True
+        assert parameter['description'] == 'An age'
+
+        assert 'q' not in by_name
 
     def test_explicit_parameters_native_types(self, api, client):
         @api.route('/types/', endpoint='native')
