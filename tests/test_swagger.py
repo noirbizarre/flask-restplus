@@ -915,6 +915,47 @@ class SwaggerTest(object):
         assert parameter['required'] is True
         assert parameter['description'] == 'An age'
 
+    def test_parameters_cascading_with_apidoc_false(self, api, client):
+        @api.route('/name/<int:age>/', endpoint='by-name', doc={
+            'get': {
+                'params': {
+                    'q': {
+                        'type': 'string',
+                        'in': 'query',
+                        'description': 'A query string',
+                    }
+                }
+            },
+            'params': {
+                'age': {
+                    'description': 'An age'
+                }
+            }
+        })
+        class ByNameResource(restplus.Resource):
+            @api.doc(params={'age': {'description': 'Overriden'}})
+            def get(self, age):
+                return {}
+
+            @api.doc(False)
+            def post(self, age):
+                return {}
+
+        data = client.get_specs()
+        assert '/name/{age}/' in data['paths']
+
+        path = data['paths']['/name/{age}/']
+        assert 'parameters' not in path
+
+        get = path['get']
+        assert len(get['parameters']) == 2
+
+        by_name = dict((p['name'], p) for p in get['parameters'])
+        assert 'age' in by_name
+        assert 'q' in by_name
+
+        assert 'post' not in path
+
     def test_explicit_parameters_desription_shortcut(self, api, client):
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
             'get': {

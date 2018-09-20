@@ -266,7 +266,9 @@ class Swagger(object):
         # we need to move the paramter down to each method
         if need_to_go_down:
             for method in methods:
-                method_doc = doc[method]
+                method_doc = doc.get(method)
+                if not method_doc:
+                    continue
                 params = {
                     (n, p.get('in', 'query')): p
                     for n, p in (method_doc['params'] or {}).items()
