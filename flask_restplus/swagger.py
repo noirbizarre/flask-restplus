@@ -226,7 +226,7 @@ class Swagger(object):
                 tags.append({
                     'name': ns.name,
                     'description': ns.description
-                })
+                } if ns.description else {'name': ns.name})
             elif ns.description:
                 by_name[ns.name]['description'] = ns.description
         return tags

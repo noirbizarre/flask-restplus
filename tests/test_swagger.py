@@ -269,6 +269,18 @@ class SwaggerTest(object):
             {'name': 'ns', 'description': 'Test namespace'}
         ]
 
+    def test_specs_endpoint_namespace_without_description(self, app, client):
+        api = restplus.Api(app)
+        ns = api.namespace('ns')
+
+        @ns.route('/test', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                return {}
+
+        data = client.get_specs('')
+        assert data['tags'] == [{'name': 'ns'}]
+
     def test_specs_authorizations(self, app, client):
         authorizations = {
             'apikey': {
