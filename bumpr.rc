@@ -7,7 +7,7 @@ push = true
 tests = tox
 publish =
     inv assets
-    python setup.py bdist_wheel upload
+    python setup.py sdist bdist_wheel upload
 clean =
     inv clean
 files =
