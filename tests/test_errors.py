@@ -296,7 +296,7 @@ class ErrorsTest(object):
         # Exceptions are re-raised rather than being handled by the app’s error handlers.
         # If not set, this is implicitly true if TESTING or DEBUG is enabled.
         with pytest.raises(Exception):
-            response = client.get('/api/test/')
+            client.get('/api/test/')
 
 
     def test_custom_default_errorhandler(self, app, client):
