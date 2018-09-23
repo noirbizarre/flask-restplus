@@ -298,7 +298,6 @@ class ErrorsTest(object):
         with pytest.raises(Exception):
             client.get('/api/test/')
 
-
     def test_custom_default_errorhandler(self, app, client):
         api = restplus.Api(app)
 
