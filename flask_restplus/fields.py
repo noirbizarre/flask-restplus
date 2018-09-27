@@ -736,7 +736,7 @@ class Wildcard(Raw):
         if obj == self._obj and self._flat is not None:
             return self._flat
         if isinstance(obj, dict):
-            self._flat = [x for x in obj.items()]
+            self._flat = [x for x in iteritems(obj)]
         else:
 
             def __match_attributes(attribute):
