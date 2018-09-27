@@ -17,6 +17,7 @@ files =
 unsuffix = true
 
 [prepare]
+part = patch
 suffix = dev
 
 [changelog]
