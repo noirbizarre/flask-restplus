@@ -6,12 +6,20 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Fix missing changelog inprevious release
 
 0.12.0 (2018-09-27)
 -------------------
 
 - Fix Namespace decorators (:issue:`475`)
+- Do not serialize empty tags descriptions
+- Ensure `consumes` is properly set when using form parameters on classes
+- Ensure parameters are not duplicated (:issue:`164`, :issue:`196`, :issue:`234`)
+- Publish sources distribution (:issue:`500`, :issue:`515`)
+- Fix late resources registeration (:issue:`483`)
+- Don't include namespaces without resources to the SWAGGER documentation (:issue:`470`)
+- Add support for checkbox validation input + consistent behavior between inputs and fields. (:issue:`461`)
+- Fix missing `enum34` dependency (:issue:`444`)
 
 0.11.0 (2018-05-16)
 -------------------
