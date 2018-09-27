@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.12.0 (2018-09-27)
+-------------------
 
 - Fix Namespace decorators (:issue:`475`)
 
