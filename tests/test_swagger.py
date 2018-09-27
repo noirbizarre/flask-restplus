@@ -1517,9 +1517,6 @@ class SwaggerTest(object):
         })
 
         fields = api.model('Person', {
-            'name': restplus.fields.String,
-            'age': restplus.fields.Integer,
-            'birthdate': restplus.fields.DateTime,
             'address': restplus.fields.Nested(address_fields)
         })
 
@@ -1537,8 +1534,16 @@ class SwaggerTest(object):
 
         assert 'definitions' in data
         assert 'Person' in data['definitions']
+        assert data['definitions']['Person'] == {
+            'properties': {
+                'address': {
+                    '$ref': '#/definitions/Address'
+                },
+            },
+            'type': 'object'
+        }
 
-        assert 'Address' in data['definitions'].keys()
+        assert 'Address' in data['definitions']
         assert data['definitions']['Address'] == {
             'properties': {
                 'road': {
@@ -1551,6 +1556,50 @@ class SwaggerTest(object):
         path = data['paths']['/model-as-dict/']
         assert path['get']['responses']['200']['schema']['$ref'] == '#/definitions/Person'
         assert path['post']['responses']['200']['schema']['$ref'] == '#/definitions/Person'
+
+    def test_model_as_nested_dict_with_details(self, api, client):
+        address_fields = api.model('Address', {
+            'road': restplus.fields.String,
+        })
+
+        fields = api.model('Person', {
+            'address': restplus.fields.Nested(address_fields, description='description', readonly=True)
+        })
+
+        @api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @api.doc(model=fields)
+            def get(self):
+                return {}
+
+            @api.doc(model='Person')
+            def post(self):
+                return {}
+
+        data = client.get_specs()
+
+        assert 'definitions' in data
+        assert 'Person' in data['definitions']
+        assert data['definitions']['Person'] == {
+            'properties': {
+                'address': {
+                    'description': 'description',
+                    'readOnly': True,
+                    'allOf': [{'$ref': '#/definitions/Address'}]
+                },
+            },
+            'type': 'object'
+        }
+
+        assert 'Address' in data['definitions']
+        assert data['definitions']['Address'] == {
+            'properties': {
+                'road': {
+                    'type': 'string'
+                },
+            },
+            'type': 'object'
+        }
 
     def test_model_as_flat_dict_with_marchal_decorator(self, api, client):
         fields = api.model('Person', {

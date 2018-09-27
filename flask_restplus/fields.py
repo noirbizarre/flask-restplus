@@ -227,11 +227,13 @@ class Nested(Raw):
         if self.as_list:
             schema['type'] = 'array'
             schema['items'] = {'$ref': ref}
+        elif any(schema.values()):
+            # There is already some properties in the schema
+            allOf = schema.get('allOf', [])
+            allOf.append({'$ref': ref})
+            schema['allOf'] = allOf
         else:
             schema['$ref'] = ref
-            # if not self.allow_null and not self.readonly:
-            #     schema['required'] = True
-
         return schema
 
     def clone(self, mask=None):
