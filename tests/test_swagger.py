@@ -215,11 +215,13 @@ class SwaggerTest(object):
         assert data['tags'] == [{'name': 'ns'}, {'name': 'tag'}]
 
     def test_specs_endpoint_invalid_tags(self, app, client):
-        restplus.Api(app, tags=[
+        api = restplus.Api(app, tags=[
             {'description': 'Tag 1'}
         ])
 
         client.get_specs('', status=500)
+
+        assert list(api.__schema__.keys()) == ['error']
 
     def test_specs_endpoint_default_ns_with_resources(self, app, client):
         restplus.Api(app)

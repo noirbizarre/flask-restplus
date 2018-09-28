@@ -75,6 +75,13 @@ Errors
 .. autoexception:: flask_restplus.mask.ParseError
 
 
+Schemas
+-------
+
+.. automodule:: flask_restplus.schemas
+    :members:
+
+
 Internals
 ---------
 

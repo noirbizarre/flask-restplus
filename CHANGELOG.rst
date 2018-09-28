@@ -8,6 +8,7 @@ Current
 
 - Fix missing changelog inprevious release
 - Ensure definitions with both `$ref` and description (or other property) output is valid (using `allOf`)
+- Added initial specifications schemas and validation support
 
 0.12.0 (2018-09-27)
 -------------------
