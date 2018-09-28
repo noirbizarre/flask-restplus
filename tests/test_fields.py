@@ -756,12 +756,18 @@ class NestedFieldTest(FieldTestCase):
     def test_with_description(self, api):
         nested_fields = api.model('NestedModel', {'name': fields.String})
         field = fields.Nested(nested_fields, description='A description')
-        assert field.__schema__ == {'$ref': '#/definitions/NestedModel', 'description': 'A description'}
+        assert field.__schema__ == {
+            'description': 'A description',
+            'allOf': [{'$ref': '#/definitions/NestedModel'}]
+        }
 
     def test_with_title(self, api):
         nested_fields = api.model('NestedModel', {'name': fields.String})
         field = fields.Nested(nested_fields, title='A title')
-        assert field.__schema__ == {'$ref': '#/definitions/NestedModel', 'title': 'A title'}
+        assert field.__schema__ == {
+            'title': 'A title',
+            'allOf': [{'$ref': '#/definitions/NestedModel'}]
+        }
 
     def test_with_allow_null(self, api):
         nested_fields = api.model('NestedModel', {'name': fields.String})
@@ -781,7 +787,10 @@ class NestedFieldTest(FieldTestCase):
         api = Api(app)
         nested_fields = api.model('NestedModel', {'name': fields.String})
         field = fields.Nested(nested_fields, readonly=True)
-        assert field.__schema__ == {'$ref': '#/definitions/NestedModel', 'readOnly': True}
+        assert field.__schema__ == {
+            'readOnly': True,
+            'allOf': [{'$ref': '#/definitions/NestedModel'}]
+        }
 
     def test_as_list(self, api):
         nested_fields = api.model('NestedModel', {'name': fields.String})
