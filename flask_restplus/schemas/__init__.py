@@ -7,6 +7,7 @@ and allows to validate specs against them.
 '''
 from __future__ import unicode_literals
 
+import io
 import json
 import pkg_resources
 
@@ -57,8 +58,9 @@ class LazySchema(Mapping):
 
     def _load(self):
         if not self._schema:
-            data = pkg_resources.resource_string(__name__, self.filename)
-            self._schema = json.loads(data)
+            filename = pkg_resources.resource_filename(__name__, self.filename)
+            with io.open(filename) as infile:
+                self._schema = json.load(infile)
 
     def __getitem__(self, key):
         self._load()
