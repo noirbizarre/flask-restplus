@@ -9,6 +9,7 @@ Current
 - Fix missing changelog inprevious release
 - Ensure definitions with both `$ref` and description (or other property) output is valid (using `allOf`)
 - Added initial specifications schemas and validation support
+- Ensure empty enums are not serialized (to have a valid specification)
 
 0.12.0 (2018-09-27)
 -------------------

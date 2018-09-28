@@ -379,7 +379,8 @@ class String(StringMixin, Raw):
     def schema(self):
         enum = self._v('enum')
         schema = super(String, self).schema()
-        schema.update(enum=enum)
+        if enum:
+            schema.update(enum=enum)
         if enum and schema['example'] is None:
             schema['example'] = enum[0]
         return schema
