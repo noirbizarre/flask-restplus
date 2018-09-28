@@ -6,7 +6,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Ensure `basePath` is always a path
 
 0.12.1 (2018-09-28)
 -------------------

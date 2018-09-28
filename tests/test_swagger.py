@@ -152,13 +152,26 @@ class SwaggerTest(object):
 
         data = client.get_specs('')
         assert 'host' not in data
+        assert data['basePath'] == '/'
 
+    @pytest.mark.options(server_name='api.restplus.org')
     def test_specs_endpoint_host(self, app, client):
-        app.config['SERVER_NAME'] = 'api.restplus.org'
+        # app.config['SERVER_NAME'] = 'api.restplus.org'
         restplus.Api(app)
 
         data = client.get_specs('')
         assert data['host'] == 'api.restplus.org'
+        assert data['basePath'] == '/'
+
+    @pytest.mark.options(server_name='api.restplus.org')
+    def test_specs_endpoint_host_with_url_prefix(self, app, client):
+        blueprint = Blueprint('api', __name__, url_prefix='/api/1')
+        restplus.Api(blueprint)
+        app.register_blueprint(blueprint)
+
+        data = client.get_specs('/api/1')
+        assert data['host'] == 'api.restplus.org'
+        assert data['basePath'] == '/api/1'
 
     @pytest.mark.options(server_name='restplus.org')
     def test_specs_endpoint_host_and_subdomain(self, app, client):
@@ -168,6 +181,7 @@ class SwaggerTest(object):
 
         data = client.get_specs(base_url='http://api.restplus.org')
         assert data['host'] == 'api.restplus.org'
+        assert data['basePath'] == '/'
 
     def test_specs_endpoint_tags_short(self, app, client):
         restplus.Api(app, tags=['tag-1', 'tag-2', 'tag-3'])
