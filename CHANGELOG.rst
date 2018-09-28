@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.12.1 (2018-09-28)
+-------------------
 
 - Fix missing changelog inprevious release
 - Ensure definitions with both `$ref` and description (or other property) output is valid (using `allOf`)
