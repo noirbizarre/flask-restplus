@@ -214,6 +214,63 @@ You can also unmarshal fields as lists ::
     >>> json.dumps(marshal(data, resource_fields))
     >>> '{"first_names": ["Emile", "Raoul"], "name": "Bougnazal"}'
 
+.. _wildcard-field:
+
+Wildcard Field
+--------------
+
+If you don't know the name(s) of the field(s) you want to unmarshall, you can
+use :class:`~fields.Wildcard` ::
+
+    >>> from flask_restplus import fields, marshal
+    >>> import json
+    >>>
+    >>> wild = fields.Wildcard(fields.String)
+    >>> wildcard_fields = {'*': wild}
+    >>> data = {'John': 12, 'bob': 42, 'Jane': '68'}
+    >>> json.dumps(marshal(data, wildcard_fields))
+    >>> '{"Jane": "68", "bob": "42", "John": "12"}'
+
+The name you give to your :class:`~fields.Wildcard` acts as a real glob as
+shown bellow ::
+
+    >>> from flask_restplus import fields, marshal
+    >>> import json
+    >>>
+    >>> wild = fields.Wildcard(fields.String)
+    >>> wildcard_fields = {'j*': wild}
+    >>> data = {'John': 12, 'bob': 42, 'Jane': '68'}
+    >>> json.dumps(marshal(data, wildcard_fields))
+    >>> '{"Jane": "68", "John": "12"}'
+
+.. note ::
+    It is important you define your :class:`~fields.Wildcard` **outside** your
+    model (ie. you **cannot** use it like this:
+    ``res_fields = {'*': fields.Wildcard(fields.String)}``) because it has to be
+    stateful to keep a track of what fields it has already treated.
+
+.. note ::
+    The glob is not a regex, it can only treat simple wildcards like '*' or '?'.
+
+In order to avoid unexpected behavior, when mixing :class:`~fields.Wildcard`
+with other fields, you may want to use an ``OrderedDict`` and use the
+:class:`~fields.Wildcard` as the last field ::
+
+    >>> from flask_restplus import fields, marshal
+    >>> from collections import OrderedDict
+    >>> import json
+    >>>
+    >>> wild = fields.Wildcard(fields.Integer)
+    >>> mod = OrderedDict()
+    >>> mod['zoro'] = fields.String
+    >>> mod['*'] = wild
+    >>> # you can use it in api.model like this:
+    >>> # some_fields = api.model('MyModel', mod)
+    >>>
+    >>> data = {'John': 12, 'bob': 42, 'Jane': '68', 'zoro': 72}
+    >>> json.dumps(marshal(data, mod))
+    >>> '{"zoro": "72", "Jane": 68, "bob": 42, "John": 12}'
+
 .. _nested-field:
 
 Nested Field

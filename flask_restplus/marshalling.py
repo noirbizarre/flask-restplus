@@ -11,6 +11,12 @@ from .mask import Mask, apply as apply_mask
 from .utils import unpack
 
 
+def make(cls):
+    if isinstance(cls, type):
+        return cls()
+    return cls
+
+
 def marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=False):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
@@ -49,11 +55,103 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=Fal
     OrderedDict([('a', 100)])
 
     """
+    out, has_wildcards = _marshal(data, fields, envelope, skip_none, mask, ordered)
 
-    def make(cls):
-        if isinstance(cls, type):
-            return cls()
-        return cls
+    if has_wildcards:
+        # ugly local import to avoid dependency loop
+        from .fields import Wildcard
+
+        items = []
+        keys = []
+        for dkey, val in fields.items():
+            key = dkey
+            if isinstance(val, dict):
+                value = marshal(data, val, skip_none=skip_none, ordered=ordered)
+            else:
+                field = make(val)
+                is_wildcard = isinstance(field, Wildcard)
+                # exclude already parsed keys from the wildcard
+                if is_wildcard:
+                    field.reset()
+                    if keys:
+                        field.exclude |= set(keys)
+                        keys = []
+                value = field.output(dkey, data)
+                if is_wildcard:
+
+                    def _append(k, v):
+                        if skip_none and (v is None or v == OrderedDict() or v == {}):
+                            return
+                        items.append((k, v))
+
+                    key = field.key or dkey
+                    _append(key, value)
+                    while True:
+                        value = field.output(dkey, data, ordered=ordered)
+                        if value is None or \
+                                value == field.container.format(field.default):
+                            break
+                        key = field.key
+                        _append(key, value)
+                    continue
+
+            keys.append(key)
+            if skip_none and (value is None or value == OrderedDict() or value == {}):
+                continue
+            items.append((key, value))
+
+        items = tuple(items)
+
+        out = OrderedDict(items) if ordered else dict(items)
+
+        if envelope:
+            out = OrderedDict([(envelope, out)]) if ordered else {envelope: out}
+
+        return out
+
+    return out
+
+
+def _marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=False):
+    """Takes raw data (in the form of a dict, list, object) and a dict of
+    fields to output and filters the data based on those fields.
+
+    :param data: the actual object(s) from which the fields are taken from
+    :param fields: a dict of whose keys will make up the final serialized
+                   response output
+    :param envelope: optional key that will be used to envelop the serialized
+                     response
+    :param bool skip_none: optional key will be used to eliminate fields
+                           which value is None or the field's key not
+                           exist in data
+    :param bool ordered: Wether or not to preserve order
+
+
+    >>> from flask_restplus import fields, marshal
+    >>> data = { 'a': 100, 'b': 'foo', 'c': None }
+    >>> mfields = { 'a': fields.Raw, 'c': fields.Raw, 'd': fields.Raw }
+
+    >>> marshal(data, mfields)
+    {'a': 100, 'c': None, 'd': None}
+
+    >>> marshal(data, mfields, envelope='data')
+    {'data': {'a': 100, 'c': None, 'd': None}}
+
+    >>> marshal(data, mfields, skip_none=True)
+    {'a': 100}
+
+    >>> marshal(data, mfields, ordered=True)
+    OrderedDict([('a', 100), ('c', None), ('d', None)])
+
+    >>> marshal(data, mfields, envelope='data', ordered=True)
+    OrderedDict([('data', OrderedDict([('a', 100), ('c', None), ('d', None)]))])
+
+    >>> marshal(data, mfields, skip_none=True, ordered=True)
+    OrderedDict([('a', 100)])
+
+    """
+    # ugly local import to avoid dependency loop
+    from .fields import Wildcard
 
     mask = mask or getattr(fields, '__mask__', None)
     fields = getattr(fields, 'resolved', fields)
@@ -64,12 +162,21 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=Fal
         out = [marshal(d, fields, skip_none=skip_none, ordered=ordered) for d in data]
         if envelope:
             out = OrderedDict([(envelope, out)]) if ordered else {envelope: out}
-        return out
+        return out, False
+
+    has_wildcards = {'present': False}
+
+    def __format_field(key, val):
+        field = make(val)
+        if isinstance(field, Wildcard):
+            has_wildcards['present'] = True
+        value = field.output(key, data, ordered=ordered)
+        return (key, value)
 
     items = (
-        (k, marshal(data, v, skip_none=skip_none, ordered=ordered)
+        (k, marshal(data, v, skip_none=skip_none, ordered=ordered))
         if isinstance(v, dict)
-        else make(v).output(k, data, ordered=ordered))
+        else __format_field(k, v)
         for k, v in iteritems(fields)
     )
 
@@ -82,7 +189,7 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=Fal
     if envelope:
         out = OrderedDict([(envelope, out)]) if ordered else {envelope: out}
 
-    return out
+    return out, has_wildcards['present']
 
 
 class marshal_with(object):

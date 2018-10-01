@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import re
+import fnmatch
+import inspect
+
 from calendar import timegm
 from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_EVEN
@@ -20,7 +24,7 @@ from .utils import camel_to_dash, not_none
 
 __all__ = ('Raw', 'String', 'FormattedString', 'Url', 'DateTime', 'Date',
            'Boolean', 'Integer', 'Float', 'Arbitrary', 'Fixed',
-           'Nested', 'List', 'ClassName', 'Polymorph',
+           'Nested', 'List', 'ClassName', 'Polymorph', 'Wildcard',
            'StringMixin', 'MinMaxMixin', 'NumberMixin', 'MarshallingError')
 
 
@@ -702,3 +706,102 @@ class Polymorph(Nested):
 
         data['mask'] = mask
         return Polymorph(mapping, **data)
+
+
+class Wildcard(Raw):
+    '''
+    Field for marshalling list of "unkown" fields.
+
+    :param cls_or_instance: The field type the list will contain.
+    '''
+    exclude = set()
+    # cache the flat object
+    _flat = None
+    _obj = None
+    _cache = set()
+    _last = None
+
+    def __init__(self, cls_or_instance, **kwargs):
+        super(Wildcard, self).__init__(**kwargs)
+        error_msg = 'The type of the wildcard elements must be a subclass of fields.Raw'
+        if isinstance(cls_or_instance, type):
+            if not issubclass(cls_or_instance, Raw):
+                raise MarshallingError(error_msg)
+            self.container = cls_or_instance()
+        else:
+            if not isinstance(cls_or_instance, Raw):
+                raise MarshallingError(error_msg)
+            self.container = cls_or_instance
+
+    def _flatten(self, obj):
+        if obj is None:
+            return None
+        if obj == self._obj and self._flat is not None:
+            return self._flat
+        if isinstance(obj, dict):
+            self._flat = [x for x in iteritems(obj)]
+        else:
+
+            def __match_attributes(attribute):
+                attr_name, attr_obj = attribute
+                if inspect.isroutine(attr_obj) or \
+                        (attr_name.startswith('__') and attr_name.endswith('__')):
+                    return False
+                return True
+
+            attributes = inspect.getmembers(obj)
+            self._flat = [x for x in attributes if __match_attributes(x)]
+
+        self._cache = set()
+        self._obj = obj
+        return self._flat
+
+    @property
+    def key(self):
+        return self._last
+
+    def reset(self):
+        self.exclude = set()
+        self._flat = None
+        self._obj = None
+        self._cache = set()
+        self._last = None
+
+    def output(self, key, obj, ordered=False):
+        value = None
+        reg = fnmatch.translate(key)
+
+        if self._flatten(obj):
+            while True:
+                try:
+                    # we are using pop() so that we don't
+                    # loop over the whole object every time dropping the
+                    # complexity to O(n)
+                    (objkey, val) = self._flat.pop()
+                    if objkey not in self._cache and \
+                            objkey not in self.exclude and \
+                            re.match(reg, objkey, re.IGNORECASE):
+                        value = val
+                        self._cache.add(objkey)
+                        self._last = objkey
+                        break
+                except IndexError:
+                    break
+
+        if value is None:
+            if self.default is not None:
+                return self.container.format(self.default)
+            return None
+
+        return self.container.format(value)
+
+    def schema(self):
+        schema = super(Wildcard, self).schema()
+        schema['type'] = 'object'
+        schema['additionalProperties'] = self.container.__schema__
+        return schema
+
+    def clone(self):
+        kwargs = self.__dict__.copy()
+        model = kwargs.pop('container')
+        return self.__class__(model, **kwargs)

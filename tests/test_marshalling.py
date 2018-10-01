@@ -31,11 +31,25 @@ class MarshallingTest(object):
         output = marshal(marshal_dict, model, envelope='hey')
         assert output == {'hey': {'foo': 'bar'}}
 
+    def test_marshal_wildcard_with_envelope(self):
+        wild = fields.Wildcard(fields.String)
+        model = OrderedDict([('foo', fields.Raw), ('*', wild)])
+        marshal_dict = OrderedDict([('foo', {'bat': 'baz'}), ('a', 'toto'), ('b', 'tata')])
+        output = marshal(marshal_dict, model, envelope='hey')
+        assert output == {'hey': {'a': 'toto', 'b': 'tata', 'foo': {'bat': 'baz'}}}
+
     def test_marshal_with_skip_none(self):
         model = OrderedDict([('foo', fields.Raw), ('bat', fields.Raw), ('qux', fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', None)])
         output = marshal(marshal_dict, model, skip_none=True)
         assert output == {'foo': 'bar'}
+
+    def test_marshal_wildcard_with_skip_none(self):
+        wild = fields.Wildcard(fields.String)
+        model = OrderedDict([('foo', fields.Raw), ('*', wild)])
+        marshal_dict = OrderedDict([('foo', None), ('bat', None), ('baz', 'biz'), ('bar', None)])
+        output = marshal(marshal_dict, model, skip_none=True)
+        assert output == {'baz': 'biz'}
 
     def test_marshal_decorator(self):
         model = OrderedDict([('foo', fields.Raw)])
