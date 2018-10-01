@@ -890,8 +890,8 @@ class WildcardFieldTest(BaseFieldTestMixin, FieldTestCase):
             class WrongType:
                 pass
             x = WrongType()
-            field1 = fields.Wildcard(WrongType)
-            field2 = fields.Wildcard(x)
+            field1 = fields.Wildcard(WrongType)  # noqa
+            field2 = fields.Wildcard(x)  # noqa
 
     def test_defaults(self):
         field = fields.Wildcard(fields.String)
@@ -989,7 +989,7 @@ class WildcardFieldTest(BaseFieldTestMixin, FieldTestCase):
         result5 = api.marshal(data5, wild_fields5)
         result6 = api.marshal(data6, wild_fields6)
         result7 = api.marshal(data7, wild_fields7, skip_none=True)
-        result8 = api.marshal(data8, wild_fields7, skip_none=True)
+        result8 = api.marshal(data8, wild_fields8, skip_none=True)
 
         assert expected1 == result1
         assert expected2 == result2
