@@ -798,9 +798,7 @@ class Wildcard(Raw):
         schema['additionalProperties'] = self.container.__schema__
         return schema
 
-    def clone(self, mask=None):
+    def clone(self):
         kwargs = self.__dict__.copy()
         model = kwargs.pop('container')
-        if mask:
-            model = mask.apply(model)
         return self.__class__(model, **kwargs)
