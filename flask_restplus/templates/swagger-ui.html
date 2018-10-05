@@ -60,6 +60,9 @@
                 plugins: [
                     SwaggerUIBundle.plugins.DownloadUrl
                 ],
+                {% if config.SWAGGER_UI_OAUTH_REDIRECT_URI -%}
+                oauth2RedirectUrl: "{{ config.SWAGGER_UI_OAUTH_REDIRECT_URI }}",
+                {%- endif %}
                 displayOperationId: {{ config.SWAGGER_UI_OPERATION_ID|default(False)|tojson }},
                 displayRequestDuration: {{ config.SWAGGER_UI_REQUEST_DURATION|default(False)|tojson }},
                 docExpansion: "{{ config.SWAGGER_UI_DOC_EXPANSION | default('none') }}"
