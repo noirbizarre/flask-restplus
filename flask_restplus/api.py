@@ -199,7 +199,7 @@ class Api(object):
         self._register_doc(self.blueprint or app)
 
         app.handle_exception = partial(self.error_router, app.handle_exception)
-        app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+        app.handle_user_exception = partial(self.user_error_router, app.handle_user_exception)
 
         if len(self.resources) > 0:
             for resource, namespace, urls, kwargs in self.resources:
@@ -575,14 +575,56 @@ class Api(object):
         :param function original_handler: the original Flask error handler for the app
         :param Exception e: the exception raised while handling the request
         '''
+        return self._error_router(self.handle_error, original_handler, e)
+
+    def user_error_router(self, original_handler, e):
+        '''
+        This function decides whether the error occured in a flask-restplus
+        endpoint or not. If it happened in a flask-restplus endpoint, our
+        user handler will be dispatched. If it happened in an unrelated view, the
+        app's original user error handler will be dispatched.
+        In the event that the error occurred in a flask-restplus endpoint but
+        the local handler can't resolve the situation, the router will fall
+        back onto the original_handler as last resort.
+
+        :param function original_handler: the original Flask error handler for the app
+        :param Exception e: the exception raised while handling the request
+        '''
+        return self._error_router(self.handle_user_error, original_handler, e)
+
+    def _error_router(self, handler, original_handler, e):
+        '''
+        This function decides whether the error occured in a flask-restplus
+        endpoint or not. If it happened in a flask-restplus endpoint, given handler
+        will be dispatched. If it happened in an unrelated view, the
+        given app's original error handler will be dispatched.
+        In the event that the error occurred in a flask-restplus endpoint but
+        the local handler can't resolve the situation, the router will fall
+        back onto the original_handler as last resort.
+
+        :param function handler: the error handler to dispatch on error that occured in a flask-restplus endpoint
+        :param function original_handler: the original Flask error handler for the app
+        :param Exception e: the exception raised while handling the request
+        '''
         if self._has_fr_route():
             try:
-                return self.handle_error(e)
+                return handler(e)
             except Exception:
                 pass  # Fall through to original handler
         return original_handler(e)
 
     def handle_error(self, e):
+        '''
+        Internal server Error handler for the API transforms an unknown raised exception into a Flask response,
+        with the appropriate HTTP status code and body.
+
+        :param Exception e: the raised Exception object
+
+        '''
+        code = HTTPStatus.INTERNAL_SERVER_ERROR
+        return self._make_error_response(code, {'message': code.phrase}, e, Headers())
+
+    def handle_user_error(self, e):
         '''
         Error handler for the API transforms a raised exception into a Flask response,
         with the appropriate HTTP status code and body.
@@ -591,8 +633,6 @@ class Api(object):
 
         '''
         got_request_exception.send(current_app._get_current_object(), exception=e)
-
-        include_message_in_response = current_app.config.get("ERROR_INCLUDE_MESSAGE", True)
         default_data = {}
 
         headers = Headers()
@@ -605,23 +645,33 @@ class Api(object):
         else:
             if isinstance(e, HTTPException):
                 code = HTTPStatus(e.code)
-                if include_message_in_response:
-                    default_data = {
-                        'message': getattr(e, 'description', code.phrase)
-                    }
+                default_data = {
+                    'message': getattr(e, 'description', code.phrase)
+                }
                 headers = e.get_response().headers
             elif self._default_error_handler:
                 result = self._default_error_handler(e)
                 default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
             else:
-                code = HTTPStatus.INTERNAL_SERVER_ERROR
-                if include_message_in_response:
-                    default_data = {
-                        'message': code.phrase,
-                    }
+                # The error looks like an unhandled one,
+                # We reraise it so the regular error_handler will handle it
+                raise e
 
+        return self._make_error_response(code, default_data, e, headers)
+
+    def _make_error_response(self, code, default_data, e, headers):
+        '''
+        Creates and returns a Flask response with given HTTP status code, body and headers based on given arguments
+        :param code: HTTP status code
+        :param default_data: Response body
+        :param e: Original exception that led to this error response
+        :param headers: Response headers
+        '''
+        include_message_in_response = current_app.config.get("ERROR_INCLUDE_MESSAGE", True)
         if include_message_in_response:
             default_data['message'] = default_data.get('message', str(e))
+        else:
+            default_data.pop('message', None)
 
         data = getattr(e, 'data', default_data)
         fallback_mediatype = None
@@ -633,7 +683,7 @@ class Api(object):
             current_app.log_exception(exc_info)
 
         elif code == HTTPStatus.NOT_FOUND and current_app.config.get("ERROR_404_HELP", True) \
-                and include_message_in_response:
+            and include_message_in_response:
             data['message'] = self._help_on_404(data.get('message', None))
 
         elif code == HTTPStatus.NOT_ACCEPTABLE and self.default_mediatype is None:
