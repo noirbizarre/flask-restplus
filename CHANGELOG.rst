@@ -7,6 +7,7 @@ Current
 -------
 
 - Ensure `basePath` is always a path
+- Added namespace class customization to :class:`api.Api`
 
 0.12.1 (2018-09-28)
 -------------------
