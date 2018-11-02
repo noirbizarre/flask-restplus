@@ -186,7 +186,7 @@ class Namespace(object):
 
     def inherit(self, name, *specs):
         '''
-        Inherit a modal (use the Swagger composition pattern aka. allOf)
+        Inherit a model (use the Swagger composition pattern aka. allOf)
 
         .. seealso:: :meth:`Model.inherit`
         '''

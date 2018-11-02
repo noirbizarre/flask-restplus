@@ -97,6 +97,7 @@ class Api(object):
             tags=None, prefix='', ordered=False,
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
+            namespace_cls=None,
             **kwargs):
         self.version = version
         self.title = title or 'API'
@@ -126,6 +127,7 @@ class Api(object):
         self._refresolver = None
         self.format_checker = format_checker
         self.namespaces = []
+        self.namespace_cls = namespace_cls or Namespace
         self.default_namespace = self.namespace(default, default_label,
             endpoint='{0}-declaration'.format(default),
             validate=validate,
@@ -434,7 +436,8 @@ class Api(object):
         :returns Namespace: a new namespace instance
         '''
         kwargs['ordered'] = kwargs.get('ordered', self.ordered)
-        ns = Namespace(*args, **kwargs)
+        namespace_cls = kwargs.pop('namespace_cls', self.namespace_cls)
+        ns = namespace_cls(*args, **kwargs)
         self.add_namespace(ns)
         return ns
 

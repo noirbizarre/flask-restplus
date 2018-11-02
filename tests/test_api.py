@@ -337,3 +337,15 @@ class APITest(object):
         assert decorator1.called is True
         assert decorator2.called is True
         assert decorator3.called is True
+
+    def test_custom_namespace(self, app):
+        class MyNamespace(restplus.Namespace):
+            pass
+
+        api = restplus.Api(version='1.0', namespace_cls=MyNamespace)
+        ns = api.namespace('my_ns')
+        assert isinstance(ns, MyNamespace)
+
+        api = restplus.Api(version='1.0')
+        ns = api.namespace('my_ns', namespace_cls=MyNamespace)
+        assert isinstance(ns, MyNamespace)
