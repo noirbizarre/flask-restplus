@@ -594,6 +594,7 @@ class Api(object):
 
         include_message_in_response = current_app.config.get("ERROR_INCLUDE_MESSAGE", True)
         default_data = {}
+        data = None
 
         headers = Headers()
 
@@ -601,6 +602,7 @@ class Api(object):
             if isinstance(e, typecheck):
                 result = handler(e)
                 default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
+                data = default_data
                 break
         else:
             if isinstance(e, HTTPException):
@@ -623,7 +625,8 @@ class Api(object):
         if include_message_in_response:
             default_data['message'] = default_data.get('message', str(e))
 
-        data = getattr(e, 'data', default_data)
+        if data is None:
+            data = getattr(e, 'data', default_data)
         fallback_mediatype = None
 
         if code >= HTTPStatus.INTERNAL_SERVER_ERROR:
