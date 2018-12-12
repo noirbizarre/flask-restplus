@@ -7,6 +7,7 @@ Current
 -------
 
 - Ensure `basePath` is always a path
+- Fallthrough unhandled exception to original handler
 
 0.12.1 (2018-09-28)
 -------------------
