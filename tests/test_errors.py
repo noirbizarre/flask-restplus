@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import json
 import pytest
 
-from flask import Blueprint, abort
+from flask import Blueprint, abort, jsonify
 from flask.signals import got_request_exception
 
 from werkzeug.exceptions import HTTPException, BadRequest, NotFound, Aborter
@@ -80,7 +80,7 @@ class ErrorsTest(object):
         data = json.loads(response.data.decode('utf8'))
         assert 'message' in data
 
-    def test_abort_on_exception(self, app, client):
+    def test_abort_on_exception_without_parent_handler(self, app, client):
         api = restplus.Api(app)
 
         @api.route('/test/', endpoint='test')
@@ -90,10 +90,29 @@ class ErrorsTest(object):
 
         response = client.get('/test/')
         assert response.status_code == 500
+        assert response.content_type == 'text/html'
+
+        data = response.data.decode('utf8')
+        assert '<title>500 Internal Server Error</title>' in data
+
+    def test_abort_on_exception_with_parent_handler(self, app, client):
+        api = restplus.Api(app)
+
+        @app.errorhandler(ValueError)
+        def errorhandler(exception):
+            return jsonify({'parent_message': 'ValueError'}), 400
+
+        @api.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise ValueError()
+
+        response = client.get('/test/')
+        assert response.status_code == 400
         assert response.content_type == 'application/json'
 
         data = json.loads(response.data.decode('utf8'))
-        assert 'message' in data
+        assert 'parent_message' in data
 
     def test_abort_on_exception_with_lazy_init(self, app, client):
         api = restplus.Api()
@@ -107,10 +126,10 @@ class ErrorsTest(object):
 
         response = client.get('/test/')
         assert response.status_code == 500
-        assert response.content_type == 'application/json'
+        assert response.content_type == 'text/html'
 
-        data = json.loads(response.data.decode('utf8'))
-        assert 'message' in data
+        data = response.data.decode('utf8')
+        assert '<title>500 Internal Server Error</title>' in data
 
     def test_errorhandler_for_exception_inheritance(self, app, client):
         api = restplus.Api(app)
@@ -273,10 +292,10 @@ class ErrorsTest(object):
 
         response = client.get('/test/')
         assert response.status_code == 500
-        assert response.content_type == 'application/json'
+        assert response.content_type == 'text/html'
 
-        data = json.loads(response.data.decode('utf8'))
-        assert 'message' in data
+        data = response.data.decode('utf8')
+        assert '<title>500 Internal Server Error</title>' in data
 
     def test_default_errorhandler_with_propagate_true(self, app, client):
         blueprint = Blueprint('api', __name__, url_prefix='/api')
@@ -291,12 +310,8 @@ class ErrorsTest(object):
 
         app.config['PROPAGATE_EXCEPTIONS'] = True
 
-        response = client.get('/api/test/')
-        assert response.status_code == 500
-        assert response.content_type == 'application/json'
-
-        data = json.loads(response.data.decode('utf8'))
-        assert 'message' in data
+        with pytest.raises(Exception):
+            client.get('/api/test/')
 
     def test_custom_default_errorhandler(self, app, client):
         api = restplus.Api(app)
@@ -534,22 +549,8 @@ class ErrorsTest(object):
     def test_handle_server_error(self, app):
         api = restplus.Api(app)
 
-        resp = api.handle_error(Exception())
-        assert resp.status_code == 500
-        assert json.loads(resp.data.decode()) == {
-            'message': "Internal Server Error"
-        }
-
-    def test_handle_error_with_code(self, app):
-        api = restplus.Api(app, serve_challenge_on_401=True)
-
-        exception = Exception()
-        exception.code = "Not an integer"
-        exception.data = {'foo': 'bar'}
-
-        response = api.handle_error(exception)
-        assert response.status_code == 500
-        assert json.loads(response.data.decode()) == {"foo": "bar"}
+        with pytest.raises(Exception):
+            api.handle_error(Exception())
 
     def test_errorhandler_swagger_doc(self, app, client):
         api = restplus.Api(app)

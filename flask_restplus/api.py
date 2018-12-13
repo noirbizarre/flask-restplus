@@ -614,11 +614,8 @@ class Api(object):
                 result = self._default_error_handler(e)
                 default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
             else:
-                code = HTTPStatus.INTERNAL_SERVER_ERROR
-                if include_message_in_response:
-                    default_data = {
-                        'message': code.phrase,
-                    }
+                # Fall through to original handler
+                raise e
 
         if include_message_in_response:
             default_data['message'] = default_data.get('message', str(e))
