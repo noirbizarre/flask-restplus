@@ -7,6 +7,7 @@ Current
 -------
 
 - Ensure `basePath` is always a path
+- Fix `setup.py` to install `dev` dependencies (:issue:`560`)
 
 0.12.1 (2018-09-28)
 -------------------
