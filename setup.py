@@ -5,7 +5,6 @@
 import io
 import os
 import re
-import sys
 
 from setuptools import setup, find_packages
 
@@ -37,7 +36,6 @@ def rst(filename):
     return content
 
 
-
 def pip(filename):
     '''Parse pip reqs file and transform it to setuptools requirements.'''
     requirements = []
@@ -45,7 +43,10 @@ def pip(filename):
         line = line.strip()
         if not line or '://' in line or line.startswith('#'):
             continue
-        requirements.append(line)
+        if '-e' in line:
+            requirements.extend(pip(re.match(r'.*\[(.+)\]', line).group(1)))
+        else:
+            requirements.append(line)
     return requirements
 
 
@@ -55,10 +56,10 @@ long_description = '\n'.join((
     ''
 ))
 
-
 exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about__.py', 'exec'))
 
 install_requires = pip('install')
+develop_require = pip('develop')
 doc_require = pip('doc')
 tests_require = pip('test')
 
@@ -75,6 +76,7 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require={
+        'dev': develop_require,
         'test': tests_require,
         'doc': doc_require,
     },
