@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import difflib
 import inspect
 from itertools import chain
-import logging
 import operator
 import re
 import six
@@ -42,8 +41,6 @@ RE_RULES = re.compile('(<.*>)')
 HEADERS_BLACKLIST = ('Content-Length',)
 
 DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
-
-log = logging.getLogger(__name__)
 
 
 class Api(object):
@@ -485,7 +482,7 @@ class Api(object):
                 # Log the source exception for debugging purpose
                 # and return an error message
                 msg = 'Unable to render schema'
-                log.exception(msg)  # This will provide a full traceback
+                current_app.logger.exception(msg)  # Will provide full traceback
                 return {'error': msg}
         return self._schema
 

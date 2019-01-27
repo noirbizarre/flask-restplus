@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import
 
-import logging
 import re
 import six
 
@@ -9,8 +8,6 @@ from collections import OrderedDict
 from inspect import isclass
 
 from .errors import RestError
-
-log = logging.getLogger(__name__)
 
 LEXER = re.compile(r'\{|\}|\,|[\w_:\-\*]+')
 
