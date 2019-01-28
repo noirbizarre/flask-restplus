@@ -6,7 +6,10 @@ import re
 
 from inspect import isclass, getdoc
 from collections import OrderedDict
-from collections.abc import Hashable
+try:
+    from collections.abc import Hashable
+except ImportError:
+    from collections import Hashable
 from six import string_types, itervalues, iteritems, iterkeys
 
 from flask import current_app
