@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import decimal
 import six
 
-from collections import Hashable
+from collections.abc import Hashable
 from copy import deepcopy
 from flask import current_app, request
 
