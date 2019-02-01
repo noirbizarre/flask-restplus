@@ -12,6 +12,7 @@ class SchemasTest:
     def test_lazyness(self):
         schema = schemas.LazySchema('oas-2.0.json')
         assert schema._schema is None
+        assert len(schema)
 
         '' in schema  # Trigger load
         assert schema._schema is not None
@@ -39,6 +40,9 @@ class ValidationTest:
                 'swagger': '2.0',
                 'should': 'not be here',
             })
+
+        assert 'OpenAPI 2.0 validation failed' in str(excinfo)
+
         for error in excinfo.value.errors:
             assert isinstance(error, ValidationError)
 

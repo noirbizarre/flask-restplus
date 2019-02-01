@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import copy
 
 from flask import url_for, Blueprint
+import pytest
 
 import flask_restplus as restplus
 
@@ -318,6 +319,16 @@ class APITest(object):
 
         assert schema['error'] == 'Unable to render schema'
         app.logger.exception.assert_called_with('Unable to render schema')
+
+    def test_should_use_fr_error_handler_unknown_exc(self, app, mocker):
+        api = restplus.Api(app)
+        adapter = mocker.MagicMock()
+        adapter.match.side_effect = KeyError
+        mocker.patch.object(app, 'create_url_adapter', return_value=adapter)
+
+        ret = api._should_use_fr_error_handler()
+
+        assert ret is None
 
     def test_non_ordered_namespace(self, app):
         api = restplus.Api(app)
