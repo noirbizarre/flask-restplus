@@ -308,6 +308,17 @@ class APITest(object):
         unified_auth.update(a2)
         assert api.__schema__["securityDefinitions"] == unified_auth
 
+    def test_api_schema_error(self, app, mocker):
+        api = restplus.Api(app)
+        mocked_swagger = mocker.patch('flask_restplus.api.Swagger', autospec=True)
+        mocked_swagger.return_value.as_dict.side_effect = Exception('boo hoo')
+        mocker.patch.object(app, 'logger', autospec=True)
+
+        schema = api.__schema__
+
+        assert schema['error'] == 'Unable to render schema'
+        app.logger.exception.assert_called_with('Unable to render schema')
+
     def test_non_ordered_namespace(self, app):
         api = restplus.Api(app)
         ns = api.namespace('ns', 'Test namespace')
