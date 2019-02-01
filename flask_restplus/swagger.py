@@ -256,10 +256,13 @@ class Swagger(object):
                 method_params = merge(method_params, method_doc.get('params', {}))
                 inherited_params = OrderedDict((k, v) for k, v in iteritems(params) if k in method_params)
                 method_doc['params'] = merge(inherited_params, method_params)
-                for name, param in method_doc['params'].items():
-                    key = (name, param.get('in', 'query'))
-                    if key in up_params:
-                        need_to_go_down.add(key)
+
+                if hasattr(method_doc['params'], 'items'):
+                    for name, param in method_doc['params'].items():
+                        key = (name, param.get('in', 'query'))
+                        if key in up_params:
+                            need_to_go_down.add(key)
+
             doc[method] = method_doc
         # Deduplicate parameters
         # For each couple (name, in), if a method overrides it,
