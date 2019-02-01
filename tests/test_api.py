@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import copy
 
 from flask import url_for, Blueprint
-import pytest
 
 import flask_restplus as restplus
 
