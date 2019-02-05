@@ -387,26 +387,27 @@ and to start handling polymorphism.
 
 .. code-block:: python
 
-    parent = api.model('Parent', {
-        'name': fields.String,
-        'class': fields.String(discriminator=True)
-    })
-
-    child = api.inherit('Child', parent, {
-        'extra': fields.String
-    })
-
-The :meth:`Api/Namespace.clone <~Namespace.clone>` will register both the parent and the child
-in the Swagger models definitions.
-
-.. code-block:: python
-
     parent = Model('Parent', {
         'name': fields.String,
         'class': fields.String(discriminator=True)
     })
 
     child = parent.inherit('Child', {
+        'extra': fields.String
+    })
+
+
+The :meth:`Api/Namespace.inherit <~Namespace.inherit>` will register both the parent and the child
+in the Swagger models definitions.
+
+.. code-block:: python
+
+    parent = api.model('Parent', {
+        'name': fields.String,
+        'class': fields.String(discriminator=True)
+    })
+
+    child = api.inherit('Child', parent, {
         'extra': fields.String
     })
 
