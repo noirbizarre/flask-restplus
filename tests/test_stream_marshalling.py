@@ -18,6 +18,25 @@ class StreamMarshallingTest(object):
 
             fields = {'foo': fields.Float}
 
+            @api.marshal_as_stream_with(fields)
+            def get(self):
+                def generate():
+                    yield {"foo": 3.0}
+                return generate()
+
+        api.add_resource(FooResource, '/api')
+
+        resp = client.get('/api')
+        assert resp.status_code == 200
+        assert resp.data.decode('utf-8') == '[{"foo": 3.0}]'
+
+    def test_stream_marshalled_apidecorator(self, app, client):
+        api = Api(app)
+
+        class FooResource(Resource):
+
+            fields = {'foo': fields.Float}
+
             @marshal_as_stream_with(fields)
             def get(self):
                 def generate():

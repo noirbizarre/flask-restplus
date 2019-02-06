@@ -9,7 +9,7 @@ from flask import request
 from flask.views import http_method_funcs
 
 from .errors import abort
-from .marshalling import marshal, marshal_with
+from .marshalling import marshal, marshal_with, marshal_as_stream_with
 from .model import Model, OrderedModel, SchemaModel
 from .reqparse import RequestParser
 from .utils import merge
@@ -237,6 +237,10 @@ class Namespace(object):
             func.__apidoc__ = merge(getattr(func, '__apidoc__', {}), doc)
             return marshal_with(fields, ordered=self.ordered, **kwargs)(func)
         return wrapper
+
+    def marshal_as_stream_with(self, fields, **kwargs):
+        '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
+        return marshal_as_stream_with(fields, **kwargs)
 
     def marshal_list_with(self, fields, **kwargs):
         '''A shortcut decorator for :meth:`~Api.marshal_with` with ``as_list=True``'''
