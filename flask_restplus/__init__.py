@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from . import fields, reqparse, apidoc, inputs, cors
 from .api import Api  # noqa
-from .marshalling import marshal, marshal_with, marshal_with_field  # noqa
+from .marshalling import marshal, marshal_with, marshal_with_field, marshal_as_stream_with # noqa
 from .mask import Mask
 from .model import Model, OrderedModel, SchemaModel  # noqa
 from .namespace import Namespace  # noqa

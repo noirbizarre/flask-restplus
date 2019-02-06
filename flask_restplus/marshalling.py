@@ -5,10 +5,13 @@ from collections import OrderedDict
 from functools import wraps
 from six import iteritems
 
-from flask import request, current_app, has_app_context
+from flask import request, current_app, has_app_context, Response
 
 from .mask import Mask, apply as apply_mask
 from .utils import unpack
+
+import json
+import types
 
 
 def make(cls):
@@ -30,7 +33,6 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=Fal
                            which value is None or the field's key not
                            exist in data
     :param bool ordered: Wether or not to preserve order
-
 
     >>> from flask_restplus import fields, marshal
     >>> data = { 'a': 100, 'b': 'foo', 'c': None }
@@ -55,6 +57,7 @@ def marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=Fal
     OrderedDict([('a', 100)])
 
     """
+
     out, has_wildcards = _marshal(data, fields, envelope, skip_none, mask, ordered)
 
     if has_wildcards:
@@ -226,8 +229,8 @@ class marshal_with(object):
     """
     def __init__(self, fields, envelope=None, skip_none=False, mask=None, ordered=False):
         """
-        :param fields: a dict of whose keys will make up the final
-                       serialized response output
+    :param fields: a dict of whose keys will make up the final
+                   serialized response output
         :param envelope: optional key that will be used to envelop the serialized
                          response
         """
@@ -289,5 +292,60 @@ class marshal_with_field(object):
                 data, code, headers = unpack(resp)
                 return self.field.format(data), code, headers
             return self.field.format(resp)
+
+        return wrapper
+
+
+class marshal_as_stream_with(object):
+    """
+    A decorator that streams the list of results. Expects a generator instead of data
+
+    >>> from flask_restplus import marshal_as_stream_with, fields
+    >>> @marshal_as_stream_with(fields.List(fields.Integer))
+    ... def get():
+    ...     def generate():
+    ...         yield {"foo": 3.0}
+    ...
+    >>> get()
+    {"foo": 3.0}
+
+    see :meth:`flask_restplus.marshal_as_stream_with`
+    """
+    def __init__(self, fields):
+        """
+          :param fields: a dict of whose keys will make up the final
+                   serialized response output
+        """
+        self.fields = fields
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            generator = f(*args, **kwargs)
+
+            if isinstance(generator, types.GeneratorType):
+
+                def generate():
+                    first = True
+                    for data in generator:
+                        data = marshal(data, self.fields)
+                        s = json.dumps(data)
+                        if first:
+                            yield "[" + s
+                            first = False
+                        else:
+                            yield "," + s
+                    yield "]"
+                return Response(generate(), mimetype="application/json")
+
+            else:
+                resp = generator
+                if isinstance(resp, tuple):
+                    data, code, headers = unpack(resp)
+                    return (
+                        marshal(data, self.fields), code, headers
+                    )
+                else:
+                    return marshal(resp, self.fields)
 
         return wrapper
