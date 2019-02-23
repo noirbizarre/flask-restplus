@@ -616,8 +616,18 @@ class FormatedStringFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase
 
     def test_object(self, mocker):
         obj = mocker.Mock()
+        del obj.to_dict
         obj.sid = 3
         obj.account_sid = 4
+        field = fields.FormattedString('/foo/{account_sid}/{sid}/')
+        assert field.output('foo', obj) == '/foo/4/3/'
+
+    def test_to_dict_object(self, mocker):
+        obj = mocker.Mock()
+        obj.to_dict = lambda: {
+            'sid': 3,
+            'account_sid': 4,
+        }
         field = fields.FormattedString('/foo/{account_sid}/{sid}/')
         assert field.output('foo', obj) == '/foo/4/3/'
 
@@ -656,6 +666,16 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.add_url_rule('/<foo>', 'foobar', view_func=lambda x: x)
         field = fields.Url('foobar')
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
+
+        with app.test_request_context('/'):
+            assert '/42' == field.output('foo', obj)
+    
+    def test_to_dict(self, app, mocker):
+        app.add_url_rule('/<foo>', 'foobar', view_func=lambda x: x)
+        field = fields.Url('foobar')
+        obj = mocker.Mock()
+        obj.to_dict = lambda: {"foo": 42}
 
         with app.test_request_context('/'):
             assert '/42' == field.output('foo', obj)
@@ -664,6 +684,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.add_url_rule('/<foo>', 'foobar', view_func=lambda x: x)
         field = fields.Url('foobar', absolute=True)
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
 
         with app.test_request_context('/'):
             assert 'http://localhost/42' == field.output('foo', obj)
@@ -673,6 +694,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.add_url_rule('/<foo>', 'foobar', view_func=lambda x: x)
         field = fields.Url('foobar', absolute=True, scheme='https')
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
 
         with app.test_request_context('/', base_url='http://localhost'):
             assert 'https://localhost/42' == field.output('foo', obj)
@@ -689,6 +711,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.add_url_rule('/<foo>', 'foobar', view_func=lambda x: x)
         field = fields.Url()
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
 
         with app.test_request_context('/foo'):
             assert '/42' == field.output('foo', obj)
@@ -697,6 +720,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.add_url_rule('/<foo>', 'foobar', view_func=lambda x: x)
         field = fields.Url(absolute=True)
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
 
         with app.test_request_context('/foo'):
             assert 'http://localhost/42' == field.output('foo', obj)
@@ -705,6 +729,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.add_url_rule('/<foo>', 'foobar', view_func=lambda x: x)
         field = fields.Url(absolute=True, scheme='https')
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
 
         with app.test_request_context('/foo', base_url='http://localhost'):
             assert 'https://localhost/42' == field.output('foo', obj)
@@ -725,6 +750,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.register_blueprint(bp)
         field = fields.Url()
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
 
         with app.test_request_context('/foo/foo'):
             assert '/foo/42' == field.output('foo', obj)
@@ -735,6 +761,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.register_blueprint(bp)
         field = fields.Url(absolute=True)
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
 
         with app.test_request_context('/foo/foo'):
             assert 'http://localhost/foo/42' == field.output('foo', obj)
@@ -745,6 +772,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         app.register_blueprint(bp)
         field = fields.Url(absolute=True, scheme='https')
         obj = mocker.Mock(foo=42)
+        del obj.to_dict
 
         with app.test_request_context('/foo/foo', base_url='http://localhost'):
             assert 'https://localhost/foo/42' == field.output('foo', obj)
