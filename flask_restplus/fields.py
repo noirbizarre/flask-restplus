@@ -84,7 +84,7 @@ def to_marshallable_type(obj):
         return obj  # it is indexable it is ok
 
     if hasattr(obj, 'to_dict'):
-        return obj.to_dict() # some ORM use this method to get a mapping of the values
+        return obj.to_dict()  # some ORM use this method to get a mapping of the values
 
     return dict(obj.__dict__)
 

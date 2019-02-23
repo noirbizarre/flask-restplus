@@ -670,7 +670,7 @@ class UrlFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
 
         with app.test_request_context('/'):
             assert '/42' == field.output('foo', obj)
-    
+
     def test_to_dict(self, app, mocker):
         app.add_url_rule('/<foo>', 'foobar', view_func=lambda x: x)
         field = fields.Url('foobar')
