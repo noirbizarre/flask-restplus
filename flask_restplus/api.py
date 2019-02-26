@@ -14,11 +14,6 @@ from collections import OrderedDict
 from functools import wraps, partial
 from types import MethodType
 
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
-
 from flask import url_for, request, current_app
 from flask import make_response as original_flask_make_response
 from flask.helpers import _endpoint_from_view_func
@@ -460,12 +455,12 @@ class Api(object):
 
         :rtype: str
         '''
-        swagger_url = url_for(self.endpoint('specs'), _external=True)
         if self.behind_proxy:
-            # Extract relative URL.
-            url_parts = urlparse(swagger_url)
-            swagger_url = url_parts.path
-        return swagger_url
+            # Use relative URL.
+            external = False
+        else:
+            external = True
+        return url_for(self.endpoint('specs'), _external=external)
 
     @property
     def base_url(self):
