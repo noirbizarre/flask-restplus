@@ -462,16 +462,9 @@ class Api(object):
         '''
         swagger_url = url_for(self.endpoint('specs'), _external=True)
         if self.behind_proxy:
+            # Extract relative URL.
             url_parts = urlparse(swagger_url)
-
-            # Compose relative URL.
-            swagger_parts = [url_parts.path]
-            if url_parts.query != '':
-                swagger_parts = ['?', url_parts.query]
-            if url_parts.fragment != '':
-                swagger_parts = ['#', url_parts.fragment]
-            swagger_url = ''.join(swagger_parts)
-
+            swagger_url = url_parts.path
         return swagger_url
 
     @property
