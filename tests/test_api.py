@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import copy
 
+import pytest
+
 from flask import url_for, Blueprint
 
 import flask_restplus as restplus
@@ -94,6 +96,27 @@ class APITest(object):
         api.init_app(app, add_specs=False)
         resp = client.get('/swagger.json')
         assert resp.status_code == 404
+
+    @pytest.mark.options(server_name='api.restplus.org')
+    def test_specs_endpoint_added(self, app, client):
+        api = restplus.Api()
+        api.init_app(app, add_specs=True)
+        assert app.config.get('SERVER_NAME') == 'api.restplus.org'
+        assert "host" in api.__schema__
+        resp = client.get('/swagger.json')
+        assert resp.status_code == 200
+
+    @pytest.mark.options(server_name='api.restplus.org')
+    def test_specs_endpoint_added_behind_proxy(self, app, client):
+        api = restplus.Api(behind_proxy=True)
+        api.init_app(app, add_specs=True)
+        # Behind a proxy, the specs URL must be relative.
+        assert api.specs_url == '/swagger.json'
+        # ...and the "host" field must not be present.
+        assert app.config.get('SERVER_NAME') == 'api.restplus.org'
+        assert "host" not in api.__schema__
+        resp = client.get('/swagger.json')
+        assert resp.status_code == 200
 
     def test_default_endpoint(self, app):
         api = restplus.Api(app)

@@ -14,6 +14,11 @@ from collections import OrderedDict
 from functools import wraps, partial
 from types import MethodType
 
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+
 from flask import url_for, request, current_app
 from flask import make_response as original_flask_make_response
 from flask.helpers import _endpoint_from_view_func
@@ -87,6 +92,7 @@ class Api(object):
     :param FormatChecker format_checker: A jsonschema.FormatChecker object that is hooked into
         the Model validator. A default or a custom FormatChecker can be provided (e.g., with custom
         checkers), otherwise the default action is to not enforce any format validation.
+    :param bool behind_proxy: Set to True to discover Swagger "host" behind a proxy
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,
@@ -97,6 +103,7 @@ class Api(object):
             tags=None, prefix='', ordered=False,
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
+            behind_proxy=False,
             **kwargs):
         self.version = version
         self.title = title or 'API'
@@ -125,6 +132,7 @@ class Api(object):
         self.models = {}
         self._refresolver = None
         self.format_checker = format_checker
+        self.behind_proxy = behind_proxy
         self.namespaces = []
         self.default_namespace = self.namespace(default, default_label,
             endpoint='{0}-declaration'.format(default),
@@ -448,10 +456,23 @@ class Api(object):
     def specs_url(self):
         '''
         The Swagger specifications absolute url (ie. `swagger.json`)
+        Use a relative url when behind a proxy.
 
         :rtype: str
         '''
-        return url_for(self.endpoint('specs'), _external=True)
+        swagger_url = url_for(self.endpoint('specs'), _external=True)
+        if self.behind_proxy:
+            url_parts = urlparse(swagger_url)
+
+            # Compose relative URL.
+            swagger_parts = [url_parts.path]
+            if url_parts.query != '':
+                swagger_parts = ['?', url_parts.query]
+            if url_parts.fragment != '':
+                swagger_parts = ['#', url_parts.fragment]
+            swagger_url = ''.join(swagger_parts)
+
+        return swagger_url
 
     @property
     def base_url(self):
@@ -481,6 +502,8 @@ class Api(object):
         if not self._schema:
             try:
                 self._schema = Swagger(self).as_dict()
+                if self.behind_proxy and "host" in self._schema:
+                    del self._schema["host"]
             except Exception:
                 # Log the source exception for debugging purpose
                 # and return an error message
