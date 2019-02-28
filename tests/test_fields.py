@@ -836,6 +836,13 @@ class ListFieldTest(BaseFieldTestMixin, FieldTestCase):
         expected = [OrderedDict([('name', 'John Doe')]), OrderedDict([('name', 'Jane Doe')])]
         self.assert_field(field, data, expected)
 
+    def test_format_error(self, api):
+        nested_fields = api.model('NestedModel', {'name': fields.String})
+        field = fields.List(fields.Nested(nested_fields))
+        value = {'name': 'John Doe', 'age': 42}
+        with pytest.raises(fields.MarshallingError):
+            field.format(value)
+
     def test_min_items(self):
         field = fields.List(fields.String, min_items=5)
         assert 'minItems' in field.__schema__
