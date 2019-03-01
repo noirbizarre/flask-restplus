@@ -451,7 +451,8 @@ class Api(object):
 
         :rtype: str
         '''
-        return url_for(self.endpoint('specs'), _external=True)
+        _scheme = request.headers.get('x-forwarded-proto', 'http')
+        return url_for(self.endpoint('specs'), _external=True, _scheme=_scheme)
 
     @property
     def base_url(self):
@@ -460,7 +461,8 @@ class Api(object):
 
         :rtype: str
         '''
-        return url_for(self.endpoint('root'), _external=True)
+        _scheme = request.headers.get('x-forwarded-proto', 'http')
+        return url_for(self.endpoint('root'), _external=True, _scheme=_scheme)
 
     @property
     def base_path(self):
