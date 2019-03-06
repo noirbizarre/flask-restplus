@@ -109,6 +109,11 @@ def _clean_header(header):
 
 
 def parse_docstring(obj):
+    # if docstring is chinese, add these 3 lines below
+    import sys
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+    
     raw = getdoc(obj)
     summary = raw.strip(' \n').split('\n')[0].split('.')[0] if raw else None
     raises = {}
