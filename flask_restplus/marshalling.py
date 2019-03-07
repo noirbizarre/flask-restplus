@@ -171,6 +171,8 @@ def _marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=Fa
         if isinstance(field, Wildcard):
             has_wildcards['present'] = True
         value = field.output(key, data, ordered=ordered)
+        if field.dot_escape:
+            key = key.replace("\.", ".")
         return (key, value)
 
     items = (

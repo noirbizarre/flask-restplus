@@ -42,14 +42,22 @@ def is_indexable_but_not_string(obj):
     return not hasattr(obj, "strip") and hasattr(obj, "__iter__")
 
 
-def get_value(key, obj, default=None):
+def get_value(key, obj, default=None, dot_escape=False):
     '''Helper for pulling a keyed value off various types of objects'''
     if isinstance(key, int):
         return _get_value_for_key(key, obj, default)
     elif callable(key):
         return key(obj)
     else:
-        return _get_value_for_keys(key.split('.'), obj, default)
+        keys = (
+            [
+                k.replace("\.", ".")
+                for k in re.split(r"(?<!\\)\.", key)
+            ]
+            if dot_escape
+            else key.split(".")
+        )
+        return _get_value_for_keys(keys, obj, default)
 
 
 def _get_value_for_keys(keys, obj, default):
@@ -113,7 +121,8 @@ class Raw(object):
     __schema_example__ = None
 
     def __init__(self, default=None, attribute=None, title=None, description=None,
-                 required=None, readonly=None, example=None, mask=None, **kwargs):
+                 required=None, readonly=None, example=None, mask=None,
+                 dot_escape=False, **kwargs):
         self.attribute = attribute
         self.default = default
         self.title = title
@@ -122,6 +131,7 @@ class Raw(object):
         self.readonly = readonly
         self.example = example or self.__schema_example__
         self.mask = mask
+        self.dot_escape = dot_escape
 
     def format(self, value):
         '''
@@ -151,7 +161,11 @@ class Raw(object):
         :raises MarshallingError: In case of formatting problem
         '''
 
-        value = get_value(key if self.attribute is None else self.attribute, obj)
+        value = get_value(
+            key if self.attribute is None else self.attribute,
+            obj,
+            dot_escape=self.dot_escape
+        )
 
         if value is None:
             default = self._v('default')
