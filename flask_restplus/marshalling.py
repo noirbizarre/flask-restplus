@@ -149,6 +149,15 @@ def _marshal(data, fields, envelope=None, skip_none=False, mask=None, ordered=Fa
     >>> marshal(data, mfields, skip_none=True, ordered=True)
     OrderedDict([('a', 100)])
 
+    >>> data = { 'a': 100, 'b.c': 'foo', 'd': None }
+    >>> mfields = {
+        'a': fields.Raw,
+        'b\.c': fields.Raw(dot_escape=True),
+        'd': fields.Raw
+    }
+
+    >>> marshal(data, mfields)
+    {'a': 100, 'b.c': 'foo', 'd': None}
     """
     # ugly local import to avoid dependency loop
     from .fields import Wildcard

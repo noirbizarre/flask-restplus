@@ -43,7 +43,24 @@ def is_indexable_but_not_string(obj):
 
 
 def get_value(key, obj, default=None, dot_escape=False):
-    '''Helper for pulling a keyed value off various types of objects'''
+    '''Helper for pulling a keyed value off various types of objects
+
+    :param bool dot_escape: Allow escaping of '.' character in field names to
+        indicate non-nested property access
+
+    >>> data = {'a': 'foo', b: {'c': 'bar', 'd.e': 'baz'}}}
+    >>> get_value('a', data)
+    'foo'
+
+    >>> get_value('b.c', data)
+    'bar'
+
+    >>> get_value('x', data, default='foobar')
+    'foobar'
+
+    >>> get_value('b.d\.e', data, dot_escape=True)
+    'baz'
+    '''
     if isinstance(key, int):
         return _get_value_for_key(key, obj, default)
     elif callable(key):
@@ -112,6 +129,8 @@ class Raw(object):
     :param bool readonly: Is the field read only ? (for documentation purpose)
     :param example: An optional data example (for documentation purpose)
     :param callable mask: An optional mask function to be applied to output
+    :param bool dot_escape: Allow escaping of '.' character in field names to
+        indicate non-nested property access
     '''
     #: The JSON/Swagger schema type
     __schema_type__ = 'object'
