@@ -7,6 +7,7 @@ Current
 -------
 
 - Ensure `basePath` is always a path
+- Add `dot_escape` kwarg to `fields.Raw` to prevent nested property access
 
 0.12.1 (2018-09-28)
 -------------------
