@@ -681,7 +681,7 @@ class Polymorph(Nested):
         elif len(candidates) > 1:
             raise ValueError('Unable to determine a candidate for: ' + value.__class__.__name__)
         else:
-            return marshal(value, candidates[0].resolved, mask=self.mask, ordered=ordered)
+            return marshal(value, candidates[0].resolved, skip_none=self.skip_none, mask=self.mask, ordered=ordered)
 
     def resolve_ancestor(self, models):
         '''

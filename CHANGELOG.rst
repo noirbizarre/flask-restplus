@@ -6,6 +6,7 @@ Changelog
 Current
 -------
 
+- Fix missing ``skip_none`` parameter support in Polymorph field
 - Ensure `basePath` is always a path
 
 0.12.1 (2018-09-28)
