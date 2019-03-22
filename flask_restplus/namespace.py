@@ -203,7 +203,7 @@ class Namespace(object):
         '''
         expect = []
         params = {
-            'validate': kwargs.get('validate', None) or self._validate,
+            'validate': kwargs.get('validate', self._validate),
             'expect': expect
         }
         for param in inputs:

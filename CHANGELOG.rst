@@ -6,6 +6,7 @@ Changelog
 Current
 -------
 
+- Fix `@api.expect(..., validate=False)` decorators for an :class:`Api` where `validate=True` is set on the constructor
 - Ensure `basePath` is always a path
 
 0.12.1 (2018-09-28)

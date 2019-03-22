@@ -79,7 +79,8 @@ class PayloadTest(object):
             def post(self):
                 return {}
 
-        self.assert_errors(client, '/validation/', {}, 'name')
+        data = client.post_json('/validation/', {})
+        assert data == {}
 
     def _setup_api_format_checker_tests(self, app, format_checker=None):
         class IPAddress(restplus.fields.Raw):
