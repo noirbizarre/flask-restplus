@@ -291,12 +291,12 @@ class ErrorsTest(object):
 
         app.config['PROPAGATE_EXCEPTIONS'] = True
 
-        response = client.get('/api/test/')
-        assert response.status_code == 500
-        assert response.content_type == 'application/json'
-
-        data = json.loads(response.data.decode('utf8'))
-        assert 'message' in data
+        # From the Flask docs:
+        # PROPAGATE_EXCEPTIONS
+        # Exceptions are re-raised rather than being handled by the app’s error handlers.
+        # If not set, this is implicitly true if TESTING or DEBUG is enabled.
+        with pytest.raises(Exception):
+            client.get('/api/test/')
 
     def test_custom_default_errorhandler(self, app, client):
         api = restplus.Api(app)
