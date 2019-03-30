@@ -46,8 +46,7 @@ RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)
 
 def ref(model):
     '''Return a reference to model in definitions'''
-    name = model.name if 
-    nce(model, ModelBase) else model
+    name = model.name if isinstance(model, ModelBase) else model
     return {'$ref': '#/definitions/{0}'.format(name)}
 
 
