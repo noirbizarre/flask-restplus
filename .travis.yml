@@ -7,7 +7,7 @@ python:
   - pypy
   - pypy3
 install:
-  - pip install -r requirements/develop.pip
+  - pip install .[dev]
 script:
   - inv cover qa
 after_success:
