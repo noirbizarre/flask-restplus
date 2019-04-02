@@ -164,11 +164,12 @@ class Namespace(object):
 
         :deprecated: since 0.9. Use :meth:`clone` instead
         '''
+        cls = OrderedModel if self.ordered else Model
         if isinstance(parent, list):
             parents = parent + [fields]
-            model = Model.extend(name, *parents)
+            model = cls.extend(name, *parents)
         else:
-            model = Model.extend(name, parent, fields)
+            model = cls.extend(name, parent, fields)
         return self.add_model(name, model)
 
     def clone(self, name, *specs):
@@ -181,7 +182,8 @@ class Namespace(object):
         .. seealso:: :meth:`Model.clone`
 
         '''
-        model = Model.clone(name, *specs)
+        cls = OrderedModel if self.ordered else Model
+        model = cls.clone(name, *specs)
         return self.add_model(name, model)
 
     def inherit(self, name, *specs):
@@ -190,7 +192,8 @@ class Namespace(object):
 
         .. seealso:: :meth:`Model.inherit`
         '''
-        model = Model.inherit(name, *specs)
+        cls = OrderedModel if self.ordered else Model
+        model = cls.inherit(name, *specs)
         return self.add_model(name, model)
 
     def expect(self, *inputs, **kwargs):
