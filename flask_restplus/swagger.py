@@ -5,7 +5,11 @@ import itertools
 import re
 
 from inspect import isclass, getdoc
-from collections import OrderedDict, Hashable
+from collections import OrderedDict
+try:
+    from collections.abc import Hashable
+except ImportError:
+    from collections import Hashable
 from six import string_types, itervalues, iteritems, iterkeys
 
 from flask import current_app
