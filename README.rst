@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fnoirbizarre%2Fflask-restplus.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fnoirbizarre%2Fflask-restplus?ref=badge_shield)
+
 ==============
 Flask RestPlus
 ==============
@@ -162,3 +164,6 @@ The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs
 
 .. _Flask: http://flask.pocoo.org/
 .. _Swagger: http://swagger.io/
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fnoirbizarre%2Fflask-restplus.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fnoirbizarre%2Fflask-restplus?ref=badge_large)
