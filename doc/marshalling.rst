@@ -107,6 +107,58 @@ you can specify a default value to return instead of :obj:`None`.
     }
 
 
+Nested Field Names
+------------------
+
+By default, '.' is used as a separator to indicate nested properties when values 
+are fetched from objects:
+
+.. code-block:: python
+
+    data = {
+        'address': {
+            'country': 'UK',
+            'postcode': 'CO1'
+        }
+    }
+
+    model = {
+        'address.country': fields.String,
+        'address.postcode': fields.String,
+    }
+
+    marshal(data, model)
+    {'address.country': 'UK', 'address.postcode': 'CO1'}
+
+If the object to be marshalled has '.' characters within a single field name, 
+nested property access can be prevented by passing `dot_escape=True` and escaping
+the '.' with a backslash:
+
+.. code-block:: python
+
+    data = {
+        'address.country': 'UK',
+        'address.postcode': 'CO1',
+        'user.name': {
+            'first': 'John',
+            'last': 'Smith',
+        }
+    }
+
+    model = {
+        'address\.country': fields.String(dot_escape=True),
+        'address\.postcode': fields.String(dot_escape=True),
+        'user\.name.first': fields.String(dot_escape=True),
+        'user\.name.last': fields.String(dot_escape=True),
+    }
+
+    marshal(data, model)
+    {'address.country': 'UK',
+     'address.postcode': 'CO1',
+     'user.name.first': 'John',
+     'user.name.last': 'Smith'}
+
+
 Custom Fields & Multiple Values
 -------------------------------
 

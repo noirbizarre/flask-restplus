@@ -179,6 +179,18 @@ class RawFieldTest(BaseFieldTestMixin, FieldTestCase):
         field = fields.Raw()
         assert field.output('bar.value', foo) == 42
 
+    @pytest.mark.parametrize(
+        "foo,key,val",
+        [
+            ({'not.nested.value': 42}, 'not\.nested\.value', 42),
+            ({'semi': {'nested.value': 42}}, 'semi.nested\.value', 42),
+            ({'completely': {'nested': {'value': 42}}}, 'completely.nested.value', 42),
+        ]
+    )
+    def test_dot_escape(self, foo, key, val):
+        field = fields.Raw(dot_escape=True)
+        assert field.output(key, foo) == val
+
 
 class StringFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
     field_class = fields.String

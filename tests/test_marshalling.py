@@ -166,6 +166,46 @@ class MarshallingTest(object):
 
         assert output == expected
 
+    def test_marshal_dot_escape(self):
+        model = {
+            'foo\.bar': fields.Raw(dot_escape=True),
+            'baz': fields.Raw,
+        }
+
+        marshal_fields = {
+            'foo.bar': 'bar',
+            'baz': 'foobar',
+        }
+        expected = {
+            'foo.bar': 'bar',
+            'baz': 'foobar',
+        }
+
+        output = marshal(marshal_fields, model)
+
+        assert output == expected
+
+    def test_marshal_dot_escape_partial(self):
+        model = {
+            'foo\.bar.baz': fields.Raw(dot_escape=True),
+            'bat': fields.Raw,
+        }
+
+        marshal_fields = {
+            'foo.bar': {
+                'baz': 'fee'
+            },
+            'bat': 'fye',
+        }
+        expected = {
+            'foo.bar.baz': 'fee',
+            'bat': 'fye',
+        }
+
+        output = marshal(marshal_fields, model)
+
+        assert output == expected
+
     def test_marshal_nested_ordered(self):
         model = OrderedDict([
             ('foo', fields.Raw),
