@@ -8,6 +8,7 @@ Current
 
 - Fix `@api.expect(..., validate=False)` decorators for an :class:`Api` where `validate=True` is set on the constructor
 - Ensure `basePath` is always a path
+- Hide Namespaces with all hidden Resources from Swagger documentation
 
 0.12.1 (2018-09-28)
 -------------------

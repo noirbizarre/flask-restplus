@@ -297,6 +297,30 @@ class SwaggerTest(object):
         data = client.get_specs('')
         assert data['tags'] == [{'name': 'ns'}]
 
+    def test_specs_endpoint_namespace_all_resources_hidden(self, app, client):
+        api = restplus.Api(app)
+        ns = api.namespace('ns')
+
+        @ns.route('/test', endpoint='test', doc=False)
+        class TestResource(restplus.Resource):
+            def get(self):
+                return {}
+
+        @ns.route('/test2', endpoint='test2')
+        @ns.hide
+        class TestResource2(restplus.Resource):
+            def get(self):
+                return {}
+
+        @ns.route('/test3', endpoint='test3')
+        @ns.doc(False)
+        class TestResource3(restplus.Resource):
+            def get(self):
+                return {}
+
+        data = client.get_specs('')
+        assert data['tags'] == []
+
     def test_specs_authorizations(self, app, client):
         authorizations = {
             'apikey': {
