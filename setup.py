@@ -61,6 +61,7 @@ exec(compile(open('flask_restplus/__about__.py').read(), 'flask_restplus/__about
 install_requires = pip('install')
 doc_require = pip('doc')
 tests_require = pip('test')
+dev_require = tests_require + pip('develop')
 
 setup(
     name='flask-restplus',
@@ -74,9 +75,11 @@ setup(
     include_package_data=True,
     install_requires=install_requires,
     tests_require=tests_require,
+    dev_require=dev_require,
     extras_require={
         'test': tests_require,
         'doc': doc_require,
+        'dev': dev_require, 
     },
     license='BSD-3-Clause',
     zip_safe=False,
