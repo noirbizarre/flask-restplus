@@ -162,3 +162,8 @@ The documentation is hosted `on Read the Docs <http://flask-restplus.readthedocs
 
 .. _Flask: http://flask.pocoo.org/
 .. _Swagger: http://swagger.io/
+
+
+Contribution
+============
+Want to contribute! That's awesome! Check out `CONTRIBUTING.rst! <https://github.com/noirbizarre/flask-restplus/blob/master/CONTRIBUTING.rst>`_
