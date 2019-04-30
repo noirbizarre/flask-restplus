@@ -19,6 +19,10 @@ PYPI_RST_FILTERS = (
     (r':doc:`(.+) <(.*)>`', r'`\1 <http://flask-restplus.readthedocs.org/en/stable\2.html>`_'),
     # replace issues references
     (r':issue:`(.+?)`', r'`#\1 <https://github.com/noirbizarre/flask-restplus/issues/\1>`_'),
+    # replace pr references
+    (r':pr:`(.+?)`', r'`#\1 <https://github.com/noirbizarre/flask-restplus/pull/\1>`_'),
+    # replace commit references
+    (r':commit:`(.+?)`', r'`#\1 <https://github.com/noirbizarre/flask-restplus/commit/\1>`_'),
     # Drop unrecognized currentmodule
     (r'\.\. currentmodule:: .*', ''),
 )

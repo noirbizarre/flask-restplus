@@ -52,23 +52,26 @@ The above configuration will produce these Swagger definitions:
 
 .. code-block:: json
 
-    "Parent": {
-        "properties": {
-            "name": {"type": "string"},
-            "class": {"type": "string"}
+    {
+        "Parent": {
+            "properties": {
+                "name": {"type": "string"},
+                "class": {"type": "string"}
+            },
+            "discriminator": "class",
+            "required": ["class"]
         },
-        "discriminator": "class",
-        "required": ["class"]
-    },
-    "Child": {
-        "allOf": [{
-                "$ref": "#/definitions/Parent"
-            }, {
-                "properties": {
-                    "extra": {"type": "string"}
+        "Child": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Parent"
+                }, {
+                    "properties": {
+                        "extra": {"type": "string"}
+                    }
                 }
-            }
-        ]
+            ]
+        }
     }
 
 
