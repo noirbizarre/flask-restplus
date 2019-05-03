@@ -10,7 +10,7 @@
   "author": "Axel Haustant",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "swagger-ui-dist": "^3.4.0",
+    "swagger-ui-dist": "^3.9.2",
     "typeface-droid-sans": "0.0.40"
   }
 }
