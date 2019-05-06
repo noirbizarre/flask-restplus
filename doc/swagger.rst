@@ -934,6 +934,27 @@ you can register a custom view function with the :meth:`~Api.documentation` deco
     def custom_ui():
         return apidoc.ui_for(api)
 
+Configuring "Try it Out"
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, all paths and methods have a "Try it Out" button for performing API requests in the browser.
+These can be disable **per method** with the ``SWAGGER_SUPPORTED_SUBMIT_METHODS`` configuration option, 
+supporting the same values as the ``supportedSubmitMethods`` `Swagger UI parameter <https://github.com/swagger-api/swagger-ui/blob/master/docs/usage/configuration.md#network/>`_.
+
+.. code-block:: python
+
+    from flask import Flask
+    from flask_restplus import Api
+
+    app = Flask(__name__)
+
+    # disable Try it Out for all methods
+    app.config.SWAGGER_SUPPORTED_SUBMIT_METHODS = []
+
+    # enable Try it Out for specific methods
+    app.config.SWAGGER_SUPPORTED_SUBMIT_METHODS = ["get", "post"]
+
+    api = Api(app)
 
 Disabling the documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
