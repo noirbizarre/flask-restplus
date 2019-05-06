@@ -152,6 +152,14 @@ With Flask-Restplus, you only import the api instance to route and document your
         app.run(debug=True)
 
 
+Contributors
+============
+
+Flask-RESTPlus is brought to you by @noirbizarre. Since early 2019 @SteadBytes,
+@a-luna, @j5awry, @ziirish volunteered to help @noirbizarre keep the project up
+and running.
+Of course everyone is welcome to contribute and we will be happy to review your
+PR's or answer to your issues.
 
 
 Documentation
