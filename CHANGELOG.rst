@@ -6,6 +6,8 @@ Changelog
 Current
 -------
 
+- **Behavior**:
+    * ``ujson`` is not the default json serializer anymore. A new configuration option is available instead: ``RESTPLUS_JSON_SERIALIZER`` (:issue:`507`, :issue:`587`, :issue:`589`, :pr:`637`)
 - Add new `Wildcard` fields (:pr:`255`)
 - Fix ABC deprecation warnings (:pr:`580`)
 - Fix `@api.expect(..., validate=False)` decorators for an :class:`Api` where `validate=True` is set on the constructor (:issue:`609`, :pr:`610`)

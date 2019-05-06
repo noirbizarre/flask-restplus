@@ -9,3 +9,4 @@ pytest-mock==1.6.3
 pytest-profiling==1.2.11
 pytest-sugar==0.9.0
 tzlocal
+ujson
