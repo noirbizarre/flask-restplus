@@ -16,7 +16,7 @@ from flask import current_app
 from werkzeug.routing import parse_rule
 
 from . import fields
-from .model import Model, ModelBase
+from .model import SchemaModel, Model, ModelBase
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 from ._http import HTTPStatus
@@ -557,6 +557,12 @@ class Swagger(object):
         if isinstance(specs, Model):
             for field in itervalues(specs):
                 self.register_field(field)
+        if isinstance(specs, SchemaModel):
+            for prop in itervalues(specs._schema['properties']):
+                if ('$ref' in prop):
+                    name = prop['$ref'].rsplit('/', 1).pop()
+                    if name in self.api.models:
+                        self.register_model(self.api.models[name])
         return ref(model)
 
     def register_field(self, field):
