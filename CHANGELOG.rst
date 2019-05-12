@@ -11,6 +11,7 @@ Current
 - Fix `@api.expect(..., validate=False)` decorators for an :class:`Api` where `validate=True` is set on the constructor (:issue:`609`, :pr:`610`)
 - Ensure `basePath` is always a path
 - Hide Namespaces with all hidden Resources from Swagger documentation
+- Add `SWAGGER_DEFAULT_MODELS_EXPANSION_DEPTH` config option to hide/show models in Swagger documentation
 
 0.12.1 (2018-09-28)
 -------------------
