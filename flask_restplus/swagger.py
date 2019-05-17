@@ -557,12 +557,11 @@ class Swagger(object):
         if isinstance(specs, Model):
             for field in itervalues(specs):
                 self.register_field(field)
-        if isinstance(specs, SchemaModel):
-            for prop in itervalues(specs._schema['properties']):
-                if ('$ref' in prop):
-                    name = prop['$ref'].rsplit('/', 1).pop()
-                    if name in self.api.models:
-                        self.register_model(self.api.models[name])
+        if isinstance(specs, SchemaModel) and 'definitions' in specs._schema:
+            for key, defn in iteritems(specs._schema['definitions']):
+                if key not in self.api.models:
+                    self.register_model(self.api.schema_model(key, defn))
+            del(specs._schema['definitions'])
         return ref(model)
 
     def register_field(self, field):
