@@ -56,6 +56,22 @@ class NamespaceTest(object):
         assert 'Person' in api.models
         assert isinstance(api.models['Person'], OrderedModel)
 
+    def test_custom_model(self):
+        class CustomModel(Model):
+            pass
+        api = Namespace('test', default_model_class=CustomModel)
+        api.model('Person', {})
+        assert 'Person' in api.models
+        assert isinstance(api.models['Person'], CustomModel)
+
+    def test_custom_ordered_model(self):
+        class CustomOrderedModel(Model):
+            pass
+        api = Namespace('test', ordered=True, default_ordered_model_class=CustomOrderedModel)
+        api.model('Person', {})
+        assert 'Person' in api.models
+        assert isinstance(api.models['Person'], CustomOrderedModel)
+
     def test_schema_model(self):
         api = Namespace('test')
         api.schema_model('Person', {})
@@ -133,3 +149,22 @@ class NamespaceTest(object):
         client.post_json('/apples/validation/', data)
 
         assert Payload.payload == data
+
+
+class DefaultNamespaceTest(object):
+
+    def test_custom_model(self, app):
+        class CustomModel(Model):
+            pass
+        api = restplus.Api(app, default_model_class=CustomModel)
+        api.model('Person', {})
+        assert 'Person' in api.models
+        assert isinstance(api.models['Person'], CustomModel)
+
+    def test_custom_ordered_model(self, app):
+        class CustomOrderedModel(Model):
+            pass
+        api = restplus.Api(app, ordered=True, default_ordered_model_class=CustomOrderedModel)
+        api.model('Person', {})
+        assert 'Person' in api.models
+        assert isinstance(api.models['Person'], CustomOrderedModel)

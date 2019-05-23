@@ -28,10 +28,14 @@ class Namespace(object):
     :param list decorators: A list of decorators to apply to each resources
     :param bool validate: Whether or not to perform validation on this namespace
     :param bool ordered: Whether or not to preserve order on models and marshalling
+    :param type default_model_class: Class to use when invoking ns.model(), defaults to Model
+    :param type default_ordered_model_class: Class to use when invoking ns.model() in an
+        ordered namespace, default os OrderedModel
     :param Api api: an optional API to attache to the namespace
     '''
     def __init__(self, name, description=None, path=None, decorators=None, validate=None,
-            authorizations=None, ordered=False, **kwargs):
+            authorizations=None, ordered=False, default_model_class=None,
+            default_ordered_model_class=None, **kwargs):
         self.name = name
         self.description = description
         self._path = path
@@ -46,6 +50,8 @@ class Namespace(object):
         self.default_error_handler = None
         self.authorizations = authorizations
         self.ordered = ordered
+        self.default_model_class = default_model_class or Model
+        self.default_ordered_model_class = default_ordered_model_class or OrderedModel
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
@@ -144,7 +150,7 @@ class Namespace(object):
 
         .. seealso:: :class:`Model`
         '''
-        cls = OrderedModel if self.ordered else Model
+        cls = self.default_ordered_model_class if self.ordered else self.default_model_class
         model = cls(name, model, mask=mask)
         model.__apidoc__.update(kwargs)
         return self.add_model(name, model)

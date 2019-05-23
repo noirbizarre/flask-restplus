@@ -87,6 +87,9 @@ class Api(object):
     :param FormatChecker format_checker: A jsonschema.FormatChecker object that is hooked into
         the Model validator. A default or a custom FormatChecker can be provided (e.g., with custom
         checkers), otherwise the default action is to not enforce any format validation.
+    :param type default_model_class: Class to use when invoking api.model(), defaults to Model
+    :param type default_ordered_model_class: Class to use when invoking api.model() in an ordered
+        namespace, defaults to OrderedModel
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,
@@ -97,6 +100,7 @@ class Api(object):
             tags=None, prefix='', ordered=False,
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
+            default_model_class=None, default_ordered_model_class=None,
             **kwargs):
         self.version = version
         self.title = title or 'API'
@@ -131,6 +135,8 @@ class Api(object):
             validate=validate,
             api=self,
             path='/',
+            default_model_class=default_model_class,
+            default_ordered_model_class=default_ordered_model_class,
         )
         self.ns_paths = dict()
 
