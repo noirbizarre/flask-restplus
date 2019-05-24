@@ -698,7 +698,10 @@ You can hide some resources or methods from documentation using any of the follo
 Documenting authorizations
 --------------------------
 
-You can use the ``authorizations`` keyword argument to document authorization information:
+You can use the ``authorizations`` keyword argument to document authorization information.
+See `Swagger Authentication documentation <https://swagger.io/docs/specification/2-0/authentication/>`_
+for configuration details.
+    - ``authorizations`` is a Python dictionary representation of the Swagger ``securityDefinitions`` configuration.
 
 .. code-block:: python
 
@@ -753,6 +756,7 @@ You can have multiple security schemes:
             'type': 'oauth2',
             'flow': 'accessCode',
             'tokenUrl': 'https://somewhere.com/token',
+            'authorizationUrl': 'https://somewhere.com/auth',
             'scopes': {
                 'read': 'Grant read-only access',
                 'write': 'Grant read-write access',
