@@ -1,44 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import
 
-import importlib
-
-from json import dumps
-
 from flask import make_response, current_app
 
-DEFAULT_SERIALIZER = 'dumps'
-serializer = None
-
-
-def _importer(mod_name, func_name=DEFAULT_SERIALIZER, default=dumps):
-    imported = importlib.import_module(mod_name)
-    return getattr(imported, func_name, default)
+from .utils import preload_serializer
 
 
 def output_json(data, code, headers=None):
     '''Makes a Flask response with a JSON encoded body'''
-
-    global serializer
-
     settings = current_app.config.get('RESTPLUS_JSON', {})
-    custom_serializer = current_app.config.get('RESTPLUS_JSON_SERIALIZER', None)
-
-    # If the user wants to use a custom serializer, let it be
-    if serializer is None and custom_serializer:
-        try:
-            serializer = _importer(custom_serializer)
-        except ImportError:
-            if '.' in custom_serializer:
-                mod, func = custom_serializer.rsplit('.', 1)
-                try:
-                    serializer = _importer(mod, func)
-                except ImportError:
-                    pass
-
-    # fallback, no serializer found so far, use the default one
+    serializer = current_app.config.get('RESTPLUS_CACHED_SERIALIZER')
     if serializer is None:
-        serializer = dumps
+        preload_serializer(current_app)
+        serializer = current_app.config.get('RESTPLUS_CACHED_SERIALIZER')
 
     # If we're in debug mode, and the indent is not set, we set it to a
     # reasonable value here.  Note that this won't override any existing value

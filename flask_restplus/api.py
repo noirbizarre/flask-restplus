@@ -32,7 +32,7 @@ from .namespace import Namespace
 from .postman import PostmanCollectionV1
 from .resource import Resource
 from .swagger import Swagger
-from .utils import default_id, camel_to_dash, unpack
+from .utils import default_id, camel_to_dash, preload_serializer, unpack
 from .representations import output_json
 from ._http import HTTPStatus
 
@@ -209,6 +209,7 @@ class Api(object):
         self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
         app.config.setdefault('RESTPLUS_MASK_HEADER', 'X-Fields')
         app.config.setdefault('RESTPLUS_MASK_SWAGGER', True)
+        preload_serializer(app)
 
     def __getattr__(self, name):
         try:

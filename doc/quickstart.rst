@@ -360,11 +360,13 @@ The following configuration options exist for Flask-RESTPlus:
 
                                               .. note::
                                                   Flask-RESTPlus will always
-                                                  silently fallback to the
-                                                  default ``json.dumps``
-                                                  *serializer* if it cannot
-                                                  manage to import the one
-                                                  you configured.
+                                                  fallback to the default
+                                                  ``json.dumps`` *serializer*
+                                                  if it cannot manage to import
+                                                  the one you configured.
+                                                  In such case, a
+                                                  ``UserWarning`` will be
+                                                  raised.
 
 
                                               .. warning::
