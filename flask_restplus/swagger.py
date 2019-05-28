@@ -16,7 +16,7 @@ from flask import current_app
 from werkzeug.routing import parse_rule
 
 from . import fields
-from .model import Model, ModelBase
+from .model import SchemaModel, Model, ModelBase
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 from ._http import HTTPStatus
@@ -557,6 +557,11 @@ class Swagger(object):
         if isinstance(specs, Model):
             for field in itervalues(specs):
                 self.register_field(field)
+        if isinstance(specs, SchemaModel) and 'definitions' in specs._schema:
+            for key, defn in iteritems(specs._schema['definitions']):
+                if key not in self.api.models:
+                    self.register_model(self.api.schema_model(key, defn))
+            del(specs._schema['definitions'])
         return ref(model)
 
     def register_field(self, field):
