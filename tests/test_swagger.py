@@ -1669,6 +1669,33 @@ class SwaggerTest(object):
             }
         }
 
+    def test_model_with_non_uri_chars_in_name(self, api, client):
+        # name will be encoded as 'Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
+        name = 'Person//?lots{} of &illegals@`'
+        fields = api.model(name, {
+        })
+
+        @api.route('/model-bad-uri/')
+        class ModelBadUri(restplus.Resource):
+            @api.doc(model=fields)
+            def get(self):
+                return {}
+
+            @api.response(201, "", model=name)
+            def post(self):
+                return {}
+
+        data = client.get_specs()
+
+        assert 'definitions' in data
+        assert name in data['definitions']
+
+        path = data['paths']['/model-bad-uri/']
+        assert path['get']['responses']['200']['schema']['$ref'] == \
+            '#/definitions/Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
+        assert path['post']['responses']['201']['schema']['$ref'] == \
+            '#/definitions/Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
+
     def test_marchal_decorator_with_code(self, api, client):
         fields = api.model('Person', {
             'name': restplus.fields.String,

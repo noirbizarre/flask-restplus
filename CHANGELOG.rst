@@ -11,6 +11,7 @@ Current
 - Fix `@api.expect(..., validate=False)` decorators for an :class:`Api` where `validate=True` is set on the constructor (:issue:`609`, :pr:`610`)
 - Ensure `basePath` is always a path
 - Hide Namespaces with all hidden Resources from Swagger documentation
+- Fix illegal characters in JSON references to model names (:issue:`651`)
 
 0.12.1 (2018-09-28)
 -------------------
