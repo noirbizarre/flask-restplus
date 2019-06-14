@@ -267,9 +267,10 @@ class Namespace(object):
         :param str description: a small description
         :param str _in: the parameter location `(query|header|formData|body|cookie)`
         '''
-        param = kwargs
+        param = kwargs.copy()
         param['in'] = _in
-        param['description'] = description
+        if description is not None:
+            param['description'] = description
         return self.doc(params={name: param})
 
     def response(self, code, description, model=None, **kwargs):
@@ -291,8 +292,9 @@ class Namespace(object):
         :param str description: a description about the header
 
         '''
-        header = {'description': description}
-        header.update(kwargs)
+        header = kwargs.copy()
+        if description is not None:
+            header['description'] = description
         return self.doc(headers={name: header})
 
     def produces(self, mimetypes):
