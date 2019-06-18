@@ -353,6 +353,12 @@ class Swagger(object):
         doc = self.extract_resource_doc(resource, url)
         if doc is False:
             return
+        route_doc = kwargs.get("doc")
+        if route_doc is False:
+            return
+        elif route_doc:
+            doc = merge(doc, route_doc)
+
         path = {
             'parameters': self.parameters_for(doc) or None
         }

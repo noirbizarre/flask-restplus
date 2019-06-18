@@ -3111,7 +3111,7 @@ class SwaggerTest(object):
         assert path['get']['security'] == [{'oauth2': ['read', 'write']}]
 
         path = data['paths']['/bar']
-        assert path['get']['description'] == restplus.swagger.DEFAULT_RESPONSE_DESCRIPTION
+        assert 'description' not in path['get']
         assert path['get']['security'] == [{'oauth2': ['read', 'write']}]
 
 

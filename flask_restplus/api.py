@@ -268,6 +268,7 @@ class Api(object):
 
     def _register_view(self, app, resource, namespace, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or camel_to_dash(resource.__name__)
+        kwargs.pop("doc", {})
         resource_class_args = kwargs.pop('resource_class_args', ())
         resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
 

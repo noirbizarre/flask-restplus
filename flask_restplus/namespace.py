@@ -86,17 +86,17 @@ class Namespace(object):
         A decorator to route resources.
         '''
         def wrapper(cls):
-            doc = kwargs.pop('doc', None)
+            doc = kwargs.get('doc', None)
             if doc is not None:
-                self._handle_api_doc(cls, doc)
+                route_doc = self._build_doc(cls, doc)
+                kwargs['doc'] = route_doc
             self.add_resource(cls, *urls, **kwargs)
             return cls
         return wrapper
 
-    def _handle_api_doc(self, cls, doc):
+    def _build_doc(self, cls, doc):
         if doc is False:
-            cls.__apidoc__ = False
-            return
+            return False
         unshortcut_params_description(doc)
         handle_deprecations(doc)
         for http_method in http_method_funcs:
@@ -107,7 +107,10 @@ class Namespace(object):
                 handle_deprecations(doc[http_method])
                 if 'expect' in doc[http_method] and not isinstance(doc[http_method]['expect'], (list, tuple)):
                     doc[http_method]['expect'] = [doc[http_method]['expect']]
-        cls.__apidoc__ = merge(getattr(cls, '__apidoc__', {}), doc)
+        return merge(getattr(cls, '__apidoc__', {}), doc)
+
+    def _handle_api_doc(self, cls, doc):
+        cls.__apidoc__ = self._build_doc(cls, doc)
 
     def doc(self, shortcut=None, **kwargs):
         '''A decorator to add some api documentation to the decorated object'''
