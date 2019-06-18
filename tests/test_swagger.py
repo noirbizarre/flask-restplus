@@ -3049,6 +3049,71 @@ class SwaggerTest(object):
         assert 'get' in path
         assert 'post' not in path
 
+    def test_multiple_routes_inherit_doc(self, api, client):
+        @api.route('/foo/bar')
+        @api.route('/bar')
+        @api.doc(description='an endpoint')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['description'] == 'an endpoint'
+
+        path = data['paths']['/bar']
+        assert path['get']['description'] == 'an endpoint'
+
+    def test_multiple_routes_individual_doc(self, api, client):
+        @api.route('/foo/bar', doc={'description': 'the same endpoint'})
+        @api.route('/bar', doc={'description': 'an endpoint'})
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['description'] == 'the same endpoint'
+
+        path = data['paths']['/bar']
+        assert path['get']['description'] == 'an endpoint'
+
+    def test_multiple_routes_override_doc(self, api, client):
+        @api.route('/foo/bar', doc={'description': 'the same endpoint'})
+        @api.route('/bar')
+        @api.doc(description='an endpoint')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['description'] == 'the same endpoint'
+
+        path = data['paths']['/bar']
+        assert path['get']['description'] == 'an endpoint'
+
+    def test_routes_merge_doc(self, api, client):
+        @api.route('/foo/bar', doc={'description': 'the same endpoint'})
+        @api.route('/bar')
+        @api.doc(security=[{'oauth2': ['read', 'write']}])
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['description'] == 'the same endpoint'
+        assert path['get']['security'] == [{'oauth2': ['read', 'write']}]
+
+        path = data['paths']['/bar']
+        assert path['get']['description'] == restplus.swagger.DEFAULT_RESPONSE_DESCRIPTION
+        assert path['get']['security'] == [{'oauth2': ['read', 'write']}]
+
 
 class SwaggerDeprecatedTest(object):
     def test_doc_parser_parameters(self, api):
