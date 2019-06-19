@@ -90,6 +90,7 @@ class Namespace(object):
             if doc is not None:
                 route_doc = self._build_doc(cls, doc)
                 kwargs['doc'] = route_doc
+                cls.__apidoc__ = route_doc
             self.add_resource(cls, *urls, **kwargs)
             return cls
         return wrapper

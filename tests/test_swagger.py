@@ -3094,11 +3094,11 @@ class SwaggerTest(object):
         assert path['get']['description'] == 'the same endpoint'
 
         path = data['paths']['/bar']
-        assert path['get']['description'] == 'an endpoint'
+        assert path['get']['description'] == 'the same endpoint'
 
     def test_routes_merge_doc(self, api, client):
         @api.route('/foo/bar', doc={'description': 'the same endpoint'})
-        @api.route('/bar')
+        @api.route('/bar', doc={'description': False})
         @api.doc(security=[{'oauth2': ['read', 'write']}])
         class TestResource(restplus.Resource):
             def get(self):

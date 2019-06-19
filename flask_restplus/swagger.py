@@ -366,7 +366,10 @@ class Swagger(object):
             methods = [m.lower() for m in kwargs.get('methods', [])]
             if doc[method] is False or methods and method not in methods:
                 continue
-            path[method] = self.serialize_operation(doc, method)
+            if route_doc and method in route_doc and route_doc[method] is not False:
+                path[method] = self.serialize_operation(route_doc, method)
+            else:
+                path[method] = self.serialize_operation(doc, method)
             path[method]['tags'] = [ns.name]
         return not_none(path)
 
@@ -411,7 +414,7 @@ class Swagger(object):
         '''Extract the description metadata and fallback on the whole docstring'''
         parts = []
         if 'description' in doc:
-            parts.append(doc['description'])
+            parts.append(doc['description'] or "")
         if method in doc and 'description' in doc[method]:
             parts.append(doc[method]['description'])
         if doc[method]['docstring']['details']:
