@@ -3094,7 +3094,7 @@ class SwaggerTest(object):
         assert path['get']['description'] == 'the same endpoint'
 
         path = data['paths']['/bar']
-        assert path['get']['description'] == 'the same endpoint'
+        assert path['get']['description'] == 'an endpoint'
 
     def test_routes_merge_doc(self, api, client):
         @api.route('/foo/bar', doc={'description': 'the same endpoint'})

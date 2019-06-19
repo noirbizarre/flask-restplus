@@ -132,12 +132,15 @@ def parse_docstring(obj):
     return parsed
 
 
-def is_hidden(resource):
+def is_hidden(resource, **kwargs):
     '''
     Determine whether a Resource has been hidden from Swagger documentation
     i.e. by using Api.doc(False) decorator
     '''
-    return hasattr(resource, "__apidoc__") and resource.__apidoc__ is False
+    if kwargs.get("doc") is False:
+        return True
+    else:
+        return hasattr(resource, "__apidoc__") and resource.__apidoc__ is False
 
 
 class Swagger(object):
@@ -236,8 +239,8 @@ class Swagger(object):
             if not ns.resources:
                 continue
             # hide namespaces with all Resources hidden from Swagger documentation
-            resources = (resource for resource, urls, kwargs in ns.resources)
-            if all(is_hidden(r) for r in resources):
+            resources = ((resource, kwargs) for resource, urls, kwargs in ns.resources)
+            if all(is_hidden(r, **kw) for r, kw in resources):
                 continue
             if ns.name not in by_name:
                 tags.append({
@@ -367,7 +370,7 @@ class Swagger(object):
             if doc[method] is False or methods and method not in methods:
                 continue
             if route_doc and method in route_doc and route_doc[method] is not False:
-                path[method] = self.serialize_operation(route_doc, method)
+                path[method] = self.serialize_operation(merge(doc, route_doc), method)
             else:
                 path[method] = self.serialize_operation(doc, method)
             path[method]['tags'] = [ns.name]
