@@ -3114,6 +3114,81 @@ class SwaggerTest(object):
         assert 'description' not in path['get']
         assert path['get']['security'] == [{'oauth2': ['read', 'write']}]
 
+    def test_multiple_routes_deprecation(self, api, client):
+        @api.route('/foo/bar', doc={'deprecated': True})
+        @api.route('/bar')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['deprecated'] is True
+
+        path = data['paths']['/bar']
+        assert 'deprecated' not in path['get']
+
+    @pytest.mark.parametrize('path_name', ['/name/{age}/', '/first-name/{age}/'])
+    def test_multiple_routes_explicit_parameters_override(self, path_name, api, client):
+        @api.route("/name/<int:age>/", endpoint="by-name")
+        @api.route("/first-name/<int:age>/")
+        @api.doc(
+            params={
+                "q": {
+                    "type": "string",
+                    "in": "query",
+                    "description": "Overriden description",
+                },
+                "age": {"description": "An age"},
+            }
+        )
+        class ByNameResource(restplus.Resource):
+            @api.doc(
+                params={"q": {"description": "A query string"}}
+            )
+            def get(self, age):
+                return {}
+
+            def post(self, age):
+                pass
+
+        data = client.get_specs()
+        assert path_name in data['paths']
+
+        path = data['paths'][path_name]
+        assert len(path['parameters']) == 1
+
+        by_name = dict((p['name'], p) for p in path['parameters'])
+
+        parameter = by_name['age']
+        assert parameter['name'] == 'age'
+        assert parameter['type'] == 'integer'
+        assert parameter['in'] == 'path'
+        assert parameter['required'] is True
+        assert parameter['description'] == 'An age'
+
+        # Don't duplicate parameters
+        assert 'q' not in by_name
+
+        get = path['get']
+        assert len(get['parameters']) == 1
+
+        parameter = get['parameters'][0]
+        assert parameter['name'] == 'q'
+        assert parameter['type'] == 'string'
+        assert parameter['in'] == 'query'
+        assert parameter['description'] == 'A query string'
+
+        post = path['post']
+        assert len(post['parameters']) == 1
+
+        parameter = post['parameters'][0]
+        assert parameter['name'] == 'q'
+        assert parameter['type'] == 'string'
+        assert parameter['in'] == 'query'
+        assert parameter['description'] == 'Overriden description'
+
 
 class SwaggerDeprecatedTest(object):
     def test_doc_parser_parameters(self, api):
