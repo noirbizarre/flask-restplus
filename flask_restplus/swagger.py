@@ -251,8 +251,11 @@ class Swagger(object):
                 by_name[ns.name]['description'] = ns.description
         return tags
 
-    def extract_resource_doc(self, resource, url):
-        doc = getattr(resource, '__apidoc__', {})
+    def extract_resource_doc(self, resource, url, route_doc=None):
+        route_doc = {} if route_doc is None else route_doc
+        if route_doc is False:
+            return False
+        doc = merge(getattr(resource, '__apidoc__', {}), route_doc)
         if doc is False:
             return False
         doc['name'] = resource.__name__
@@ -353,15 +356,10 @@ class Swagger(object):
         return responses
 
     def serialize_resource(self, ns, resource, url, kwargs):
-        doc = self.extract_resource_doc(resource, url)
+        route_doc = kwargs.get("doc")
+        doc = self.extract_resource_doc(resource, url, route_doc=route_doc)
         if doc is False:
             return
-        route_doc = kwargs.get("doc")
-        if route_doc is False:
-            return
-        elif route_doc:
-            doc = merge(doc, route_doc)
-
         path = {
             'parameters': self.parameters_for(doc) or None
         }
@@ -369,10 +367,7 @@ class Swagger(object):
             methods = [m.lower() for m in kwargs.get('methods', [])]
             if doc[method] is False or methods and method not in methods:
                 continue
-            if route_doc and method in route_doc and route_doc[method] is not False:
-                path[method] = self.serialize_operation(merge(doc, route_doc), method)
-            else:
-                path[method] = self.serialize_operation(doc, method)
+            path[method] = self.serialize_operation(doc, method)
             path[method]['tags'] = [ns.name]
         return not_none(path)
 
