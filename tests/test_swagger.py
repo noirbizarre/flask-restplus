@@ -3096,7 +3096,42 @@ class SwaggerTest(object):
         path = data['paths']['/bar']
         assert path['get']['description'] == 'an endpoint'
 
-    def test_routes_merge_doc(self, api, client):
+    def test_multiple_routes_no_doc_same_operationIds(self, api, client):
+        @api.route('/foo/bar')
+        @api.route('/bar')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        expected_operation_id = 'get_test_resource'
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['operationId'] == expected_operation_id
+
+        path = data['paths']['/bar']
+        assert path['get']['operationId'] == expected_operation_id
+
+    def test_multiple_routes_with_doc_unique_operationIds(self, api, client):
+        @api.route(
+            "/foo/bar",
+            doc={"description": "I should be treated separately"},
+        )
+        @api.route("/bar")
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['operationId'] == 'get_test_resource_/foo/bar'
+
+        path = data['paths']['/bar']
+        assert path['get']['operationId'] == 'get_test_resource'
+
+    def test_mutltiple_routes_merge_doc(self, api, client):
         @api.route('/foo/bar', doc={'description': 'the same endpoint'})
         @api.route('/bar', doc={'description': False})
         @api.doc(security=[{'oauth2': ['read', 'write']}])

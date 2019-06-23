@@ -258,7 +258,15 @@ class Swagger(object):
         doc = merge(getattr(resource, '__apidoc__', {}), route_doc)
         if doc is False:
             return False
-        doc['name'] = resource.__name__
+
+        # ensure unique names for multiple routes to the same resource
+        # provides different Swagger operationId's
+        doc["name"] = (
+            "{}_{}".format(resource.__name__, url)
+            if route_doc
+            else resource.__name__
+        )
+
         params = merge(self.expected_params(doc), doc.get('params', OrderedDict()))
         params = merge(params, extract_path_params(url))
         # Track parameters for late deduplication
