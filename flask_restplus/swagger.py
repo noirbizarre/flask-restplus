@@ -132,12 +132,12 @@ def parse_docstring(obj):
     return parsed
 
 
-def is_hidden(resource, **kwargs):
+def is_hidden(resource, route_doc=None):
     '''
     Determine whether a Resource has been hidden from Swagger documentation
     i.e. by using Api.doc(False) decorator
     '''
-    if kwargs.get("doc") is False:
+    if route_doc is False:
         return True
     else:
         return hasattr(resource, "__apidoc__") and resource.__apidoc__ is False
@@ -187,9 +187,17 @@ class Swagger(object):
         responses = self.register_errors()
 
         for ns in self.api.namespaces:
-            for resource, urls, kwargs in ns.resources:
+            for resource, urls, route_doc, kwargs in ns.resources:
                 for url in self.api.ns_urls(ns, urls):
-                    paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
+                    path = extract_path(url)
+                    serialized = self.serialize_resource(
+                        ns,
+                        resource,
+                        url,
+                        route_doc=route_doc,
+                        **kwargs
+                    )
+                    paths[path] = serialized
 
         # merge in the top-level authorizations
         for ns in self.api.namespaces:
@@ -239,8 +247,10 @@ class Swagger(object):
             if not ns.resources:
                 continue
             # hide namespaces with all Resources hidden from Swagger documentation
-            resources = ((resource, kwargs) for resource, urls, kwargs in ns.resources)
-            if all(is_hidden(r, **kw) for r, kw in resources):
+            if all(
+                is_hidden(r.resource, route_doc=r.route_doc)
+                for r in ns.resources
+            ):
                 continue
             if ns.name not in by_name:
                 tags.append({
@@ -363,8 +373,7 @@ class Swagger(object):
             responses[exception.__name__] = not_none(response)
         return responses
 
-    def serialize_resource(self, ns, resource, url, kwargs):
-        route_doc = kwargs.get("doc")
+    def serialize_resource(self, ns, resource, url, route_doc=None, **kwargs):
         doc = self.extract_resource_doc(resource, url, route_doc=route_doc)
         if doc is False:
             return

@@ -268,7 +268,6 @@ class Api(object):
 
     def _register_view(self, app, resource, namespace, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or camel_to_dash(resource.__name__)
-        kwargs.pop("doc", {})
         resource_class_args = kwargs.pop('resource_class_args', ())
         resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
 
@@ -422,8 +421,9 @@ class Api(object):
             if path is not None:
                 self.ns_paths[ns] = path
         # Register resources
-        for resource, urls, kwargs in ns.resources:
-            self.register_resource(ns, resource, *self.ns_urls(ns, urls), **kwargs)
+        for r in ns.resources:
+            urls = self.ns_urls(ns, r.urls)
+            self.register_resource(ns, r.resource, *urls, **r.kwargs)
         # Register models
         for name, definition in six.iteritems(ns.models):
             self.models[name] = definition

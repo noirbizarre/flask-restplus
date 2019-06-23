@@ -2,18 +2,22 @@
 from __future__ import unicode_literals
 
 import inspect
-import six
 import warnings
+from collections import namedtuple
 
+import six
 from flask import request
 from flask.views import http_method_funcs
 
+from ._http import HTTPStatus
 from .errors import abort
 from .marshalling import marshal, marshal_with
 from .model import Model, OrderedModel, SchemaModel
 from .reqparse import RequestParser
 from .utils import merge
-from ._http import HTTPStatus
+
+# Container for each route applied to a Resource using @ns.route decorator
+ResourceRoute = namedtuple("ResourceRoute", "resource urls route_doc kwargs")
 
 
 class Namespace(object):
@@ -41,7 +45,7 @@ class Namespace(object):
         self.models = {}
         self.urls = {}
         self.decorators = decorators if decorators else []
-        self.resources = []
+        self.resources = []  # List[ResourceRoute]
         self.error_handlers = {}
         self.default_error_handler = None
         self.authorizations = authorizations
@@ -54,7 +58,7 @@ class Namespace(object):
     def path(self):
         return (self._path or ('/' + self.name)).rstrip('/')
 
-    def add_resource(self, resource, *urls, **kwargs):
+    def add_resource(self, resource, *urls, route_doc=None, **kwargs):
         '''
         Register a Resource for a given API Namespace
 
@@ -76,7 +80,8 @@ class Namespace(object):
             namespace.add_resource(Foo, '/foo', endpoint="foo")
             namespace.add_resource(FooSpecial, '/special/foo', endpoint="foo")
         '''
-        self.resources.append((resource, urls, kwargs))
+        route_doc = {} if route_doc is None else route_doc
+        self.resources.append(ResourceRoute(resource, urls, route_doc, kwargs))
         for api in self.apis:
             ns_urls = api.ns_urls(self, urls)
             api.register_resource(self, resource, *ns_urls, **kwargs)
@@ -86,11 +91,10 @@ class Namespace(object):
         A decorator to route resources.
         '''
         def wrapper(cls):
-            doc = kwargs.get('doc', None)
+            doc = kwargs.pop('doc', None)
             if doc is not None:
-                route_doc = self._build_doc(cls, doc)
-                # TODO: CLEAN THIS UP + ADD MORE TESTS
-                kwargs['doc'] = route_doc
+                # build api doc intended only for this route
+                kwargs['route_doc'] = self._build_doc(cls, doc)
             self.add_resource(cls, *urls, **kwargs)
             return cls
         return wrapper
@@ -110,9 +114,6 @@ class Namespace(object):
                     doc[http_method]['expect'] = [doc[http_method]['expect']]
         return merge(getattr(cls, '__apidoc__', {}), doc)
 
-    def _handle_api_doc(self, cls, doc):
-        cls.__apidoc__ = self._build_doc(cls, doc)
-
     def doc(self, shortcut=None, **kwargs):
         '''A decorator to add some api documentation to the decorated object'''
         if isinstance(shortcut, six.text_type):
@@ -120,7 +121,10 @@ class Namespace(object):
         show = shortcut if isinstance(shortcut, bool) else True
 
         def wrapper(documented):
-            self._handle_api_doc(documented, kwargs if show else False)
+            documented.__apidoc__ = self._build_doc(
+                documented,
+                kwargs if show else False
+            )
             return documented
         return wrapper
 
