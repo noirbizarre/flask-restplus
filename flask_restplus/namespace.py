@@ -58,7 +58,7 @@ class Namespace(object):
     def path(self):
         return (self._path or ('/' + self.name)).rstrip('/')
 
-    def add_resource(self, resource, *urls, route_doc=None, **kwargs):
+    def add_resource(self, resource, *urls, **kwargs):
         '''
         Register a Resource for a given API Namespace
 
@@ -80,7 +80,7 @@ class Namespace(object):
             namespace.add_resource(Foo, '/foo', endpoint="foo")
             namespace.add_resource(FooSpecial, '/special/foo', endpoint="foo")
         '''
-        route_doc = {} if route_doc is None else route_doc
+        route_doc = kwargs.pop('route_doc', {})
         self.resources.append(ResourceRoute(resource, urls, route_doc, kwargs))
         for api in self.apis:
             ns_urls = api.ns_urls(self, urls)
