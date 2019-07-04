@@ -1597,6 +1597,10 @@ class SwaggerTest(object):
         assert path['get']['responses']['200']['schema']['$ref'] == '#/definitions/Person'
         assert path['post']['responses']['200']['schema']['$ref'] == '#/definitions/Person'
 
+    @pytest.mark.api(ordered=True)
+    def test_model_as_nested_dict_with_api_ordered(self, api, client):
+        self.test_model_as_nested_dict(api, client)
+
     def test_model_as_nested_dict_with_details(self, api, client):
         address_fields = api.model('Address', {
             'road': restplus.fields.String,
@@ -1640,6 +1644,10 @@ class SwaggerTest(object):
             },
             'type': 'object'
         }
+
+    @pytest.mark.api(ordered=True)
+    def test_model_as_nested_dict_with_details_with_api_ordered(self, api, client):
+        self.test_model_as_nested_dict_with_details(api, client)
 
     def test_model_as_flat_dict_with_marchal_decorator(self, api, client):
         fields = api.model('Person', {
@@ -1878,6 +1886,10 @@ class SwaggerTest(object):
         assert 'definitions' in data
         assert 'Person' in data['definitions']
         assert 'Address' in data['definitions']
+
+    @pytest.mark.api(ordered=True)
+    def test_model_as_nested_dict_with_list_with_api_ordered(self, api, client):
+        self.test_model_as_nested_dict_with_list(api, client)
 
     def test_model_list_of_primitive_types(self, api, client):
         @api.route('/model-list/')
@@ -2191,6 +2203,10 @@ class SwaggerTest(object):
             }]
         }
 
+    @pytest.mark.api(ordered=True)
+    def test_inherit_inline_with_api_ordered(self, api, client):
+        self.test_inherit_inline(api, client)
+
     def test_polymorph_inherit(self, api, client):
         class Child1:
             pass
@@ -2297,6 +2313,10 @@ class SwaggerTest(object):
             }]
         }
 
+    @pytest.mark.api(ordered=True)
+    def test_polymorph_inherit_with_api_ordered(self, api, client):
+        self.test_polymorph_inherit_list(api, client)
+
     def test_expect_model(self, api, client):
         person = api.model('Person', {
             'name': restplus.fields.String,
@@ -2343,6 +2363,10 @@ class SwaggerTest(object):
             }
         }
         assert 'description' not in parameter
+
+    @pytest.mark.api(ordered=True)
+    def test_polymorph_inhert_list_with_api_ordered(self, api, client):
+        self.test_polymorph_inherit_list(api, client)
 
     def test_body_model_shortcut(self, api, client):
         fields = api.model('Person', {
