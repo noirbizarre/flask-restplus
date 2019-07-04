@@ -16,7 +16,7 @@ from flask import current_app
 from werkzeug.routing import parse_rule
 
 from . import fields
-from .model import Model, ModelBase
+from .model import Model, OrderedModel, ModelBase
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 from ._http import HTTPStatus
@@ -50,7 +50,7 @@ RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)
 
 def ref(model):
     '''Return a reference to model in definitions'''
-    name = model.name if isinstance(model, ModelBase) else model
+    name = model.name if isinstance(model, (ModelBase, OrderedModel)) else model
     return {'$ref': '#/definitions/{0}'.format(name)}
 
 
@@ -578,7 +578,7 @@ class Swagger(object):
         if isinstance(specs, ModelBase):
             for parent in specs.__parents__:
                 self.register_model(parent)
-        if isinstance(specs, Model):
+        if isinstance(specs, (Model, OrderedModel)):
             for field in itervalues(specs):
                 self.register_field(field)
         return ref(model)
