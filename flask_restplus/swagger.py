@@ -485,6 +485,7 @@ class Swagger(object):
         for d in doc, doc[method]:
             if 'responses' in d:
                 for code, response in iteritems(d['responses']):
+                    code = str(code)
                     if isinstance(response, string_types):
                         description = response
                         model = None
@@ -514,7 +515,7 @@ class Swagger(object):
                 for name, description in iteritems(d['docstring']['raises']):
                     for exception, handler in iteritems(self.api.error_handlers):
                         error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
-                        code = list(error_responses.keys())[0] if error_responses else None
+                        code = str(list(error_responses.keys())[0]) if error_responses else None
                         if code and exception.__name__ == name:
                             responses[code] = {'$ref': '#/responses/{0}'.format(name)}
                             break

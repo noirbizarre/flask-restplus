@@ -2042,6 +2042,47 @@ class SwaggerTest(object):
 
         client.get_specs(status=500)
 
+    def test_specs_no_duplicate_response_keys(self, api, client):
+        '''
+        This tests that the swagger.json document will not be written with duplicate object keys
+        due to the coercion of dict keys to string. The last @api.response should win.
+        '''
+        # Note the use of a strings '404' and '200' in class decorators as opposed to ints in method decorators.
+        @api.response('404', 'Not Found')
+        class BaseResource(restplus.Resource):
+            def get(self):
+                pass
+
+        model = api.model('SomeModel', {
+            'message': restplus.fields.String,
+        })
+
+        @api.route('/test/')
+        @api.response('200', 'Success')
+        class TestResource(BaseResource):
+            # @api.marshal_with also yields a response
+            @api.marshal_with(model, code=200, description='Success on method')
+            @api.response(404, 'Not Found on method')
+            def get(self):
+                {}
+
+        data = client.get_specs('')
+        paths = data['paths']
+
+        op = paths['/test/']['get']
+        print(op['responses'])
+        assert op['responses'] == {
+            '200': {
+                'description': 'Success on method',
+                'schema': {
+                    '$ref': '#/definitions/SomeModel'
+                }
+            },
+            '404': {
+                'description': 'Not Found on method',
+            }
+        }
+
     def test_clone(self, api, client):
         parent = api.model('Person', {
             'name': restplus.fields.String,

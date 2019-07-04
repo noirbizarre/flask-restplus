@@ -11,11 +11,23 @@ import flask_restplus as restplus
 
 
 class TestClient(FlaskClient):
+    # Borrowed from https://pythonadventures.wordpress.com/2016/03/06/detect-duplicate-keys-in-a-json-file/
+    # Thank you to Wordpress author @ubuntuincident, aka Jabba Laci.
+    def dict_raise_on_duplicates(self, ordered_pairs):
+        """Reject duplicate keys."""
+        d = {}
+        for k, v in ordered_pairs:
+            if k in d:
+                raise ValueError("duplicate key: %r" % (k,))
+            else:
+                d[k] = v
+        return d
+
     def get_json(self, url, status=200, **kwargs):
         response = self.get(url, **kwargs)
         assert response.status_code == status
         assert response.content_type == 'application/json'
-        return json.loads(response.data.decode('utf8'))
+        return json.loads(response.data.decode('utf8'), object_pairs_hook=self.dict_raise_on_duplicates)
 
     def post_json(self, url, data, status=200, **kwargs):
         response = self.post(url, data=json.dumps(data),
