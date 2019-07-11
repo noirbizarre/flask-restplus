@@ -421,8 +421,9 @@ class Api(object):
             if path is not None:
                 self.ns_paths[ns] = path
         # Register resources
-        for resource, urls, kwargs in ns.resources:
-            self.register_resource(ns, resource, *self.ns_urls(ns, urls), **kwargs)
+        for r in ns.resources:
+            urls = self.ns_urls(ns, r.urls)
+            self.register_resource(ns, r.resource, *urls, **r.kwargs)
         # Register models
         for name, definition in six.iteritems(ns.models):
             self.models[name] = definition

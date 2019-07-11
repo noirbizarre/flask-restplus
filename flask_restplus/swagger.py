@@ -132,12 +132,15 @@ def parse_docstring(obj):
     return parsed
 
 
-def is_hidden(resource):
+def is_hidden(resource, route_doc=None):
     '''
     Determine whether a Resource has been hidden from Swagger documentation
     i.e. by using Api.doc(False) decorator
     '''
-    return hasattr(resource, "__apidoc__") and resource.__apidoc__ is False
+    if route_doc is False:
+        return True
+    else:
+        return hasattr(resource, "__apidoc__") and resource.__apidoc__ is False
 
 
 class Swagger(object):
@@ -184,9 +187,17 @@ class Swagger(object):
         responses = self.register_errors()
 
         for ns in self.api.namespaces:
-            for resource, urls, kwargs in ns.resources:
+            for resource, urls, route_doc, kwargs in ns.resources:
                 for url in self.api.ns_urls(ns, urls):
-                    paths[extract_path(url)] = self.serialize_resource(ns, resource, url, kwargs)
+                    path = extract_path(url)
+                    serialized = self.serialize_resource(
+                        ns,
+                        resource,
+                        url,
+                        route_doc=route_doc,
+                        **kwargs
+                    )
+                    paths[path] = serialized
 
         # merge in the top-level authorizations
         for ns in self.api.namespaces:
@@ -236,8 +247,10 @@ class Swagger(object):
             if not ns.resources:
                 continue
             # hide namespaces with all Resources hidden from Swagger documentation
-            resources = (resource for resource, urls, kwargs in ns.resources)
-            if all(is_hidden(r) for r in resources):
+            if all(
+                is_hidden(r.resource, route_doc=r.route_doc)
+                for r in ns.resources
+            ):
                 continue
             if ns.name not in by_name:
                 tags.append({
@@ -248,11 +261,22 @@ class Swagger(object):
                 by_name[ns.name]['description'] = ns.description
         return tags
 
-    def extract_resource_doc(self, resource, url):
-        doc = getattr(resource, '__apidoc__', {})
+    def extract_resource_doc(self, resource, url, route_doc=None):
+        route_doc = {} if route_doc is None else route_doc
+        if route_doc is False:
+            return False
+        doc = merge(getattr(resource, '__apidoc__', {}), route_doc)
         if doc is False:
             return False
-        doc['name'] = resource.__name__
+
+        # ensure unique names for multiple routes to the same resource
+        # provides different Swagger operationId's
+        doc["name"] = (
+            "{}_{}".format(resource.__name__, url)
+            if route_doc
+            else resource.__name__
+        )
+
         params = merge(self.expected_params(doc), doc.get('params', OrderedDict()))
         params = merge(params, extract_path_params(url))
         # Track parameters for late deduplication
@@ -349,8 +373,8 @@ class Swagger(object):
             responses[exception.__name__] = not_none(response)
         return responses
 
-    def serialize_resource(self, ns, resource, url, kwargs):
-        doc = self.extract_resource_doc(resource, url)
+    def serialize_resource(self, ns, resource, url, route_doc=None, **kwargs):
+        doc = self.extract_resource_doc(resource, url, route_doc=route_doc)
         if doc is False:
             return
         path = {
@@ -405,7 +429,7 @@ class Swagger(object):
         '''Extract the description metadata and fallback on the whole docstring'''
         parts = []
         if 'description' in doc:
-            parts.append(doc['description'])
+            parts.append(doc['description'] or "")
         if method in doc and 'description' in doc[method]:
             parts.append(doc[method]['description'])
         if doc[method]['docstring']['details']:
