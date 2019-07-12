@@ -195,6 +195,14 @@ class StringFieldTest(StringTestMixin, BaseFieldTestMixin, FieldTestCase):
         assert not field.required
         assert field.__schema__ == {'type': 'string', 'enum': enum, 'example': enum[0]}
 
+    def test_with_strict_enum(self, api):
+        enum = ['A', 'B', 'C']
+        field = fields.String(enum=enum, strict_enum=True)
+        assert not field.required
+        assert field.__schema__ == {'type': 'string', 'enum': enum, 'example': enum[0]}
+        self.assert_field(field, 'A', 'A')
+        self.assert_field_raises(field, 'FOO')
+
     def test_with_empty_enum(self):
         field = fields.String(enum=[])
         assert not field.required
