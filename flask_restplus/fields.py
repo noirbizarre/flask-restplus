@@ -367,16 +367,27 @@ class String(StringMixin, Raw):
     Marshal a value as a string. Uses ``six.text_type`` so values will
     be converted to :class:`unicode` in python2 and :class:`str` in
     python3.
+
+    :param bool discriminator: Endpoint name. If endpoint is ``None``, ``request.endpoint`` is used instead
+    :param list enum: a list of valid values to show in the Swagger documentation
+    :param bool strict_enum: raise a MarshallingError if the given value is not in ``enum``
     '''
-    def __init__(self, *args, **kwargs):
-        self.enum = kwargs.pop('enum', None)
-        self.discriminator = kwargs.pop('discriminator', None)
+    def __init__(self, discriminator=None, enum=None, strict_enum=None, *args, **kwargs):
+        self.enum = enum
+        self.strict_enum = strict_enum
+        self.discriminator = discriminator
         super(String, self).__init__(*args, **kwargs)
         self.required = self.discriminator or self.required
 
     def format(self, value):
         try:
-            return text_type(value)
+            value = text_type(value)
+            if self.enum and self.strict_enum and value not in self.enum:
+                raise ValueError("'{0}' is not allowed, valid options are {1}".format(
+                    value,
+                    ", ".join(self.enum),
+                ))
+            return value
         except ValueError as ve:
             raise MarshallingError(ve)
 
