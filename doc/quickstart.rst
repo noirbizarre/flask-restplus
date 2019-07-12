@@ -308,6 +308,77 @@ parameter to some classes or function to force order preservation:
 - globally on :class:`Namespace`: ``ns = Namespace(ordered=True)``
 - locally on :func:`marshal`: ``return marshal(data, fields, ordered=True)``
 
+Configuration
+-------------
+
+The following configuration options exist for Flask-RESTPlus:
+
+============================ =============== ==================================
+    OPTION                    DEFAULT VALUE             DESCRIPTION
+============================ =============== ==================================
+``BUNDLE_ERRORS``               ``False``     Bundle all the validation errors
+                                              instead of returning only the
+                                              first one encountered.
+                                              See the `Error Handling
+                                              <parsing.html#error-handling>`__
+                                              section of the documentation for
+                                              details.
+``RESTPLUS_VALIDATE``           ``False``     Whether to enforce payload
+                                              validation by default when using
+                                              the ``@api.expect()`` decorator.
+                                              See the `@api.expect()
+                                              <swagger.html#the-api-expect-decorator>`__
+                                              documentation for details.
+``RESTPLUS_MASK_HEADER``      ``X-Fields``    Choose the name of the *Header*
+                                              that will contain the masks to
+                                              apply to your answer.
+                                              See the `Fields masks <mask.html>`__
+                                              documentation for details.
+``RESTPLUS_MASK_SWAGGER``       ``True``      Whether to enable the mask
+                                              documentation in your swagger or
+                                              not.
+                                              See the `mask usage
+                                              <mask.html#usage>`__ documentation
+                                              for details.
+``RESTPLUS_JSON``                ``{}``       Dictionary of options to pass to
+                                              the json *serializer* (by default
+                                              ``json.dumps``).
+``RESTPLUS_JSON_SERIALIZER``    ``None``      Here you can choose your
+                                              own/preferred json *serializer*.
+                                              You can either specify the name
+                                              of the module (example: ``ujson``)
+                                              or you can give the full name of
+                                              your *serializer* (example:
+                                              ``ujson.dumps``).
+
+                                              .. note::
+                                                  If you only specify the module
+                                                  name the default Flask-RESTPlus
+                                                  behavior is to import its
+                                                  ``dumps`` method.
+
+
+                                              .. note::
+                                                  Flask-RESTPlus will always
+                                                  fallback to the default
+                                                  ``json.dumps`` *serializer*
+                                                  if it cannot manage to import
+                                                  the one you configured.
+                                                  In such case, a
+                                                  ``UserWarning`` will be
+                                                  raised.
+
+
+                                              .. warning::
+                                                  We only officially support
+                                                  python's builtin
+                                                  ``json.dumps``.
+                                                  Please keep in mind some
+                                                  serializers may behave
+                                                  differently depending on the
+                                                  input types (floats, dates,
+                                                  etc.).
+============================ =============== ==================================
 
 Full example
 ------------

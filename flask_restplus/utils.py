@@ -2,9 +2,12 @@
 from __future__ import unicode_literals
 
 import re
+import importlib
+import warnings
 
 from collections import OrderedDict
 from copy import deepcopy
+from json import dumps
 from six import iteritems
 
 from ._http import HTTPStatus
@@ -14,7 +17,51 @@ FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
 ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 
-__all__ = ('merge', 'camel_to_dash', 'default_id', 'not_none', 'not_none_sorted', 'unpack')
+__all__ = ('preload_serializer', 'importer', 'merge', 'camel_to_dash', 'default_id',
+           'not_none', 'not_none_sorted', 'unpack')
+
+
+def preload_serializer(app):
+    '''
+    Preload the json serializer for the given ``app``.
+
+    :param flask.Flask app: The flask application object
+    '''
+    custom_serializer = app.config.get('RESTPLUS_JSON_SERIALIZER', None)
+    serializer = None
+
+    # If the user wants to use a custom serializer, let it be
+    if custom_serializer:
+        try:
+            serializer = importer(custom_serializer, 'dumps')
+        except ImportError:
+            if '.' in custom_serializer:
+                mod, func = custom_serializer.rsplit('.', 1)
+                try:
+                    serializer = importer(mod, func)
+                except ImportError:
+                    warnings.warn("Unable to load custom serializer '{}', falling back to "
+                                  "'json.dumps'".format(custom_serializer),
+                                  UserWarning)
+
+    # fallback, no serializer found so far, use the default one
+    if serializer is None:
+        serializer = dumps
+    app.config['RESTPLUS_CACHED_SERIALIZER'] = serializer
+
+
+def importer(mod_name, obj_name, default=None):
+    '''
+    Import the given ``obj_name`` from the given ``mod_name``.
+
+    :param str mod_name: Module from which to import the ``obj_name``
+    :param str obj_name: Object to import from ``mod_name``
+    :param object default: Default object to return
+
+    :return: Imported object
+    '''
+    imported = importlib.import_module(mod_name)
+    return getattr(imported, obj_name, default)
 
 
 def merge(first, second):
