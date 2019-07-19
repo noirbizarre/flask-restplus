@@ -368,7 +368,7 @@ class Swagger(object):
             apidoc = getattr(handler, '__apidoc__', {})
             self.process_headers(response, apidoc)
             if 'responses' in apidoc:
-                _, model = list(apidoc['responses'].values())[0]
+                _, model, _ = list(apidoc['responses'].values())[0]
                 response['schema'] = self.serialize_schema(model)
             responses[exception.__name__] = not_none(response)
         return responses
@@ -502,7 +502,11 @@ class Swagger(object):
                     else:
                         responses[code] = {'description': description}
                     if model:
-                        responses[code]['schema'] = self.serialize_schema(model)
+                        schema = self.serialize_schema(model)
+                        envelope = kwargs.get('envelope')
+                        if envelope:
+                            schema = {'properties': {envelope: schema}}
+                        responses[code]['schema'] = schema
                     self.process_headers(responses[code], doc, method, kwargs.get('headers'))
             if 'model' in d:
                 code = str(d.get('default_code', HTTPStatus.OK))

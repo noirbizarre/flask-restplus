@@ -1725,6 +1725,38 @@ class SwaggerTest(object):
             }
         }
 
+    def test_marhsal_decorator_with_envelope(self, api, client):
+        person = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime,
+        })
+
+        @api.route('/model-as-dict/')
+        class ModelAsDict(restplus.Resource):
+            @api.marshal_with(person, envelope='person')
+            def get(self):
+                return {}
+
+        data = client.get_specs()
+
+        assert 'definitions' in data
+        assert 'Person' in data['definitions']
+
+        responses = data['paths']['/model-as-dict/']['get']['responses']
+        assert responses == {
+            '200': {
+                'description': 'Success',
+                'schema': {
+                    'properties': {
+                        'person': {
+                            '$ref': '#/definitions/Person'
+                        }
+                    }
+                }
+            }
+        }
+
     def test_model_as_flat_dict_with_marchal_decorator_list(self, api, client):
         fields = api.model('Person', {
             'name': restplus.fields.String,

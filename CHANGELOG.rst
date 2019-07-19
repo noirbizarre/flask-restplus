@@ -12,6 +12,7 @@ Current
 - Ensure `basePath` is always a path
 - Hide Namespaces with all hidden Resources from Swagger documentation
 - Per route Swagger documentation for multiple routes on a ``Resource``
+- Support ``envelope`` parameter in Swagger documentation (:pr:`390`)
 
 0.12.1 (2018-09-28)
 -------------------
