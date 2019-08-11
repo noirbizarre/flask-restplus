@@ -51,6 +51,9 @@
         window.onload = function() {
             const ui = window.ui = new SwaggerUIBundle({
                 url: "{{ specs_url }}",
+                {% if config.SWAGGER_UI_OAUTH_CLIENT_ID -%}
+                oauth2RedirectUrl: "{{ url_for('restplus_doc.static', filename='oauth2-redirect.html', _external=True) }}",
+                {%- endif %}
                 validatorUrl: "{{ config.SWAGGER_VALIDATOR_URL }}" || null,
                 dom_id: "#swagger-ui",
                 presets: [
