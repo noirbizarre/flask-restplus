@@ -3,8 +3,8 @@ Changelog
 
 .. currentmodule:: flask_restplus
 
-Current
--------
+0.13.0 (2019-08-12)
+-------------------
 
 - Add new `Wildcard` fields (:pr:`255`)
 - Fix ABC deprecation warnings (:pr:`580`)
