@@ -607,7 +607,7 @@ You can document response headers with the ``@api.header()`` decorator shortcut.
         def get(self):
             pass
 
-If you need to specify an header that appear only on a gvien response,
+If you need to specify an header that appear only on a given response,
 just use the `@api.response` `headers` parameter.
 
 .. code-block:: python
