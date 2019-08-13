@@ -38,7 +38,7 @@ def app():
 
 @pytest.fixture
 def api(request, app):
-    marker = request.keywords.get('api')
+    marker = request.node.get_closest_marker('api')
     bpkwargs = {}
     kwargs = {}
     if marker:
@@ -55,8 +55,8 @@ def api(request, app):
 
 @pytest.fixture(autouse=True)
 def _push_custom_request_context(request):
-    app = request.getfuncargvalue('app')
-    options = request.keywords.get('request_context')
+    app = request.getfixturevalue('app')
+    options = request.node.get_closest_marker('request_context')
 
     if options is None:
         return
