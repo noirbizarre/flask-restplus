@@ -11,8 +11,6 @@ python:
 
 matrix:
   include:
-    - python: 3.7
-      dist: xenial
     - python: 3.8-dev
       dist: xenial
   allow_failures:
