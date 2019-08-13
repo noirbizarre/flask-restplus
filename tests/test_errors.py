@@ -407,9 +407,9 @@ class ErrorsTest(object):
         got_request_exception.connect(record, app)
         try:
             # with self.app.test_request_context("/foo"):
-                api.handle_error(exception)
-                assert len(recorded) == 1
-                assert exception is recorded[0]
+            api.handle_error(exception)
+            assert len(recorded) == 1
+            assert exception is recorded[0]
         finally:
             got_request_exception.disconnect(record, app)
 

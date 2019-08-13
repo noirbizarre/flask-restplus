@@ -34,7 +34,7 @@ def merge(first, second):
     result = deepcopy(first)
     for key, value in iteritems(second):
         if key in result and isinstance(result[key], dict):
-                result[key] = merge(result[key], value)
+            result[key] = merge(result[key], value)
         else:
             result[key] = deepcopy(value)
     return result
