@@ -27,7 +27,7 @@ class Namespace(object):
     Namespace is to API what :class:`flask:flask.Blueprint` is for :class:`flask:flask.Flask`.
 
     :param str name: The namespace name
-    :param str description: An optionale short description
+    :param str description: An optional short description
     :param str path: An optional prefix path. If not provided, prefix is ``/+name``
     :param list decorators: A list of decorators to apply to each resources
     :param bool validate: Whether or not to perform validation on this namespace
