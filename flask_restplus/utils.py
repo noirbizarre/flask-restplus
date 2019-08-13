@@ -19,14 +19,14 @@ __all__ = ('merge', 'camel_to_dash', 'default_id', 'not_none', 'not_none_sorted'
 
 def merge(first, second):
     '''
-    Recursively merges two dictionnaries.
+    Recursively merges two dictionaries.
 
-    Second dictionnary values will take precedance over those from the first one.
-    Nested dictionnaries are merged too.
+    Second dictionary values will take precedence over those from the first one.
+    Nested dictionaries are merged too.
 
-    :param dict first: The first dictionnary
-    :param dict second: The second dictionnary
-    :return: the resulting merged dictionnary
+    :param dict first: The first dictionary
+    :param dict second: The second dictionary
+    :return: the resulting merged dictionary
     :rtype: dict
     '''
     if not isinstance(second, dict):
@@ -61,8 +61,8 @@ def not_none(data):
     '''
     Remove all keys where value is None
 
-    :param dict data: A dictionnary with potentialy some values set to None
-    :return: The same dictionnary without the keys with values to ``None``
+    :param dict data: A dictionary with potentially some values set to None
+    :return: The same dictionary without the keys with values to ``None``
     :rtype: dict
     '''
     return dict((k, v) for k, v in iteritems(data) if v is not None)
@@ -72,8 +72,8 @@ def not_none_sorted(data):
     '''
     Remove all keys where value is None
 
-    :param OrderedDict data: A dictionnary with potentialy some values set to None
-    :return: The same dictionnary without the keys with values to ``None``
+    :param OrderedDict data: A dictionary with potentially some values set to None
+    :return: The same dictionary without the keys with values to ``None``
     :rtype: OrderedDict
     '''
     return OrderedDict((k, v) for k, v in sorted(iteritems(data)) if v is not None)
@@ -90,7 +90,7 @@ def unpack(response, default_code=HTTPStatus.OK):
 
     .. warning::
 
-        When using this function, you must ensure that the tuple is not the reponse data.
+        When using this function, you must ensure that the tuple is not the response data.
         To do so, prefer returning list instead of tuple for listings.
 
     :param response: A Flask style response
