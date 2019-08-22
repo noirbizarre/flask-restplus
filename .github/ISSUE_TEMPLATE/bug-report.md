@@ -18,7 +18,12 @@ assignees: ''
 from your_code import your_buggy_implementation
 ```
 
-### **Expected behavior**
+### **Repro Steps** (if applicable)
+1. ...
+2. ...
+3. Broken!
+
+### **Expected Behavior**
 A description of what you expected to happen.
 
 ### **Actual Behavior**
