@@ -1201,8 +1201,7 @@ class PolymorphTest(FieldTestCase):
             'owner': fields.Polymorph(mapping),
         })
 
-        with pytest.raises(ValueError):
-            api.marshal({'owner': Child()}, thing)
+        api.marshal({'owner': Child()}, thing)
 
     def test_polymorph_field_required_default(self, api):
         parent = api.model('Person', {
