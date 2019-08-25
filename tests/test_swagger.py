@@ -2238,11 +2238,11 @@ class SwaggerTest(object):
         assert path['get']['responses']['200']['schema']['$ref'] == '#/definitions/Output'
 
     def test_polymorph_inherit_list(self, api, client):
-        class Child1:
+        class Child1(object):
             name = 'Child1'
             extra1 = 'extra1'
 
-        class Child2:
+        class Child2(object):
             name = 'Child2'
             extra2 = 'extra2'
 
