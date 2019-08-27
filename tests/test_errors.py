@@ -507,15 +507,23 @@ class ErrorsTest(object):
             assert 'message' not in json.loads(response.data.decode())
 
     def test_error_router_falls_back_to_original(self, app, mocker):
+        class ProgrammingBlunder(Exception):
+            pass
+
+        blunder = ProgrammingBlunder("This exception needs to be detectable")
+
+        def raise_blunder(arg):
+            raise blunder
+
         api = restplus.Api(app)
         app.handle_exception = mocker.Mock()
-        api.handle_error = mocker.Mock(side_effect=Exception())
+        api.handle_error = mocker.Mock(side_effect=raise_blunder)
         api._has_fr_route = mocker.Mock(return_value=True)
         exception = mocker.Mock(spec=HTTPException)
 
         api.error_router(app.handle_exception, exception)
 
-        app.handle_exception.assert_called_with(exception)
+        app.handle_exception.assert_called_with(blunder)
 
     def test_fr_405(self, app, client):
         api = restplus.Api(app)
