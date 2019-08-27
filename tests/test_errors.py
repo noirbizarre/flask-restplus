@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 import json
+import logging
+
 import pytest
 
 from flask import Blueprint, abort
@@ -161,6 +163,31 @@ class ErrorsTest(object):
             'message': 'error',
             'test': 'value',
         }
+
+    def test_blunder_in_errorhandler_is_not_suppressed_in_logs(self, app, client, caplog):
+
+        api = restplus.Api(app)
+
+        class CustomException(RuntimeError):
+            pass
+
+        class ProgrammingBlunder(Exception):
+            pass
+
+        @api.route('/test/', endpoint="test")
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise CustomException('error')
+
+        @api.errorhandler(CustomException)
+        def handle_custom_exception(error):
+            raise ProgrammingBlunder("This exception needs to be logged, not suppressed, then cause 500")
+
+        with caplog.at_level(logging.ERROR):
+            response = client.get('/test/')
+        exc_type, value, traceback = caplog.records[0].exc_info
+        assert exc_type is ProgrammingBlunder
+        assert response.status_code == 500
 
     def test_errorhandler_for_custom_exception_with_headers(self, app, client):
         api = restplus.Api(app)
