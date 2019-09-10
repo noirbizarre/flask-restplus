@@ -63,6 +63,16 @@ class APIDocTest(object):
         response = client.get(url_for('doc'))
         assert 'docExpansion: "full"' in str(response.data)
 
+    def test_apidoc_defualt_models_expansion_depth_parameter(self, app, client):
+        restplus.Api(app)
+
+        response = client.get(url_for('doc'))
+        assert 'defaultModelsExpandDepth: 1' in str(response.data)
+
+        app.config['SWAGGER_DEFAULT_MODELS_EXPANSION_DEPTH'] = -1
+        response = client.get(url_for('doc'))
+        assert 'defaultModelsExpandDepth: -1' in str(response.data)
+
     def test_apidoc_doc_display_operation_id(self, app, client):
         restplus.Api(app)
 

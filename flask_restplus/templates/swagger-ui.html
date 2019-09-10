@@ -68,7 +68,8 @@
                 {%- endif %}
                 displayOperationId: {{ config.SWAGGER_UI_OPERATION_ID|default(False)|tojson }},
                 displayRequestDuration: {{ config.SWAGGER_UI_REQUEST_DURATION|default(False)|tojson }},
-                docExpansion: "{{ config.SWAGGER_UI_DOC_EXPANSION | default('none') }}"
+                docExpansion: "{{ config.SWAGGER_UI_DOC_EXPANSION | default('none') }}",
+                defaultModelsExpandDepth: {{ config.SWAGGER_DEFAULT_MODELS_EXPANSION_DEPTH | default(1) }}
             })
 
             {% if config.SWAGGER_UI_OAUTH_CLIENT_ID -%}

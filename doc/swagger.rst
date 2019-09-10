@@ -1001,6 +1001,21 @@ setting (``'none'``, ``'list'`` or ``'full'``):
 
     api = Api(app)
 
+
+By default, models are shown at the bottom. You can show/hide the models in the documentation with the
+``config.SWAGGER_DEFAULT_MODELS_EXPANSION_DEPTH`` setting (``1``, or ``-1``):
+
+.. code-block:: python
+
+    from flask import Flask
+    from flask_restplus import Api
+
+    app = Flask(__name__)
+    app.config.SWAGGER_DEFAULT_MODELS_EXPANSION_DEPTH = -1
+
+    api = Api(app)
+
+
 By default, operation ID is hidden as well as request duration, you can enable them respectively with:
 
 .. code-block:: python

@@ -17,6 +17,7 @@ Current
 - Ensure `basePath` is always a path
 - Hide Namespaces with all hidden Resources from Swagger documentation
 - Per route Swagger documentation for multiple routes on a ``Resource``
+- Add `SWAGGER_DEFAULT_MODELS_EXPANSION_DEPTH` config option to hide/show models in Swagger documentation
 
 0.12.1 (2018-09-28)
 -------------------
