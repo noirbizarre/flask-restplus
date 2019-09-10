@@ -579,8 +579,8 @@ class Api(object):
         if self._has_fr_route():
             try:
                 return self.handle_error(e)
-            except Exception:
-                pass  # Fall through to original handler
+            except Exception as f:
+                return original_handler(f)
         return original_handler(e)
 
     def handle_error(self, e):

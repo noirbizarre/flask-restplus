@@ -6,7 +6,7 @@ Changelog
 Current
 -------
 
-- Nothing yet
+- Ensure that exceptions raised in error handler, including programming errors, are logged (:issue:`705`, :pr:`706`)
 
 0.13.0 (2019-08-12)
 -------------------
