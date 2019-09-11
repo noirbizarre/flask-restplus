@@ -238,7 +238,7 @@ class Namespace(object):
         def wrapper(func):
             doc = {
                 'responses': {
-                    code: (description, [fields]) if as_list else (description, fields)
+                    str(code): (description, [fields]) if as_list else (description, fields)
                 },
                 '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
             }
@@ -289,7 +289,7 @@ class Namespace(object):
         :param ModelBase model: an optional response model
 
         '''
-        return self.doc(responses={code: (description, model, kwargs)})
+        return self.doc(responses={str(code): (description, model, kwargs)})
 
     def header(self, name, description=None, **kwargs):
         '''
