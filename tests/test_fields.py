@@ -1177,7 +1177,10 @@ class PolymorphTest(FieldTestCase):
         with pytest.raises(ValueError):
             api.marshal({'owner': object()}, thing)
 
-    def test_polymorph_field_ambiguous_mapping(self, api):
+    def test_polymorph_field_does_not_have_ambiguous_mappings(self, api):
+        """
+        Regression test for https://github.com/noirbizarre/flask-restplus/pull/691
+        """
         parent = api.model('Parent', {
             'name': fields.String,
         })
@@ -1201,8 +1204,7 @@ class PolymorphTest(FieldTestCase):
             'owner': fields.Polymorph(mapping),
         })
 
-        with pytest.raises(ValueError):
-            api.marshal({'owner': Child()}, thing)
+        api.marshal({'owner': Child()}, thing)
 
     def test_polymorph_field_required_default(self, api):
         parent = api.model('Person', {
