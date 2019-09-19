@@ -358,7 +358,7 @@ class Api(object):
             raise InternalServerError()
 
     def documentation(self, func):
-        '''A decorator to specify a view funtion for the documentation'''
+        '''A decorator to specify a view function for the documentation'''
         self._doc_view = func
         return func
 
@@ -379,7 +379,7 @@ class Api(object):
 
         Endpoints are ensured not to collide.
 
-        Override this method specify a custom algoryhtm for default endpoint.
+        Override this method specify a custom algorithm for default endpoint.
 
         :param Resource resource: the resource for which we want an endpoint
         :param Namespace namespace: the namespace holding the resource
@@ -565,7 +565,7 @@ class Api(object):
 
     def error_router(self, original_handler, e):
         '''
-        This function decides whether the error occured in a flask-restplus
+        This function decides whether the error occurred in a flask-restplus
         endpoint or not. If it happened in a flask-restplus endpoint, our
         handler will be dispatched. If it happened in an unrelated view, the
         app's original error handler will be dispatched.

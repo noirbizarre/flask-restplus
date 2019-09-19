@@ -188,7 +188,7 @@ class RawModel(ModelBase):
         :param str name: The new model name
         :param dict fields: The new model extra fields
 
-        :depreated: since 0.9. Use :meth:`clone` instead.
+        :deprecated: since 0.9. Use :meth:`clone` instead.
         '''
         warnings.warn('extend is is deprecated, use clone instead', DeprecationWarning, stacklevel=2)
         if isinstance(fields, (list, tuple)):

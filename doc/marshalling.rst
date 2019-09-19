@@ -120,7 +120,7 @@ You can use fields to multiplex a single attribute to multiple output values.
 This example assumes that bit 1 in the ``flags`` attribute signifies a
 "Normal" or "Urgent" item, and bit 2 signifies "Read" or "Unread".
 These items might be easy to store in a bitfield,
-but for a human readable output it's nice to convert them to seperate string fields.
+but for a human readable output it's nice to convert them to separate string fields.
 
 .. code-block:: python
 

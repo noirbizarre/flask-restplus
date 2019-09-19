@@ -590,7 +590,7 @@ Models can also be specified with a :class:`~flask_restplus.reqparse.RequestPars
 
 .. note::
 
-    Using :class:`~flask_restplus.reqparse.RequestParser` is prefered over the ``api.param()`` decorator
+    Using :class:`~flask_restplus.reqparse.RequestParser` is preferred over the ``api.param()`` decorator
     to document form fields as it also perform validation.
 
 Headers
@@ -862,7 +862,7 @@ It supports both extensions as `dict` or `kwargs` and perform automatique `x-` p
     class Vendor(Resource):
         @api.vendor({
             'extension-1': {'works': 'with complex values'},
-            'x-extension-3': 'x- prefix is optionnal',
+            'x-extension-3': 'x- prefix is optional',
         })
         def get(self):
             return {}
