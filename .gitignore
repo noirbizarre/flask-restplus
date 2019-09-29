@@ -62,3 +62,6 @@ doc/_build/
 # Specifics
 flask_restplus/static
 node_modules
+
+# PyCharm
+.idea*
