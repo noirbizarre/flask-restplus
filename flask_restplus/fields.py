@@ -674,7 +674,7 @@ class Polymorph(Nested):
         if not hasattr(value, '__class__'):
             raise ValueError('Polymorph field only accept class instances')
 
-        candidates = [fields for cls, fields in iteritems(self.mapping) if isinstance(value, cls)]
+        candidates = [fields for cls, fields in iteritems(self.mapping) if type(value) == cls]
 
         if len(candidates) <= 0:
             raise ValueError('Unknown class: ' + value.__class__.__name__)
