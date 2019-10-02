@@ -329,6 +329,21 @@ class Namespace(object):
         '''Store the input payload in the current request context'''
         return request.get_json()
 
+    def before_first_request(self, f):
+        '''
+        Registers a function to be run before the first request to this
+        instance of the application.
+
+        The function will be called without any arguments and its return
+        value is ignored.
+        '''
+        for api in self.apis:
+            if api.blueprint:
+                api.blueprint.before_app_first_request(f)
+            else:
+                api.app.before_first_request(f)
+        return f
+
 
 def unshortcut_params_description(data):
     if 'params' in data:

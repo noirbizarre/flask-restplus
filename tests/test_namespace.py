@@ -133,3 +133,34 @@ class NamespaceTest(object):
         client.post_json('/apples/validation/', data)
 
         assert Payload.payload == data
+
+    def test_app_before_first_request(self, app, client):
+        api = restplus.Api(app, validate=True)
+        ns = restplus.Namespace('apples')
+        api.add_namespace(ns)
+
+        got = []
+        @ns.before_first_request
+        def foo():
+            got.append(42)
+
+        client.get("/")
+        assert got == [42]
+        client.get("/")
+        assert got == [42]
+
+    def test_blueprint_before_first_request(self, app, blueprint, client):
+        api = restplus.Api(blueprint, validate=True)
+        ns = restplus.Namespace('apples')
+        api.add_namespace(ns)
+
+        got = []
+        @ns.before_first_request
+        def foo():
+            got.append(42)
+        app.register_blueprint(blueprint)
+
+        client.get("/")
+        assert got == [42]
+        client.get("/")
+        assert got == [42]

@@ -65,6 +65,19 @@ def api(request, app):
     yield api
 
 
+@pytest.fixture
+def blueprint(request, app):
+    marker = request.node.get_closest_marker('api')
+    bpkwargs = {}
+    if marker:
+        if 'prefix' in marker.kwargs:
+            bpkwargs['url_prefix'] = marker.kwargs.pop('prefix')
+        if 'subdomain' in marker.kwargs:
+            bpkwargs['subdomain'] = marker.kwargs.pop('subdomain')
+    blueprint = Blueprint('api', __name__, **bpkwargs)
+    yield blueprint
+
+
 @pytest.fixture(autouse=True)
 def _push_custom_request_context(request):
     app = request.getfixturevalue('app')
