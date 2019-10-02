@@ -149,7 +149,7 @@ class Api(object):
 
         if app is not None:
             self.app = app
-            self.init_app(app)
+            self.init_app(app, **kwargs)
         # super(Api, self).__init__(app, **kwargs)
 
     def init_app(self, app, **kwargs):
