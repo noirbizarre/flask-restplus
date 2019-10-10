@@ -91,7 +91,7 @@ class Mask(OrderedDict):
             raise ParseError('Missing closing bracket')
 
     def clean(self, mask):
-        '''Remove unecessary characters'''
+        '''Remove unnecessary characters'''
         mask = mask.replace('\n', '').strip()
         # External brackets are optional
         if mask[0] == '{':
@@ -132,7 +132,7 @@ class Mask(OrderedDict):
         Handle the data filtering given a parsed mask
 
         :param dict data: the raw data to filter
-        :param list mask: a parsed mask tofilter against
+        :param list mask: a parsed mask to filter against
         :param bool skip: whether or not to skip missing fields
 
         '''
