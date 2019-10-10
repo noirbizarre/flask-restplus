@@ -266,9 +266,13 @@ class Argument(object):
     def __schema__(self):
         if self.location == 'cookie':
             return
+        if isinstance(self.location, six.string_types):
+            location = self.location
+        else:
+            location = self.location[-1]
         param = {
             'name': self.name,
-            'in': LOCATIONS.get(self.location, 'query')
+            'in': LOCATIONS.get(location, 'query')
         }
         _handle_arg_type(self, param)
         if self.required:

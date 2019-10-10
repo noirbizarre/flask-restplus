@@ -985,6 +985,24 @@ class RequestParserSchemaTest(object):
 
         assert cm.value.msg == "Can't use formData and body at the same time"
 
+    def test_location_json_or_values(self):
+        parser = RequestParser()
+        parser.add_argument('in_json_or_values', type=str, location=['json', 'values'])
+        assert parser.__schema__ == [{
+            'name': 'in_json_or_values',
+            'type': 'string',
+            'in': 'query',
+        }]
+
+    def test_location_values_or_json(self):
+        parser = RequestParser()
+        parser.add_argument('in_values_or_json', type=str, location=['values', 'json'])
+        assert parser.__schema__ == [{
+            'name': 'in_values_or_json',
+            'type': 'string',
+            'in': 'body',
+        }]
+
     def test_models(self):
         todo_fields = Model('Todo', {
             'task': fields.String(required=True, description='The task details')
