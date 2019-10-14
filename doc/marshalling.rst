@@ -257,15 +257,11 @@ with other fields, you may want to use an ``OrderedDict`` and use the
 :class:`~fields.Wildcard` as the last field ::
 
     >>> from flask_restplus import fields, marshal
-    >>> from collections import OrderedDict
     >>> import json
     >>>
     >>> wild = fields.Wildcard(fields.Integer)
-    >>> mod = OrderedDict()
-    >>> mod['zoro'] = fields.String
-    >>> mod['*'] = wild
     >>> # you can use it in api.model like this:
-    >>> # some_fields = api.model('MyModel', mod)
+    >>> # some_fields = api.model('MyModel', {'zoro': fields.String, '*': wild})
     >>>
     >>> data = {'John': 12, 'bob': 42, 'Jane': '68', 'zoro': 72}
     >>> json.dumps(marshal(data, mod))

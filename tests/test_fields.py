@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from collections import OrderedDict
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    # TODO Remove this to drop Python2 support
+    from collections import OrderedDict
 from datetime import date, datetime
 from decimal import Decimal
 from functools import partial

@@ -7,6 +7,7 @@ Current
 -------
 
 - Ensure that exceptions raised in error handler, including programming errors, are logged (:issue:`705`, :pr:`706`)
+- Import the ABCs from 'collections.abc' instead of 'collections' by default as it is deprecated since Python3.7, and in 3.8 it will stop working. Python2.7 is still supported though.
 
 0.13.0 (2019-08-12)
 -------------------
