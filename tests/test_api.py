@@ -3,7 +3,10 @@ from __future__ import unicode_literals
 
 import copy
 
+import pytest
+
 from flask import url_for, Blueprint
+from werkzeug.routing import BuildError
 
 import flask_restplus as restplus
 
@@ -89,10 +92,38 @@ class APITest(object):
         assert 'specs' not in api.endpoints
         assert 'specs' not in app.view_functions
 
-    def test_specs_endpoint_not_found_if_not_added(self, app, client):
-        api = restplus.Api()
-        api.init_app(app, add_specs=False)
-        resp = client.get('/swagger.json')
+    def test_specs_not_enabled_and_documentation_enabled(self, app, client):
+        restplus.Api(app, add_specs=True, doc=False)
+
+        with pytest.raises(BuildError):
+            url_for('doc')
+
+        resp = client.get(url_for('specs'))
+        assert resp.status_code == 200
+
+        response = client.get(url_for('root'))
+        assert response.status_code == 404
+
+    def test_specs_and_documentation_not_enabled(self, app, client):
+        restplus.Api(app, add_specs=False, doc=False)
+
+        with pytest.raises(BuildError):
+            url_for('doc')
+            url_for('specs')
+
+        resp = client.get("/sawgger.json")
+        assert resp.status_code == 404
+
+        response = client.get(url_for('root'))
+        assert response.status_code == 404
+
+    def test_specs_not_enabled(self, app, client):
+        restplus.Api(app, add_specs=False)
+
+        with pytest.raises(BuildError):
+            url_for('specs')
+
+        resp = client.get("/swagger.json")
         assert resp.status_code == 404
 
     def test_default_endpoint(self, app):

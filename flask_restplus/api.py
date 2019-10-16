@@ -87,6 +87,9 @@ class Api(object):
     :param FormatChecker format_checker: A jsonschema.FormatChecker object that is hooked into
         the Model validator. A default or a custom FormatChecker can be provided (e.g., with custom
         checkers), otherwise the default action is to not enforce any format validation.
+    :param bool add_specs: Whether to add specs to the API or disable the
+        specs generation. Note that disabling the specs implies that also the
+        documentation will be disabled. (default 'True')
     '''
 
     def __init__(self, app=None, version='1.0', title=None, description=None,
@@ -97,7 +100,7 @@ class Api(object):
             tags=None, prefix='', ordered=False,
             default_mediatype='application/json', decorators=None,
             catch_all_404s=False, serve_challenge_on_401=False, format_checker=None,
-            **kwargs):
+            add_specs=True, **kwargs):
         self.version = version
         self.title = title or 'API'
         self.description = description
@@ -112,7 +115,7 @@ class Api(object):
         self.default_id = default_id
         self.ordered = ordered
         self._validate = validate
-        self._doc = doc
+        self._doc = add_specs and doc
         self._doc_view = None
         self._default_error_handler = None
         self.tags = tags or []
@@ -149,7 +152,7 @@ class Api(object):
 
         if app is not None:
             self.app = app
-            self.init_app(app)
+            self.init_app(app, add_specs=add_specs)
         # super(Api, self).__init__(app, **kwargs)
 
     def init_app(self, app, **kwargs):
