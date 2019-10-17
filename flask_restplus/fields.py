@@ -14,7 +14,7 @@ from six import iteritems, itervalues, text_type, string_types
 from six.moves.urllib.parse import urlparse, urlunparse
 
 from flask import url_for, request
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 
 from .inputs import date_from_iso8601, datetime_from_iso8601, datetime_from_rfc822, boolean
 from .errors import RestError
