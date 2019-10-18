@@ -281,9 +281,11 @@ class List(Raw):
         def is_attr(val):
             return self.container.attribute and hasattr(val, self.container.attribute)
 
+        if value is None:
+            return []
         return [
             self.container.output(idx,
-                val if (isinstance(val, dict) or is_attr(val)) and not is_nested else value)
+                                  val if (isinstance(val, dict) or is_attr(val)) and not is_nested else value)
             for idx, val in enumerate(value)
         ]
 
@@ -793,6 +795,8 @@ class Wildcard(Raw):
                 return self.container.format(self.default)
             return None
 
+        if isinstance(self.container, Nested):
+            return marshal(value, self.container.nested, skip_none=self.container.skip_none, ordered=ordered)
         return self.container.format(value)
 
     def schema(self):
