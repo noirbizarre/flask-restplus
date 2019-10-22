@@ -232,7 +232,7 @@ class Argument(object):
                             continue
                         return self.handle_validation_error(error, bundle_errors)
 
-                    if self.choices and value not in self.choices:
+                    if self.nullable is False and self.choices and value not in self.choices:
                         msg = 'The value \'{0}\' is not a valid choice for \'{1}\'.'.format(value, name)
                         return self.handle_validation_error(msg, bundle_errors)
 
