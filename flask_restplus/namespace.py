@@ -53,6 +53,7 @@ class Namespace(object):
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
+            kwargs['api'].add_namespace(self)
 
     @property
     def path(self):

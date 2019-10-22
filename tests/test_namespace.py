@@ -133,3 +133,9 @@ class NamespaceTest(object):
         client.post_json('/apples/validation/', data)
 
         assert Payload.payload == data
+
+    def test_api_namespaces(self, app):
+        api = restplus.Api(app, validate=True)
+        ns1 = Namespace('ns1', api=api)
+
+        assert ns1 in api.namespaces
