@@ -11,8 +11,11 @@ import io
 import json
 import pkg_resources
 
-from collections import Mapping
-
+try:
+    from collections.abc import Mapping
+except ImportError:
+    # TODO Remove this to drop Python2 support
+    from collections import Mapping
 from jsonschema import Draft4Validator
 
 from flask_restplus import errors
