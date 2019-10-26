@@ -260,8 +260,6 @@ you use the ``fields`` module to describe the structure of your response.
 
 .. code-block:: python
 
-    from collections import OrderedDict
-
     from flask import Flask
     from flask_restplus import fields, Api, Resource
 

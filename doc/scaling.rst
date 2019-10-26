@@ -135,7 +135,7 @@ You don't have to bind url-prefix while declaration of Namespace object.
     api.add_namespace(nsX, path='/prefix/of/nsX')
 
 
-Using this pattern, you simple have to register your API in `app.py` like that:
+Using this pattern, you simply have to register your API in `app.py` like that:
 
 .. code-block:: Python
 

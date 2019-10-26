@@ -10,7 +10,11 @@ import re
 import six
 import sys
 
-from collections import OrderedDict
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    # TODO Remove this to drop Python2 support
+    from collections import OrderedDict
 from functools import wraps, partial
 from types import MethodType
 
@@ -358,7 +362,7 @@ class Api(object):
             raise InternalServerError()
 
     def documentation(self, func):
-        '''A decorator to specify a view funtion for the documentation'''
+        '''A decorator to specify a view function for the documentation'''
         self._doc_view = func
         return func
 
@@ -379,7 +383,7 @@ class Api(object):
 
         Endpoints are ensured not to collide.
 
-        Override this method specify a custom algoryhtm for default endpoint.
+        Override this method specify a custom algorithm for default endpoint.
 
         :param Resource resource: the resource for which we want an endpoint
         :param Namespace namespace: the namespace holding the resource
@@ -421,8 +425,9 @@ class Api(object):
             if path is not None:
                 self.ns_paths[ns] = path
         # Register resources
-        for resource, urls, kwargs in ns.resources:
-            self.register_resource(ns, resource, *self.ns_urls(ns, urls), **kwargs)
+        for r in ns.resources:
+            urls = self.ns_urls(ns, r.urls)
+            self.register_resource(ns, r.resource, *urls, **r.kwargs)
         # Register models
         for name, definition in six.iteritems(ns.models):
             self.models[name] = definition
@@ -564,7 +569,7 @@ class Api(object):
 
     def error_router(self, original_handler, e):
         '''
-        This function decides whether the error occured in a flask-restplus
+        This function decides whether the error occurred in a flask-restplus
         endpoint or not. If it happened in a flask-restplus endpoint, our
         handler will be dispatched. If it happened in an unrelated view, the
         app's original error handler will be dispatched.
@@ -578,8 +583,8 @@ class Api(object):
         if self._has_fr_route():
             try:
                 return self.handle_error(e)
-            except Exception:
-                pass  # Fall through to original handler
+            except Exception as f:
+                return original_handler(f)
         return original_handler(e)
 
     def handle_error(self, e):

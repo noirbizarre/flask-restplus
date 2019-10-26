@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 import json
+import logging
+
 import pytest
 
 from flask import Blueprint, abort
@@ -161,6 +163,31 @@ class ErrorsTest(object):
             'message': 'error',
             'test': 'value',
         }
+
+    def test_blunder_in_errorhandler_is_not_suppressed_in_logs(self, app, client, caplog):
+
+        api = restplus.Api(app)
+
+        class CustomException(RuntimeError):
+            pass
+
+        class ProgrammingBlunder(Exception):
+            pass
+
+        @api.route('/test/', endpoint="test")
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise CustomException('error')
+
+        @api.errorhandler(CustomException)
+        def handle_custom_exception(error):
+            raise ProgrammingBlunder("This exception needs to be logged, not suppressed, then cause 500")
+
+        with caplog.at_level(logging.ERROR):
+            response = client.get('/test/')
+        exc_type, value, traceback = caplog.records[0].exc_info
+        assert exc_type is ProgrammingBlunder
+        assert response.status_code == 500
 
     def test_errorhandler_for_custom_exception_with_headers(self, app, client):
         api = restplus.Api(app)
@@ -407,9 +434,9 @@ class ErrorsTest(object):
         got_request_exception.connect(record, app)
         try:
             # with self.app.test_request_context("/foo"):
-                api.handle_error(exception)
-                assert len(recorded) == 1
-                assert exception is recorded[0]
+            api.handle_error(exception)
+            assert len(recorded) == 1
+            assert exception is recorded[0]
         finally:
             got_request_exception.disconnect(record, app)
 
@@ -480,15 +507,23 @@ class ErrorsTest(object):
             assert 'message' not in json.loads(response.data.decode())
 
     def test_error_router_falls_back_to_original(self, app, mocker):
+        class ProgrammingBlunder(Exception):
+            pass
+
+        blunder = ProgrammingBlunder("This exception needs to be detectable")
+
+        def raise_blunder(arg):
+            raise blunder
+
         api = restplus.Api(app)
         app.handle_exception = mocker.Mock()
-        api.handle_error = mocker.Mock(side_effect=Exception())
+        api.handle_error = mocker.Mock(side_effect=raise_blunder)
         api._has_fr_route = mocker.Mock(return_value=True)
         exception = mocker.Mock(spec=HTTPException)
 
         api.error_router(app.handle_exception, exception)
 
-        app.handle_exception.assert_called_with(exception)
+        app.handle_exception.assert_called_with(blunder)
 
     def test_fr_405(self, app, client):
         api = restplus.Api(app)

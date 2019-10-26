@@ -2069,6 +2069,47 @@ class SwaggerTest(object):
 
         client.get_specs(status=500)
 
+    def test_specs_no_duplicate_response_keys(self, api, client):
+        '''
+        This tests that the swagger.json document will not be written with duplicate object keys
+        due to the coercion of dict keys to string. The last @api.response should win.
+        '''
+        # Note the use of a strings '404' and '200' in class decorators as opposed to ints in method decorators.
+        @api.response('404', 'Not Found')
+        class BaseResource(restplus.Resource):
+            def get(self):
+                pass
+
+        model = api.model('SomeModel', {
+            'message': restplus.fields.String,
+        })
+
+        @api.route('/test/')
+        @api.response('200', 'Success')
+        class TestResource(BaseResource):
+            # @api.marshal_with also yields a response
+            @api.marshal_with(model, code=200, description='Success on method')
+            @api.response(404, 'Not Found on method')
+            def get(self):
+                {}
+
+        data = client.get_specs('')
+        paths = data['paths']
+
+        op = paths['/test/']['get']
+        print(op['responses'])
+        assert op['responses'] == {
+            '200': {
+                'description': 'Success on method',
+                'schema': {
+                    '$ref': '#/definitions/SomeModel'
+                }
+            },
+            '404': {
+                'description': 'Not Found on method',
+            }
+        }
+
     def test_clone(self, api, client):
         parent = api.model('Person', {
             'name': restplus.fields.String,
@@ -2265,11 +2306,11 @@ class SwaggerTest(object):
         assert path['get']['responses']['200']['schema']['$ref'] == '#/definitions/Output'
 
     def test_polymorph_inherit_list(self, api, client):
-        class Child1:
+        class Child1(object):
             name = 'Child1'
             extra1 = 'extra1'
 
-        class Child2:
+        class Child2(object):
             name = 'Child2'
             extra2 = 'extra2'
 
@@ -3075,6 +3116,181 @@ class SwaggerTest(object):
         path = data['paths']['/bar']
         assert 'get' in path
         assert 'post' not in path
+
+    def test_multiple_routes_inherit_doc(self, api, client):
+        @api.route('/foo/bar')
+        @api.route('/bar')
+        @api.doc(description='an endpoint')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['description'] == 'an endpoint'
+
+        path = data['paths']['/bar']
+        assert path['get']['description'] == 'an endpoint'
+
+    def test_multiple_routes_individual_doc(self, api, client):
+        @api.route('/foo/bar', doc={'description': 'the same endpoint'})
+        @api.route('/bar', doc={'description': 'an endpoint'})
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['description'] == 'the same endpoint'
+
+        path = data['paths']['/bar']
+        assert path['get']['description'] == 'an endpoint'
+
+    def test_multiple_routes_override_doc(self, api, client):
+        @api.route('/foo/bar', doc={'description': 'the same endpoint'})
+        @api.route('/bar')
+        @api.doc(description='an endpoint')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['description'] == 'the same endpoint'
+
+        path = data['paths']['/bar']
+        assert path['get']['description'] == 'an endpoint'
+
+    def test_multiple_routes_no_doc_same_operationIds(self, api, client):
+        @api.route('/foo/bar')
+        @api.route('/bar')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        expected_operation_id = 'get_test_resource'
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['operationId'] == expected_operation_id
+
+        path = data['paths']['/bar']
+        assert path['get']['operationId'] == expected_operation_id
+
+    def test_multiple_routes_with_doc_unique_operationIds(self, api, client):
+        @api.route(
+            "/foo/bar",
+            doc={"description": "I should be treated separately"},
+        )
+        @api.route("/bar")
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['operationId'] == 'get_test_resource_/foo/bar'
+
+        path = data['paths']['/bar']
+        assert path['get']['operationId'] == 'get_test_resource'
+
+    def test_mutltiple_routes_merge_doc(self, api, client):
+        @api.route('/foo/bar', doc={'description': 'the same endpoint'})
+        @api.route('/bar', doc={'description': False})
+        @api.doc(security=[{'oauth2': ['read', 'write']}])
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['description'] == 'the same endpoint'
+        assert path['get']['security'] == [{'oauth2': ['read', 'write']}]
+
+        path = data['paths']['/bar']
+        assert 'description' not in path['get']
+        assert path['get']['security'] == [{'oauth2': ['read', 'write']}]
+
+    def test_multiple_routes_deprecation(self, api, client):
+        @api.route('/foo/bar', doc={'deprecated': True})
+        @api.route('/bar')
+        class TestResource(restplus.Resource):
+            def get(self):
+                pass
+
+        data = client.get_specs()
+
+        path = data['paths']['/foo/bar']
+        assert path['get']['deprecated'] is True
+
+        path = data['paths']['/bar']
+        assert 'deprecated' not in path['get']
+
+    @pytest.mark.parametrize('path_name', ['/name/{age}/', '/first-name/{age}/'])
+    def test_multiple_routes_explicit_parameters_override(self, path_name, api, client):
+        @api.route("/name/<int:age>/", endpoint="by-name")
+        @api.route("/first-name/<int:age>/")
+        @api.doc(
+            params={
+                "q": {
+                    "type": "string",
+                    "in": "query",
+                    "description": "Overriden description",
+                },
+                "age": {"description": "An age"},
+            }
+        )
+        class ByNameResource(restplus.Resource):
+            @api.doc(
+                params={"q": {"description": "A query string"}}
+            )
+            def get(self, age):
+                return {}
+
+            def post(self, age):
+                pass
+
+        data = client.get_specs()
+        assert path_name in data['paths']
+
+        path = data['paths'][path_name]
+        assert len(path['parameters']) == 1
+
+        by_name = dict((p['name'], p) for p in path['parameters'])
+
+        parameter = by_name['age']
+        assert parameter['name'] == 'age'
+        assert parameter['type'] == 'integer'
+        assert parameter['in'] == 'path'
+        assert parameter['required'] is True
+        assert parameter['description'] == 'An age'
+
+        # Don't duplicate parameters
+        assert 'q' not in by_name
+
+        get = path['get']
+        assert len(get['parameters']) == 1
+
+        parameter = get['parameters'][0]
+        assert parameter['name'] == 'q'
+        assert parameter['type'] == 'string'
+        assert parameter['in'] == 'query'
+        assert parameter['description'] == 'A query string'
+
+        post = path['post']
+        assert len(post['parameters']) == 1
+
+        parameter = post['parameters'][0]
+        assert parameter['name'] == 'q'
+        assert parameter['type'] == 'string'
+        assert parameter['in'] == 'query'
+        assert parameter['description'] == 'Overriden description'
 
 
 class SwaggerDeprecatedTest(object):
