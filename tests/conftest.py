@@ -65,6 +65,18 @@ def api(request, app):
     yield api
 
 
+@pytest.fixture
+def mock_app(mocker):
+    app = mocker.Mock(Flask)
+    # mock Flask app object doesn't have any real loggers -> mock logging
+    # set up on Api object
+    mocker.patch.object(restplus.Api, '_configure_namespace_logger')
+    app.view_functions = {}
+    app.extensions = {}
+    app.config = {}
+    return app
+
+
 @pytest.fixture(autouse=True)
 def _push_custom_request_context(request):
     app = request.getfixturevalue('app')

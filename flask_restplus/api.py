@@ -130,12 +130,7 @@ class Api(object):
         self._refresolver = None
         self.format_checker = format_checker
         self.namespaces = []
-        self.default_namespace = self.namespace(default, default_label,
-            endpoint='{0}-declaration'.format(default),
-            validate=validate,
-            api=self,
-            path='/',
-        )
+
         self.ns_paths = dict()
 
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
@@ -150,7 +145,14 @@ class Api(object):
         self.resources = []
         self.app = None
         self.blueprint = None
-
+        # must come after self.app initialisation to prevent __getattr__ recursion
+        # in self._configure_namespace_logger
+        self.default_namespace = self.namespace(default, default_label,
+            endpoint='{0}-declaration'.format(default),
+            validate=validate,
+            api=self,
+            path='/',
+        )
         if app is not None:
             self.app = app
             self.init_app(app)
@@ -208,6 +210,9 @@ class Api(object):
         if len(self.resources) > 0:
             for resource, namespace, urls, kwargs in self.resources:
                 self._register_view(app, resource, namespace, *urls, **kwargs)
+
+        for ns in self.namespaces:
+            self._configure_namespace_logger(app, ns)
 
         self._register_apidoc(app)
         self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
@@ -269,6 +274,11 @@ class Api(object):
         else:
             self.resources.append((resource, namespace, urls, kwargs))
         return endpoint
+
+    def _configure_namespace_logger(self, app, namespace):
+        for handler in app.logger.handlers:
+            namespace.logger.addHandler(handler)
+        namespace.logger.setLevel(app.logger.level)
 
     def _register_view(self, app, resource, namespace, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or camel_to_dash(resource.__name__)
@@ -431,6 +441,8 @@ class Api(object):
         # Register models
         for name, definition in six.iteritems(ns.models):
             self.models[name] = definition
+        if not self.blueprint and self.app is not None:
+            self._configure_namespace_logger(self.app, ns)
 
     def namespace(self, *args, **kwargs):
         '''

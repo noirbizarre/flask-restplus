@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import inspect
 import warnings
+import logging
 from collections import namedtuple
 
 import six
@@ -53,6 +54,7 @@ class Namespace(object):
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
+        self.logger = logging.getLogger(__name__ + "." + self.name)
 
     @property
     def path(self):
