@@ -21,6 +21,10 @@ from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 from ._http import HTTPStatus
 
+try:
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
 PATH_TYPES = {
@@ -51,7 +55,7 @@ RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)
 def ref(model):
     '''Return a reference to model in definitions'''
     name = model.name if isinstance(model, ModelBase) else model
-    return {'$ref': '#/definitions/{0}'.format(name)}
+    return {'$ref': '#/definitions/{0}'.format(quote(name, safe=''))}
 
 
 def _v(value):
