@@ -609,7 +609,12 @@ class Api(object):
         '''
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
-        if not isinstance(e, HTTPException) and current_app.propagate_exceptions:
+        # When propagate_exceptions is set, do not return the exception to the
+        # client if a handler is configured for the exception.
+        if not isinstance(e, HTTPException) and \
+                current_app.propagate_exceptions and \
+                not isinstance(e, tuple(self.error_handlers.keys())):
+
             exc_type, exc_value, tb = sys.exc_info()
             if exc_value is e:
                 raise
