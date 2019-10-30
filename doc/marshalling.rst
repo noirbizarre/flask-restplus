@@ -168,7 +168,7 @@ To override the default scheme, pass the ``scheme`` keyword argument:
 .. code-block:: python
 
     model = {
-        'uri': fields.Url('todo_resource', absolute=True)
+        'uri': fields.Url('todo_resource', absolute=True),
         'https_uri': fields.Url('todo_resource', absolute=True, scheme='https')
     }
 

@@ -964,6 +964,8 @@ These values are all public knowledge. No *client secret* is specified here.
 .. code-block:: python
 
     from flask import Flask
+    from flask_restplus import Api
+    
     app = Flask(__name__)
 
     app.config.SWAGGER_UI_OAUTH_CLIENT_ID = 'MyClientId'
