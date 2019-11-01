@@ -99,6 +99,16 @@ class ModelBase(object):
         return model
 
     def validate(self, data, resolver=None, format_checker=None):
+        try:
+            # check if any field has a custom validator
+            current_field = ''
+            for field, value in data.items():
+                current_field = field
+                if hasattr(self.get(field), 'validate'):
+                    self[field].validate(value)
+        except Exception as e:
+            abort(HTTPStatus.BAD_REQUEST, message='Input payload validation failed',
+                errors={current_field: str(e)})
         validator = Draft4Validator(self.__schema__, resolver=resolver, format_checker=format_checker)
         try:
             validator.validate(data)
