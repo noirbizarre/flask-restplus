@@ -47,10 +47,10 @@ class RestError(Exception):
 
 
 class ValidationError(RestError):
-    '''An helper class for validation errors.'''
+    '''A helper class for validation errors.'''
     pass
 
 
 class SpecsError(RestError):
-    '''An helper class for incoherent specifications.'''
+    '''A helper class for incoherent specifications.'''
     pass

@@ -590,7 +590,7 @@ Models can also be specified with a :class:`~flask_restplus.reqparse.RequestPars
 
 .. note::
 
-    Using :class:`~flask_restplus.reqparse.RequestParser` is prefered over the ``api.param()`` decorator
+    Using :class:`~flask_restplus.reqparse.RequestParser` is preferred over the ``api.param()`` decorator
     to document form fields as it also perform validation.
 
 Headers
@@ -607,7 +607,7 @@ You can document response headers with the ``@api.header()`` decorator shortcut.
         def get(self):
             pass
 
-If you need to specify an header that appear only on a gvien response,
+If you need to specify an header that appear only on a given response,
 just use the `@api.response` `headers` parameter.
 
 .. code-block:: python
@@ -862,7 +862,7 @@ It supports both extensions as `dict` or `kwargs` and perform automatique `x-` p
     class Vendor(Resource):
         @api.vendor({
             'extension-1': {'works': 'with complex values'},
-            'x-extension-3': 'x- prefix is optionnal',
+            'x-extension-3': 'x- prefix is optional',
         })
         def get(self):
             return {}
@@ -952,6 +952,43 @@ You can specify a custom validator URL by setting ``config.SWAGGER_VALIDATOR_URL
 
     api = Api(app)
 
+
+You can enable [OAuth2 Implicit Flow](https://oauth.net/2/grant-types/implicit/) for retrieving an
+authorization token for testing api endpoints interactively within Swagger UI.
+The ``config.SWAGGER_UI_OAUTH_CLIENT_ID`` and ``authorizationUrl`` and ``scopes``
+will be specific to your OAuth2 IDP configuration.
+The realm string is added as a query parameter to authorizationUrl and tokenUrl.
+These values are all public knowledge. No *client secret* is specified here.
+.. Using PKCE instead of Implicit Flow depends on https://github.com/swagger-api/swagger-ui/issues/5348
+
+.. code-block:: python
+
+    from flask import Flask
+    from flask_restplus import Api
+    
+    app = Flask(__name__)
+
+    app.config.SWAGGER_UI_OAUTH_CLIENT_ID = 'MyClientId'
+    app.config.SWAGGER_UI_OAUTH_REALM = '-'
+    app.config.SWAGGER_UI_OAUTH_APP_NAME = 'Demo'
+
+    api = Api(
+        app,
+        title=app.config.SWAGGER_UI_OAUTH_APP_NAME,
+        security={'OAuth2': ['read', 'write']},
+        authorizations={
+            'OAuth2': {
+                'type': 'oauth2',
+                'flow': 'implicit',
+                'authorizationUrl': 'https://idp.example.com/authorize?audience=https://app.example.com',
+                'clientId': app.config.SWAGGER_UI_OAUTH_CLIENT_ID,
+                'scopes': {
+                    'openid': 'Get ID token',
+                    'profile': 'Get identity',
+                }
+            }
+        }
+    )
 
 You can also specify the initial expansion state with the ``config.SWAGGER_UI_DOC_EXPANSION``
 setting (``'none'``, ``'list'`` or ``'full'``):

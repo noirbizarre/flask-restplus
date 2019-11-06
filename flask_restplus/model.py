@@ -5,7 +5,11 @@ import copy
 import re
 import warnings
 
-from collections import OrderedDict, MutableMapping
+try:
+    from collections.abc import OrderedDict, MutableMapping
+except ImportError:
+    # TODO Remove this to drop Python2 support
+    from collections import OrderedDict, MutableMapping
 from six import iteritems, itervalues
 from werkzeug.utils import cached_property
 
@@ -188,7 +192,7 @@ class RawModel(ModelBase):
         :param str name: The new model name
         :param dict fields: The new model extra fields
 
-        :depreated: since 0.9. Use :meth:`clone` instead.
+        :deprecated: since 0.9. Use :meth:`clone` instead.
         '''
         warnings.warn('extend is is deprecated, use clone instead', DeprecationWarning, stacklevel=2)
         if isinstance(fields, (list, tuple)):

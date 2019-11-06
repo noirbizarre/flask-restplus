@@ -126,21 +126,17 @@ class APITest(object):
         }):
             assert api.mediatypes() == ['application/json', 'application/xml']
 
-    def test_decorator(self, mocker):
+    def test_decorator(self, mocker, mock_app):
         def return_zero(func):
             return 0
 
-        app = mocker.Mock(flask.Flask)
-        app.view_functions = {}
-        app.extensions = {}
-        app.config = {}
         view = mocker.Mock()
-        api = restplus.Api(app)
+        api = restplus.Api(mock_app)
         api.decorators.append(return_zero)
         api.output = mocker.Mock()
         api.add_resource(view, '/foo', endpoint='bar')
 
-        app.add_url_rule.assert_called_with('/foo', view_func=0)
+        mock_app.add_url_rule.assert_called_with('/foo', view_func=0)
 
     def test_add_resource_endpoint(self, app, mocker):
         view = mocker.Mock(**{'as_view.return_value.__name__': str('test_view')})
@@ -181,28 +177,20 @@ class APITest(object):
             foo2 = client.get('/foo/toto')
             assert foo2.data == b'"foo1"\n'
 
-    def test_add_resource(self, mocker):
-        app = mocker.Mock(flask.Flask)
-        app.view_functions = {}
-        app.extensions = {}
-        app.config = {}
-        api = restplus.Api(app)
+    def test_add_resource(self, mocker, mock_app):
+        api = restplus.Api(mock_app)
         api.output = mocker.Mock()
         api.add_resource(views.MethodView, '/foo')
 
-        app.add_url_rule.assert_called_with('/foo',
+        mock_app.add_url_rule.assert_called_with('/foo',
                                             view_func=api.output())
 
-    def test_add_resource_kwargs(self, mocker):
-        app = mocker.Mock(flask.Flask)
-        app.view_functions = {}
-        app.extensions = {}
-        app.config = {}
-        api = restplus.Api(app)
+    def test_add_resource_kwargs(self, mocker, mock_app):
+        api = restplus.Api(mock_app)
         api.output = mocker.Mock()
         api.add_resource(views.MethodView, '/foo', defaults={"bar": "baz"})
 
-        app.add_url_rule.assert_called_with('/foo',
+        mock_app.add_url_rule.assert_called_with('/foo',
                                             view_func=api.output(),
                                             defaults={"bar": "baz"})
 

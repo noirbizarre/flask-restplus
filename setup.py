@@ -83,7 +83,7 @@ setup(
     extras_require={
         'test': tests_require,
         'doc': doc_require,
-        'dev': dev_require, 
+        'dev': dev_require,
     },
     license='BSD-3-Clause',
     zip_safe=False,
@@ -102,6 +102,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: BSD License',

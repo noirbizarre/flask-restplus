@@ -173,7 +173,7 @@ The :mod:`~flask_restplus.inputs` module provides some common type handling like
 
 - :func:`~inputs.boolean` for wider boolean handling
 - :func:`~inputs.ipv4` and :func:`~inputs.ipv6` for IP adresses
-- :func:`~inputs.date_from_iso8601` and :func:`~inputs.datetime_from_iso8601` for ISO8601 date and dateime handling
+- :func:`~inputs.date_from_iso8601` and :func:`~inputs.datetime_from_iso8601` for ISO8601 date and datetime handling
 
 You just have to use them as `type` argument:
 
@@ -193,7 +193,7 @@ You can also write your own:
             raise ValueError('This is not my type')
         return parse(value)
 
-    # Swagger documntation
+    # Swagger documentation
     my_type.__schema__ = {'type': 'string', 'format': 'my-custom-format'}
 
 

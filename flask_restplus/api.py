@@ -10,7 +10,11 @@ import re
 import six
 import sys
 
-from collections import OrderedDict
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    # TODO Remove this to drop Python2 support
+    from collections import OrderedDict
 from functools import wraps, partial
 from types import MethodType
 
@@ -126,12 +130,7 @@ class Api(object):
         self._refresolver = None
         self.format_checker = format_checker
         self.namespaces = []
-        self.default_namespace = self.namespace(default, default_label,
-            endpoint='{0}-declaration'.format(default),
-            validate=validate,
-            api=self,
-            path='/',
-        )
+
         self.ns_paths = dict()
 
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
@@ -146,7 +145,14 @@ class Api(object):
         self.resources = []
         self.app = None
         self.blueprint = None
-
+        # must come after self.app initialisation to prevent __getattr__ recursion
+        # in self._configure_namespace_logger
+        self.default_namespace = self.namespace(default, default_label,
+            endpoint='{0}-declaration'.format(default),
+            validate=validate,
+            api=self,
+            path='/',
+        )
         if app is not None:
             self.app = app
             self.init_app(app)
@@ -204,6 +210,9 @@ class Api(object):
         if len(self.resources) > 0:
             for resource, namespace, urls, kwargs in self.resources:
                 self._register_view(app, resource, namespace, *urls, **kwargs)
+
+        for ns in self.namespaces:
+            self._configure_namespace_logger(app, ns)
 
         self._register_apidoc(app)
         self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
@@ -265,6 +274,11 @@ class Api(object):
         else:
             self.resources.append((resource, namespace, urls, kwargs))
         return endpoint
+
+    def _configure_namespace_logger(self, app, namespace):
+        for handler in app.logger.handlers:
+            namespace.logger.addHandler(handler)
+        namespace.logger.setLevel(app.logger.level)
 
     def _register_view(self, app, resource, namespace, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or camel_to_dash(resource.__name__)
@@ -358,7 +372,7 @@ class Api(object):
             raise InternalServerError()
 
     def documentation(self, func):
-        '''A decorator to specify a view funtion for the documentation'''
+        '''A decorator to specify a view function for the documentation'''
         self._doc_view = func
         return func
 
@@ -379,7 +393,7 @@ class Api(object):
 
         Endpoints are ensured not to collide.
 
-        Override this method specify a custom algoryhtm for default endpoint.
+        Override this method specify a custom algorithm for default endpoint.
 
         :param Resource resource: the resource for which we want an endpoint
         :param Namespace namespace: the namespace holding the resource
@@ -427,6 +441,8 @@ class Api(object):
         # Register models
         for name, definition in six.iteritems(ns.models):
             self.models[name] = definition
+        if not self.blueprint and self.app is not None:
+            self._configure_namespace_logger(self.app, ns)
 
     def namespace(self, *args, **kwargs):
         '''
@@ -565,7 +581,7 @@ class Api(object):
 
     def error_router(self, original_handler, e):
         '''
-        This function decides whether the error occured in a flask-restplus
+        This function decides whether the error occurred in a flask-restplus
         endpoint or not. If it happened in a flask-restplus endpoint, our
         handler will be dispatched. If it happened in an unrelated view, the
         app's original error handler will be dispatched.
@@ -579,8 +595,8 @@ class Api(object):
         if self._has_fr_route():
             try:
                 return self.handle_error(e)
-            except Exception:
-                pass  # Fall through to original handler
+            except Exception as f:
+                return original_handler(f)
         return original_handler(e)
 
     def handle_error(self, e):
@@ -593,7 +609,12 @@ class Api(object):
         '''
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
-        if not isinstance(e, HTTPException) and current_app.propagate_exceptions:
+        # When propagate_exceptions is set, do not return the exception to the
+        # client if a handler is configured for the exception.
+        if not isinstance(e, HTTPException) and \
+                current_app.propagate_exceptions and \
+                not isinstance(e, tuple(self.error_handlers.keys())):
+
             exc_type, exc_value, tb = sys.exc_info()
             if exc_value is e:
                 raise

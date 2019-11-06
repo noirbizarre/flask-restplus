@@ -5,11 +5,11 @@ import itertools
 import re
 
 from inspect import isclass, getdoc
-from collections import OrderedDict
 try:
-    from collections.abc import Hashable
+    from collections.abc import OrderedDict, Hashable
 except ImportError:
-    from collections import Hashable
+    # TODO Remove this to drop Python2 support
+    from collections import OrderedDict, Hashable
 from six import string_types, itervalues, iteritems, iterkeys
 
 from flask import current_app
@@ -21,6 +21,10 @@ from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 from ._http import HTTPStatus
 
+try:
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
 
 #: Maps Flask/Werkzeug rooting types to Swagger ones
 PATH_TYPES = {
@@ -51,7 +55,7 @@ RE_RAISES = re.compile(r'^:raises\s+(?P<name>[\w\d_]+)\s*:\s*(?P<description>.*)
 def ref(model):
     '''Return a reference to model in definitions'''
     name = model.name if isinstance(model, ModelBase) else model
-    return {'$ref': '#/definitions/{0}'.format(name)}
+    return {'$ref': '#/definitions/{0}'.format(quote(name, safe=''))}
 
 
 def _v(value):
@@ -485,6 +489,7 @@ class Swagger(object):
         for d in doc, doc[method]:
             if 'responses' in d:
                 for code, response in iteritems(d['responses']):
+                    code = str(code)
                     if isinstance(response, string_types):
                         description = response
                         model = None
@@ -518,7 +523,7 @@ class Swagger(object):
                 for name, description in iteritems(d['docstring']['raises']):
                     for exception, handler in iteritems(self.api.error_handlers):
                         error_responses = getattr(handler, '__apidoc__', {}).get('responses', {})
-                        code = list(error_responses.keys())[0] if error_responses else None
+                        code = str(list(error_responses.keys())[0]) if error_responses else None
                         if code and exception.__name__ == name:
                             responses[code] = {'$ref': '#/responses/{0}'.format(name)}
                             break

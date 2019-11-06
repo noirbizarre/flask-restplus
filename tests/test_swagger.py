@@ -1669,6 +1669,33 @@ class SwaggerTest(object):
             }
         }
 
+    def test_model_with_non_uri_chars_in_name(self, api, client):
+        # name will be encoded as 'Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
+        name = 'Person//?lots{} of &illegals@`'
+        fields = api.model(name, {
+        })
+
+        @api.route('/model-bad-uri/')
+        class ModelBadUri(restplus.Resource):
+            @api.doc(model=fields)
+            def get(self):
+                return {}
+
+            @api.response(201, "", model=name)
+            def post(self):
+                return {}
+
+        data = client.get_specs()
+
+        assert 'definitions' in data
+        assert name in data['definitions']
+
+        path = data['paths']['/model-bad-uri/']
+        assert path['get']['responses']['200']['schema']['$ref'] == \
+            '#/definitions/Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
+        assert path['post']['responses']['201']['schema']['$ref'] == \
+            '#/definitions/Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
+
     def test_marchal_decorator_with_code(self, api, client):
         fields = api.model('Person', {
             'name': restplus.fields.String,
@@ -2074,6 +2101,47 @@ class SwaggerTest(object):
 
         client.get_specs(status=500)
 
+    def test_specs_no_duplicate_response_keys(self, api, client):
+        '''
+        This tests that the swagger.json document will not be written with duplicate object keys
+        due to the coercion of dict keys to string. The last @api.response should win.
+        '''
+        # Note the use of a strings '404' and '200' in class decorators as opposed to ints in method decorators.
+        @api.response('404', 'Not Found')
+        class BaseResource(restplus.Resource):
+            def get(self):
+                pass
+
+        model = api.model('SomeModel', {
+            'message': restplus.fields.String,
+        })
+
+        @api.route('/test/')
+        @api.response('200', 'Success')
+        class TestResource(BaseResource):
+            # @api.marshal_with also yields a response
+            @api.marshal_with(model, code=200, description='Success on method')
+            @api.response(404, 'Not Found on method')
+            def get(self):
+                {}
+
+        data = client.get_specs('')
+        paths = data['paths']
+
+        op = paths['/test/']['get']
+        print(op['responses'])
+        assert op['responses'] == {
+            '200': {
+                'description': 'Success on method',
+                'schema': {
+                    '$ref': '#/definitions/SomeModel'
+                }
+            },
+            '404': {
+                'description': 'Not Found on method',
+            }
+        }
+
     def test_clone(self, api, client):
         parent = api.model('Person', {
             'name': restplus.fields.String,
@@ -2270,11 +2338,11 @@ class SwaggerTest(object):
         assert path['get']['responses']['200']['schema']['$ref'] == '#/definitions/Output'
 
     def test_polymorph_inherit_list(self, api, client):
-        class Child1:
+        class Child1(object):
             name = 'Child1'
             extra1 = 'extra1'
 
-        class Child2:
+        class Child2(object):
             name = 'Child2'
             extra2 = 'extra2'
 

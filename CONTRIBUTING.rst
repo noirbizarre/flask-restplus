@@ -32,7 +32,7 @@ If you want to contribute some code:
 4. do your work in it
 5. Commit your changes. Ensure the commit message includes the issue. Also, if contributing from a corporation, be sure to add a comment with the Copyright information
 6. rebase it on the master branch from the official repository (cleanup your history by performing an interactive rebase)
-7. add you change to the changelog
+7. add your change to the changelog
 8. submit your pull-request
 9. 2 Maintainers should review the code for bugfix and features. 1 maintainer for minor changes (such as docs)
 10. After review, a maintainer a will merge the PR. Maintainers should not merge their own PRs 

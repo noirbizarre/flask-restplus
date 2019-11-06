@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import inspect
 import warnings
+import logging
 from collections import namedtuple
 
 import six
@@ -27,7 +28,7 @@ class Namespace(object):
     Namespace is to API what :class:`flask:flask.Blueprint` is for :class:`flask:flask.Flask`.
 
     :param str name: The namespace name
-    :param str description: An optionale short description
+    :param str description: An optional short description
     :param str path: An optional prefix path. If not provided, prefix is ``/+name``
     :param list decorators: A list of decorators to apply to each resources
     :param bool validate: Whether or not to perform validation on this namespace
@@ -53,6 +54,7 @@ class Namespace(object):
         self.apis = []
         if 'api' in kwargs:
             self.apis.append(kwargs['api'])
+        self.logger = logging.getLogger(__name__ + "." + self.name)
 
     @property
     def path(self):
@@ -194,7 +196,7 @@ class Namespace(object):
 
     def inherit(self, name, *specs):
         '''
-        Inherit a modal (use the Swagger composition pattern aka. allOf)
+        Inherit a model (use the Swagger composition pattern aka. allOf)
 
         .. seealso:: :meth:`Model.inherit`
         '''
@@ -238,7 +240,7 @@ class Namespace(object):
         def wrapper(func):
             doc = {
                 'responses': {
-                    code: (description, [fields], kwargs) if as_list else (description, fields, kwargs)
+                    str(code): (description, [fields], kwargs) if as_list else (description, fields, kwargs)
                 },
                 '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
             }
@@ -289,7 +291,7 @@ class Namespace(object):
         :param ModelBase model: an optional response model
 
         '''
-        return self.doc(responses={code: (description, model, kwargs)})
+        return self.doc(responses={str(code): (description, model, kwargs)})
 
     def header(self, name, description=None, **kwargs):
         '''

@@ -1,19 +1,29 @@
 language: python
+
 python:
   - 2.7
   - 3.4
   - 3.5
   - 3.6
+  - 3.7
   - pypy
   - pypy3
+
+matrix:
+  include:
+    - python: 3.8-dev
+      dist: xenial
+  allow_failures:
+    - python: pypy3
+    - python: 3.8-dev
+
 install:
   - pip install .[dev]
+
 script:
   - inv cover qa
+
 after_success:
   - pip install coveralls
   - coveralls --rcfile=coverage.rc
   - ./travis-bench-after-success.sh
-matrix:
-  allow_failures:
-    - python: pypy3

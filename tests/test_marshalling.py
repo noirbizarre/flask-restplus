@@ -7,7 +7,11 @@ from flask_restplus import (
     marshal, marshal_with, marshal_with_field, fields, Api, Resource
 )
 
-from collections import OrderedDict
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    # TODO Remove this to drop Python2 support
+    from collections import OrderedDict
 
 
 # Add a dummy Resource to verify that the app is properly set.
@@ -24,6 +28,37 @@ class MarshallingTest(object):
         assert isinstance(output, dict)
         assert not isinstance(output, OrderedDict)
         assert output == {'foo': 'bar'}
+
+    def test_marshal_wildcard_nested(self):
+        nest = fields.Nested(OrderedDict([('thumbnail', fields.String), ('video', fields.String)]))
+        wild = fields.Wildcard(nest)
+        wildcard_fields = OrderedDict([('*', wild)])
+        model = OrderedDict([('preview', fields.Nested(wildcard_fields))])
+        sub_dict = OrderedDict([
+            ('9:16', {'thumbnail': 24, 'video': 12}),
+            ('16:9', {'thumbnail': 25, 'video': 11}),
+            ('1:1', {'thumbnail': 26, 'video': 10})
+        ])
+        marshal_dict = OrderedDict([('preview', sub_dict)])
+        output = marshal(marshal_dict, model)
+        assert output == {'preview': {'1:1': {'thumbnail': '26', 'video': '10'},
+                                      '16:9': {'thumbnail': '25', 'video': '11'},
+                                      '9:16': {'thumbnail': '24', 'video': '12'}}}
+
+    def test_marshal_wildcard_list(self):
+        wild = fields.Wildcard(fields.List(fields.String))
+        wildcard_fields = OrderedDict([('*', wild)])
+        model = OrderedDict([('preview', fields.Nested(wildcard_fields))])
+        sub_dict = OrderedDict([
+            ('1:1', [1, 2, 3]),
+            ('16:9', [4, 5, 6]),
+            ('9:16', [7, 8, 9])
+        ])
+        marshal_dict = OrderedDict([('preview', sub_dict)])
+        output = marshal(marshal_dict, model)
+        assert output == {'preview': {'9:16': ['7', '8', '9'],
+                                      '16:9': ['4', '5', '6'],
+                                      '1:1': ['1', '2', '3']}}
 
     def test_marshal_with_envelope(self):
         model = OrderedDict([('foo', fields.Raw)])

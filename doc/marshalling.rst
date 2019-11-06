@@ -120,7 +120,7 @@ You can use fields to multiplex a single attribute to multiple output values.
 This example assumes that bit 1 in the ``flags`` attribute signifies a
 "Normal" or "Urgent" item, and bit 2 signifies "Read" or "Unread".
 These items might be easy to store in a bitfield,
-but for a human readable output it's nice to convert them to seperate string fields.
+but for a human readable output it's nice to convert them to separate string fields.
 
 .. code-block:: python
 
@@ -168,7 +168,7 @@ To override the default scheme, pass the ``scheme`` keyword argument:
 .. code-block:: python
 
     model = {
-        'uri': fields.Url('todo_resource', absolute=True)
+        'uri': fields.Url('todo_resource', absolute=True),
         'https_uri': fields.Url('todo_resource', absolute=True, scheme='https')
     }
 
@@ -257,15 +257,11 @@ with other fields, you may want to use an ``OrderedDict`` and use the
 :class:`~fields.Wildcard` as the last field ::
 
     >>> from flask_restplus import fields, marshal
-    >>> from collections import OrderedDict
     >>> import json
     >>>
     >>> wild = fields.Wildcard(fields.Integer)
-    >>> mod = OrderedDict()
-    >>> mod['zoro'] = fields.String
-    >>> mod['*'] = wild
     >>> # you can use it in api.model like this:
-    >>> # some_fields = api.model('MyModel', mod)
+    >>> # some_fields = api.model('MyModel', {'zoro': fields.String, '*': wild})
     >>>
     >>> data = {'John': 12, 'bob': 42, 'Jane': '68', 'zoro': 72}
     >>> json.dumps(marshal(data, mod))

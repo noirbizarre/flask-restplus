@@ -51,6 +51,7 @@ Flask-RESTPlus with Flask.
     errors
     mask
     swagger
+    logging
     postman
     scaling
     example

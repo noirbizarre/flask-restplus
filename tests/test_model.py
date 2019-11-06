@@ -4,7 +4,11 @@ from __future__ import unicode_literals
 import copy
 import pytest
 
-from collections import OrderedDict
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    # TODO Remove this to drop Python2 support
+    from collections import OrderedDict
 
 from flask_restplus import fields, Model, OrderedModel, SchemaModel
 
