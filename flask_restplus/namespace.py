@@ -240,7 +240,7 @@ class Namespace(object):
         def wrapper(func):
             doc = {
                 'responses': {
-                    str(code): (description, [fields]) if as_list else (description, fields)
+                    str(code): (description, [fields], kwargs) if as_list else (description, fields, kwargs)
                 },
                 '__mask__': kwargs.get('mask', True),  # Mask values can't be determined outside app context
             }

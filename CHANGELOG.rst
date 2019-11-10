@@ -9,6 +9,7 @@ Current
 - Ensure that exceptions raised in error handler, including programming errors, are logged (:issue:`705`, :pr:`706`)
 - Import the ABCs from 'collections.abc' instead of 'collections' by default as it is deprecated since Python3.7, and in 3.8 it will stop working. Python2.7 is still supported though.
 - Fix illegal characters in JSON references to model names (:issue:`651`)
+- Support ``envelope`` parameter in Swagger documentation (:pr:`390`)
 
 0.13.0 (2019-08-12)
 -------------------
@@ -20,7 +21,6 @@ Current
 - Hide Namespaces with all hidden Resources from Swagger documentation
 - Per route Swagger documentation for multiple routes on a ``Resource``
 - Fix Swagger `duplicate mapping key` problem from conflicts between response codes given as string or integer (:issue`661`)
-
 
 0.12.1 (2018-09-28)
 -------------------
