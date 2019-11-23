@@ -234,6 +234,7 @@ and to set the type to :class:`~werkzeug.datastructures.FileStorage`.
 
 .. code-block:: python
 
+    from flask import request
     from werkzeug.datastructures import FileStorage
 
     upload_parser = api.parser()
@@ -245,7 +246,7 @@ and to set the type to :class:`~werkzeug.datastructures.FileStorage`.
     @api.expect(upload_parser)
     class Upload(Resource):
         def post(self):
-            uploaded_file = args['file']  # This is FileStorage instance
+            uploaded_file = request.files['file']  # This is FileStorage instance
             url = do_something_with_file(uploaded_file)
             return {'url': url}, 201
 
