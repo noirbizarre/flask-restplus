@@ -2166,7 +2166,7 @@ class SwaggerTest(object):
         data = client.get_specs()
 
         assert 'definitions' in data
-        assert 'Person' not in data['definitions']
+        assert 'Person' in data['definitions']
         assert 'Child' in data['definitions']
 
         path = data['paths']['/extend/']

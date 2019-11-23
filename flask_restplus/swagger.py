@@ -381,6 +381,8 @@ class Swagger(object):
         doc = self.extract_resource_doc(resource, url, route_doc=route_doc)
         if doc is False:
             return
+        for _n, _v in ns.models.items():
+            self.register_model(_v)
         path = {
             'parameters': self.parameters_for(doc) or None
         }
