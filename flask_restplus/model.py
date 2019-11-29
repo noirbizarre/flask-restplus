@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from werkzeug import exceptions
 
 import copy
 import re
@@ -103,8 +104,8 @@ class ModelBase(object):
         try:
             validator.validate(data)
         except ValidationError:
-            abort(HTTPStatus.BAD_REQUEST, message='Input payload validation failed',
-                  errors=dict(self.format_error(e) for e in validator.iter_errors(data)))
+            errors = dict(self.format_error(e) for e in validator.iter_errors(data))
+            raise exceptions.BadRequest(errors)
 
     def format_error(self, error):
         path = list(error.path)

@@ -364,7 +364,7 @@ class RequestParser(object):
             if found or arg.store_missing:
                 result[arg.dest or arg.name] = value
         if errors:
-            abort(HTTPStatus.BAD_REQUEST, 'Input payload validation failed', errors=errors)
+            raise exceptions.BadRequest(errors)
 
         if strict and req.unparsed_arguments:
             arguments = ', '.join(req.unparsed_arguments.keys())
