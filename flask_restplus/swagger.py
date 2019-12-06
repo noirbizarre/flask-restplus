@@ -582,6 +582,8 @@ class Swagger(object):
         name = model.name if isinstance(model, ModelBase) else model
         if name not in self.api.models:
             raise ValueError('Model {0} not registered'.format(name))
+        if name in self._registered_models:
+            return ref(model)
         specs = self.api.models[name]
         self._registered_models[name] = specs
         if isinstance(specs, ModelBase):
