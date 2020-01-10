@@ -3,11 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-try:
-    from collections.abc import OrderedDict
-except ImportError:
-    # TODO Remove this to drop Python2 support
-    from collections import OrderedDict
+from collections import OrderedDict
 from copy import deepcopy
 from six import iteritems
 
