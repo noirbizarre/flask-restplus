@@ -21,6 +21,23 @@ Flask RestPlus
    :alt: Join the chat at https://gitter.im/noirbizarre/flask-restplus
    :target: https://gitter.im/noirbizarre/flask-restplus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
+**IMPORTANT NOTICE**:
+
+This project has been **forked** to `Flask-RESTX <https://github.com/python-restx/flask-restx>`_
+and will be maintained by by the `python-restx <https://github.com/python-restx>`_
+organization. **Flask-RESTPlus should be considered unmaintained**.
+
+The community has decided to fork the project due to lack of response from the
+original author @noirbizarre. We have been discussing this eventuality for
+almost `a year <https://github.com/noirbizarre/flask-restplus/issues/593>`_.
+
+Things evolved a bit since that discussion and a few of us have been granted
+maintainers access to the github project, but only the original author has
+access rights on the PyPi project. As such, we been unable to make any actual
+releases. To prevent this project from dying out, we have forked it to continue
+development and to support our users.
+
+
 Flask-RESTPlus is an extension for `Flask`_ that adds support for quickly building REST APIs.
 Flask-RESTPlus encourages best practices with minimal setup.
 If you are familiar with Flask, Flask-RESTPlus should be easy to pick up.
