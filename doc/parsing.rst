@@ -245,6 +245,7 @@ and to set the type to :class:`~werkzeug.datastructures.FileStorage`.
     @api.expect(upload_parser)
     class Upload(Resource):
         def post(self):
+            args = upload_parser.parse_args()
             uploaded_file = args['file']  # This is FileStorage instance
             url = do_something_with_file(uploaded_file)
             return {'url': url}, 201
