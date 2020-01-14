@@ -10,11 +10,7 @@ import re
 import six
 import sys
 
-try:
-    from collections.abc import OrderedDict
-except ImportError:
-    # TODO Remove this to drop Python2 support
-    from collections import OrderedDict
+from collections import OrderedDict
 from functools import wraps, partial
 from types import MethodType
 
