@@ -16,7 +16,7 @@ from flask import current_app
 from werkzeug.routing import parse_rule
 
 from . import fields
-from .model import Model, ModelBase
+from .model import Model, ModelBase, SchemaModel
 from .reqparse import RequestParser
 from .utils import merge, not_none, not_none_sorted
 from ._http import HTTPStatus
@@ -590,7 +590,26 @@ class Swagger(object):
         if isinstance(specs, Model):
             for field in itervalues(specs):
                 self.register_field(field)
+        if isinstance(specs, SchemaModel):
+            self.register_Json_ref(specs._schema)
         return ref(model)
+
+    def register_Json_ref(self, jschema):
+        typeelem = jschema.get("type", "")
+        propertieselem = jschema.get("properties", "")
+        itemselem = jschema.get("items", "")
+        refelem = jschema.get("$ref", "")
+
+        if refelem != "":
+            name = refelem.split("/")[-1]
+            model = self.api.models[name]
+            self.register_model(model)
+        else:
+            if typeelem == "object" and propertieselem != "":
+                for prop_k, prop_v in propertieselem.items():
+                    self.register_Json_ref(prop_v)
+            elif typeelem == "array" and itemselem != "":
+                self.register_Json_ref(itemselem)
 
     def register_field(self, field):
         if isinstance(field, fields.Polymorph):
