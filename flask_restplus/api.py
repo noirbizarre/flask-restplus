@@ -468,7 +468,11 @@ class Api(object):
 
         :rtype: str
         '''
-        return url_for(self.endpoint('specs'), _external=True)
+        url = url_for(self.endpoint('specs'), _external=True)
+        if self.app.config.get('SWAGGER_BASEPATH', ''):
+            prefix = url.split('/swagger.json')[0]
+            url = prefix + self.app.config.get('SWAGGER_BASEPATH', '') + '/swagger.json'
+        return url
 
     @property
     def base_url(self):
