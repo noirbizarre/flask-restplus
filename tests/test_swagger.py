@@ -2101,6 +2101,26 @@ class SwaggerTest(object):
 
         client.get_specs(status=500)
 
+    def test_recursive_model(self, api, client):
+        fields = api.model('Person', {
+            'name': restplus.fields.String,
+            'age': restplus.fields.Integer,
+            'birthdate': restplus.fields.DateTime
+        })
+
+        fields["children"] = restplus.fields.List(
+            restplus.fields.Nested(fields),
+            default=[])
+
+        @api.route('/recursive-model/')
+        @api.doc(get={'model': fields})
+        class ModelAsDict(restplus.Resource):
+            @api.marshal_with(fields)
+            def get(self):
+                return {}
+
+        client.get_specs(status=200)
+
     def test_specs_no_duplicate_response_keys(self, api, client):
         '''
         This tests that the swagger.json document will not be written with duplicate object keys
