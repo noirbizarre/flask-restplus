@@ -367,6 +367,32 @@ class ErrorsTest(object):
         assert data == {'message': 'some maintenance'}
         assert response.headers['Retry-After'] == '120'
 
+    def test_custom_default_errorhandler_with_namespace(self, app, client):
+        api = restplus.Api(app)
+
+        ns = restplus.Namespace("ExceptionHandler", path="/")
+
+        @ns.route('/test/', endpoint='test')
+        class TestResource(restplus.Resource):
+            def get(self):
+                raise Exception('error')
+
+        @ns.errorhandler
+        def default_error_handler(error):
+            return {'message': str(error), 'test': 'value'}, 500
+
+        api.add_namespace(ns)
+
+        response = client.get('/test/')
+        assert response.status_code == 500
+        assert response.content_type == 'application/json'
+
+        data = json.loads(response.data.decode('utf8'))
+        assert data == {
+            'message': 'error',
+            'test': 'value',
+        }
+
     def test_errorhandler_lazy(self, app, client):
         api = restplus.Api()
 
