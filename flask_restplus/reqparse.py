@@ -9,7 +9,7 @@ try:
 except ImportError:
     from collections import Hashable
 from copy import deepcopy
-from flask import current_app, request
+from flask import current_app, request, json
 
 from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
@@ -211,7 +211,10 @@ class Argument(object):
                 if hasattr(source, 'getlist'):
                     values = source.getlist(name)
                 else:
-                    values = [source.get(name)]
+                    # Account for append action with json locations
+                    values = source.get(name)
+                    if not isinstance(values, list):
+                        values = [values]
 
                 for value in values:
                     if hasattr(value, 'strip') and self.trim:
@@ -266,10 +269,12 @@ class Argument(object):
     def __schema__(self):
         if self.location == 'cookie':
             return
-        param = {
-            'name': self.name,
-            'in': LOCATIONS.get(self.location, 'query')
-        }
+        param = {'name': self.name}
+        if isinstance(self.location, six.string_types):
+            location = self.location
+        else:
+            location = self.location[-1]
+        param['in'] = LOCATIONS.get(location, 'query')
         _handle_arg_type(self, param)
         if self.required:
             param['required'] = True
