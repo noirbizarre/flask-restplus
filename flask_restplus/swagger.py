@@ -147,6 +147,31 @@ def is_hidden(resource, route_doc=None):
         return hasattr(resource, "__apidoc__") and resource.__apidoc__ is False
 
 
+def rparser_to_swagger_body_param(request_parser):
+    """
+    If any parameters are in the request body then return the swagger representation for the requests json body
+    :param request_parser: The request parser containing params for the request
+    :return:
+    """
+    json_body_list = [p for p in request_parser.__schema__ if p['in'] == 'body']
+    if not json_body_list:
+        return
+
+    properties = {}
+    for param in json_body_list:
+        properties[param['name']] = {
+            'type': 'string' if 'type' not in param else param['type']
+        }
+
+    return {
+        'name': 'payload',
+        'required': True,
+        'in': 'body',
+        'type': 'object',
+        'schema': {'properties': properties}
+    }
+
+
 class Swagger(object):
     '''
     A Swagger documentation wrapper for an API instance.
@@ -333,8 +358,12 @@ class Swagger(object):
 
         for expect in doc.get('expect', []):
             if isinstance(expect, RequestParser):
-                parser_params = OrderedDict((p['name'], p) for p in expect.__schema__)
+                parser_params = OrderedDict((p['name'], p) for p in expect.__schema__ if p['in'] != 'body')
                 params.update(parser_params)
+
+                payload = rparser_to_swagger_body_param(expect)
+                if payload:
+                    params['payload'] = payload
             elif isinstance(expect, ModelBase):
                 params['payload'] = not_none({
                     'name': 'payload',

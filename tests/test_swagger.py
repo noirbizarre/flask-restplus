@@ -623,6 +623,7 @@ class SwaggerTest(object):
     def test_expect_parser(self, api, client):
         parser = api.parser()
         parser.add_argument('param', type=int, help='Some param')
+        parser.add_argument('jsonparam', type=str, location='json', help='Some param')
 
         @api.route('/with-parser/', endpoint='with-parser')
         class WithParserResource(restplus.Resource):
@@ -634,13 +635,20 @@ class SwaggerTest(object):
         assert '/with-parser/' in data['paths']
 
         op = data['paths']['/with-parser/']['get']
-        assert len(op['parameters']) == 1
+        assert len(op['parameters']) == 2
 
-        parameter = op['parameters'][0]
+        parameter = [o for o in op['parameters'] if o['in'] == 'query'][0]
         assert parameter['name'] == 'param'
         assert parameter['type'] == 'integer'
         assert parameter['in'] == 'query'
         assert parameter['description'] == 'Some param'
+
+        parameter = [o for o in op['parameters'] if o['in'] == 'body'][0]
+        assert parameter['name'] == 'payload'
+        assert parameter['required']
+        assert parameter['in'] == 'body'
+        print(parameter)
+        assert parameter['schema']['properties']['jsonparam']['type'] == 'string'
 
     def test_expect_parser_on_class(self, api, client):
         parser = api.parser()
@@ -3323,6 +3331,23 @@ class SwaggerTest(object):
         assert parameter['type'] == 'string'
         assert parameter['in'] == 'query'
         assert parameter['description'] == 'Overriden description'
+
+    def test_rparser_to_swagger_body_param(self):
+        parser = restplus.reqparse.RequestParser()
+        parser.add_argument('test', type=int, location='headers')
+
+        assert not restplus.swagger.rparser_to_swagger_body_param(parser)
+
+        parser.add_argument('test1', type=int, location='json')
+        parser.add_argument('test2', location='json')
+
+        result = restplus.swagger.rparser_to_swagger_body_param(parser)
+
+        assert result['name'] == 'payload'
+        assert result['required']
+        assert result['in'] == 'body'
+        assert result['schema']['properties']['test1']['type'] == 'integer'
+        assert result['schema']['properties']['test2']['type'] == 'string'
 
 
 class SwaggerDeprecatedTest(object):
