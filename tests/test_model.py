@@ -619,6 +619,21 @@ class ModelTest(object):
         with pytest.raises(BadRequest):
             model.validate(data, format_checker=FormatChecker())
 
+    def test_custom_validate(self):
+        class MyField(fields.Raw):
+            __schema_type__ = 'string'
+
+            def validate(self, value):
+                if value != 'correct':
+                    raise fields.MarshallingError('Invalid Value')
+                return True
+        model = Model('MyModel', {'field': MyField()})
+        bad_data = {'field': 'incorrect'}
+        good_data = {'field': 'correct'}
+        assert model.validate(good_data) is None
+        with pytest.raises(Exception):
+            model.validate(bad_data)
+
 
 class ModelSchemaTestCase(object):
     def test_model_schema(self):
