@@ -273,8 +273,11 @@ class List(Raw):
 
     def format(self, value):
         # Convert all instances in typed list to container type
-        if isinstance(value, set):
+        if isinstance(value, (set, tuple)):
             value = list(value)
+
+        if not isinstance(value, list):
+            raise MarshallingError('should be list')
 
         is_nested = isinstance(self.container, Nested) or type(self.container) is Raw
 
