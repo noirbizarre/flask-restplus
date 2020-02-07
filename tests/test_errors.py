@@ -413,7 +413,7 @@ class ErrorsTest(object):
 
         response = client.get("/foo")
         assert response.status_code == 404
-        assert response.headers['Content-Type'] == 'text/html'
+        assert response.headers['Content-Type'].startswith('text/html')
 
     def test_non_api_error_404_catchall(self, app, client):
         api = restplus.Api(app, catch_all_404s=True)
