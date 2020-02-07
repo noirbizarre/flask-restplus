@@ -24,8 +24,11 @@ from flask.helpers import _endpoint_from_view_func
 from flask.signals import got_request_exception
 
 from jsonschema import RefResolver
+try:
+    from werkzeug.utils import cached_property
+except ImportError:
+    from werkzeug import cached_property
 
-from werkzeug import cached_property
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.wrappers import BaseResponse
