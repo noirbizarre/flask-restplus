@@ -5,7 +5,7 @@ pytest==4.6.5; python_version < '3.5'
 pytest==5.0.1; python_version >= '3.5'
 pytest-benchmark==3.2.2
 pytest-cov==2.7.1
-pytest-flask==0.15.0
+pytest-flask==0.15.1
 pytest-mock==1.10.4
 pytest-profiling==1.7.0
 pytest-sugar==0.9.2
