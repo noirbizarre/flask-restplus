@@ -202,7 +202,9 @@ class Api(object):
         :param flask.Flask app: The flask application object
         '''
         self._register_specs(self.blueprint or app)
-        self._register_doc(self.blueprint or app)
+        apidoc_off_or_not = app.config.get('RESTPLUS_APIDOC_OFF', False)
+        if not apidoc_off_or_not:
+            self._register_doc(self.blueprint or app)
 
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
@@ -214,7 +216,8 @@ class Api(object):
         for ns in self.namespaces:
             self._configure_namespace_logger(app, ns)
 
-        self._register_apidoc(app)
+        if not apidoc_off_or_not:
+            self._register_apidoc(app)
         self._validate = self._validate if self._validate is not None else app.config.get('RESTPLUS_VALIDATE', False)
         app.config.setdefault('RESTPLUS_MASK_HEADER', 'X-Fields')
         app.config.setdefault('RESTPLUS_MASK_SWAGGER', True)
