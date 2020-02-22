@@ -712,7 +712,7 @@ class Polymorph(Nested):
 
 class Wildcard(Raw):
     '''
-    Field for marshalling list of "unkown" fields.
+    Field for marshalling list of "unknown" fields.
 
     :param cls_or_instance: The field type the list will contain.
     '''
