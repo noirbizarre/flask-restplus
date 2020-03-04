@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import
 
+from uuid import uuid1
+
 import itertools
 import re
 
@@ -397,7 +399,7 @@ class Swagger(object):
             'responses': self.responses_for(doc, method) or None,
             'summary': doc[method]['docstring']['summary'],
             'description': self.description_for(doc, method) or None,
-            'operationId': self.operation_id_for(doc, method),
+            'operationId': '%s-%s' % (self.operation_id_for(doc, method), str(uuid1())[:6]),
             'parameters': self.parameters_for(doc[method]) or None,
             'security': self.security_for(doc, method),
         }
