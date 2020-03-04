@@ -48,7 +48,7 @@ class LazySchema(Mapping):
     '''
     A thin wrapper around schema file lazy loading the data on first access
 
-    :param filename str: The package relative json schema filename
+    :param str filename: The package relative json schema filename
     :param validator: The jsonschema validator class version
 
     .. versionadded:: 0.12.1
@@ -98,7 +98,7 @@ def validate(data):
 
     Supported OpenAPI versions: 2.0
 
-    :param data dict: The specification to validate
+    :param dict data: The specification to validate
     :returns boolean: True if the specification is valid
     :raises SchemaValidationError: when the specification is invalid
     :raises flask_restplus.errors.SpecsError: when it's not possible to determinate
