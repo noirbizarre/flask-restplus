@@ -214,6 +214,20 @@ Given the previous layout, we can migrate it to the following directory structur
         ├── ...
         └── namespaceX.py
 
+Each `apis/namespaceX` wmodule will have the following pattern:
+
+.. code-block:: python
+
+    from flask_restplus import Namespace
+
+    api = Namespace('mynamespace', 'Namespace Description' )
+
+    @api.route("/")
+    class Myclass(Resource):
+        def get(self):
+            return {}
+
+
 Each `apivX` module will have the following pattern:
 
 .. code-block:: python
