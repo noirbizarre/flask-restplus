@@ -42,6 +42,10 @@ def is_indexable_but_not_string(obj):
     return not hasattr(obj, "strip") and hasattr(obj, "__iter__")
 
 
+def is_integer_indexable(obj):
+    return isinstance(obj, list) or isinstance(obj, tuple)
+
+
 def get_value(key, obj, default=None):
     '''Helper for pulling a keyed value off various types of objects'''
     if isinstance(key, int):
@@ -65,6 +69,11 @@ def _get_value_for_key(key, obj, default):
         try:
             return obj[key]
         except (IndexError, TypeError, KeyError):
+            pass
+    if is_integer_indexable(obj):
+        try:
+            return obj[int(key)]
+        except (IndexError, TypeError, ValueError):
             pass
     return getattr(obj, key, default)
 
