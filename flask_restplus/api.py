@@ -401,7 +401,8 @@ class Api(object):
         '''
         endpoint = camel_to_dash(resource.__name__)
         if namespace is not self.default_namespace:
-            endpoint = '{ns.name}_{endpoint}'.format(ns=namespace, endpoint=endpoint)
+            ns_name = namespace.name.replace('.', '_')
+            endpoint = '{ns_name}_{endpoint}'.format(ns_name=ns_name, endpoint=endpoint)
         if endpoint in self.endpoints:
             suffix = 2
             while True:
