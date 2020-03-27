@@ -58,7 +58,7 @@ will output
 The Flask abort helper
 ----------------------
 
-The :meth:`abort <werkeug.exceptions.Aborter.__call__>` helper
+The :meth:`abort <werkzeug.exceptions.Aborter.__call__>` helper
 properly wraps errors into a :exc:`~werkzeug.exceptions.HTTPException`
 so it will have the same behavior.
 
