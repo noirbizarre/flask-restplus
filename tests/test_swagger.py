@@ -842,6 +842,25 @@ class SwaggerTest(object):
         assert parameter['in'] == 'formData'
         assert parameter['description'] == 'A query string'
 
+    def test_explicit_parameters_with_decorator_no_description(self, api, client):
+        @api.route('/name/')
+        class ByNameResource(restplus.Resource):
+            @api.param('q', type='string', _in='formData')
+            def get(self, age):
+                return {}
+
+        data = client.get_specs()
+        assert '/name/' in data['paths']
+
+        op = data['paths']['/name/']['get']
+        assert len(op['parameters']) == 1
+
+        parameter = op['parameters'][0]
+        assert parameter['name'] == 'q'
+        assert parameter['type'] == 'string'
+        assert parameter['in'] == 'formData'
+        assert 'description' not in parameter
+
     def test_class_explicit_parameters(self, api, client):
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
             'params': {
@@ -875,6 +894,39 @@ class SwaggerTest(object):
         assert parameter['type'] == 'string'
         assert parameter['in'] == 'query'
         assert parameter['description'] == 'A query string'
+
+    def test_class_explicit_parameters_no_description(self, api, client):
+        @api.route('/name/<int:age>/', endpoint='by-name', doc={
+            'params': {
+                'q': {
+                    'type': 'string',
+                    'in': 'query',
+                }
+            }
+        })
+        class ByNameResource(restplus.Resource):
+            def get(self, age):
+                return {}
+
+        data = client.get_specs()
+        assert '/name/{age}/' in data['paths']
+
+        path = data['paths']['/name/{age}/']
+        assert len(path['parameters']) == 2
+
+        by_name = dict((p['name'], p) for p in path['parameters'])
+
+        parameter = by_name['age']
+        assert parameter['name'] == 'age'
+        assert parameter['type'] == 'integer'
+        assert parameter['in'] == 'path'
+        assert parameter['required'] is True
+
+        parameter = by_name['q']
+        assert parameter['name'] == 'q'
+        assert parameter['type'] == 'string'
+        assert parameter['in'] == 'query'
+        assert 'description' not in parameter
 
     def test_explicit_parameters_override(self, api, client):
         @api.route('/name/<int:age>/', endpoint='by-name', doc={
