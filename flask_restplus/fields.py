@@ -120,7 +120,10 @@ class Raw(object):
         self.description = description
         self.required = required
         self.readonly = readonly
-        self.example = example or self.__schema_example__
+        if example is None:
+            self.example = self.__schema_example__
+        else:
+            self.example = example
         self.mask = mask
 
     def format(self, value):
