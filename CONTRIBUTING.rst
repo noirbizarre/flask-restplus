@@ -3,8 +3,8 @@ Contributing
 
 flask-restplus is open-source and very open to contributions. 
 
-If you're part of a corporation with an NDA, and you may require updating the license. 
-See Updating Copyright below
+If you're part of a corporation with an NDA, you may require updating the license. 
+See :ref:`Updating Copyright` below
 
 Submitting issues
 -----------------
@@ -106,6 +106,8 @@ For local development, you may wish to run a local server. running the following
 NOTE: You'll need `NPM <https://docs.npmjs.com/getting-started/>`_ installed to do this. 
 If you're new to NPM, also check out `nvm <https://github.com/creationix/nvm/blob/master/README.md>`_
 
+
+.. _Updating Copyright:
 
 Updating Copyright
 ------------------
