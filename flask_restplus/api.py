@@ -74,7 +74,7 @@ class Api(object):
     :param str contact: A contact email for the API (used in Swagger documentation)
     :param str license: The license associated to the API (used in Swagger documentation)
     :param str license_url: The license page URL (used in Swagger documentation)
-    :param str endpoint: The API base endpoint (default to 'api).
+    :param str endpoint: The API base endpoint (default to 'api').
     :param str default: The default namespace base name (default to 'default')
     :param str default_label: The default namespace label (used in Swagger documentation)
     :param str default_mediatype: The default media type to return
