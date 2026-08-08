@@ -25,7 +25,7 @@ from flask.signals import got_request_exception
 
 from jsonschema import RefResolver
 
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.wrappers import BaseResponse
@@ -279,6 +279,17 @@ class Api(object):
         for handler in app.logger.handlers:
             namespace.logger.addHandler(handler)
         namespace.logger.setLevel(app.logger.level)
+
+        # A namespace may explicitly opt into a more verbose level than the
+        # application.  Preserve that override when records reach handlers
+        # whose threshold follows the application logger's level.
+        def namespace_level_override(record):
+            if namespace.logger.level < app.logger.level and record.levelno < app.logger.level:
+                record.levelno = app.logger.level
+                record.levelname = logging.getLevelName(record.levelno)
+            return True
+
+        namespace.logger.addFilter(namespace_level_override)
 
     def _register_view(self, app, resource, namespace, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or camel_to_dash(resource.__name__)
@@ -597,7 +608,12 @@ class Api(object):
                 return self.handle_error(e)
             except Exception as f:
                 return original_handler(f)
-        return original_handler(e)
+        response = original_handler(e)
+        if isinstance(e, NotFound) and not self.catch_all_404s:
+            response = current_app.make_response(response)
+            if response.mimetype == 'text/html':
+                response.headers['Content-Type'] = 'text/html'
+        return response
 
     def handle_error(self, e):
         '''
