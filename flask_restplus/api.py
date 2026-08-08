@@ -25,7 +25,7 @@ from flask.signals import got_request_exception
 
 from jsonschema import RefResolver
 
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.wrappers import BaseResponse
@@ -276,8 +276,9 @@ class Api(object):
         return endpoint
 
     def _configure_namespace_logger(self, app, namespace):
-        for handler in app.logger.handlers:
-            namespace.logger.addHandler(handler)
+        for handler in logging.getLogger().handlers:
+            handler.setLevel(logging.NOTSET)
+        namespace.logger.parent = app.logger
         namespace.logger.setLevel(app.logger.level)
 
     def _register_view(self, app, resource, namespace, *urls, **kwargs):
@@ -597,7 +598,10 @@ class Api(object):
                 return self.handle_error(e)
             except Exception as f:
                 return original_handler(f)
-        return original_handler(e)
+        response = current_app.make_response(original_handler(e))
+        if response.mimetype == 'text/html':
+            response.headers['Content-Type'] = response.mimetype
+        return response
 
     def handle_error(self, e):
         '''
