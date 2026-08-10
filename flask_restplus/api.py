@@ -25,7 +25,7 @@ from flask.signals import got_request_exception
 
 from jsonschema import RefResolver
 
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.wrappers import BaseResponse
